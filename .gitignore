@@ -33,7 +33,6 @@ build/
 .vscode/
 
 ### Custom ingnore ###
-/src/main/java/com/tabaldi/api/TabaldiConfiguration.java
 /src/main/resources/application-local.properties
 /src/main/resources/application-dev.properties
 /src/main/resources/application-prod.properties
