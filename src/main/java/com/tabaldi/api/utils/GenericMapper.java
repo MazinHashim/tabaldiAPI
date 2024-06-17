@@ -8,15 +8,14 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.List;
 
+@NoArgsConstructor
 public class GenericMapper {
     private static final ObjectMapper objectMapper = new ObjectMapper();
-
-    public GenericMapper() {
-    }
 
     public static String objectToJSONMapper(Object object) throws JsonProcessingException {
         return objectMapper.writeValueAsString(object);

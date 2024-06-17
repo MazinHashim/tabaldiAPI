@@ -8,8 +8,6 @@ import com.tabaldi.api.repository.*;
 import com.tabaldi.api.service.*;
 import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.MessagesUtils;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
@@ -24,7 +22,6 @@ import java.io.IOException;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -43,6 +40,7 @@ public class VendorServiceImpl implements VendorService {
     private final CategoryRepository categoryRepository;
     private final OrderService orderService;
     private final ProductRepository productRepository;
+    private final TabaldiConfiguration configuration;
 
 
     @Override
@@ -121,7 +119,7 @@ public class VendorServiceImpl implements VendorService {
                 String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
             }
-            profilePath = TabaldiConfiguration.HOST_VENDOR_IMAGE_FOLDER.getValue()
+            profilePath = configuration.getHostProductImageFolder()
                     .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
                     .concat(profileImage.getOriginalFilename()
                             .substring(profileImage.getOriginalFilename().indexOf(".")));
@@ -131,7 +129,7 @@ public class VendorServiceImpl implements VendorService {
                 String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
             }
-            identityPath = TabaldiConfiguration.HOST_VENDOR_IMAGE_FOLDER.getValue()
+            identityPath = configuration.getHostVendorImageFolder()
                     .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
                     .concat(identityImage.getOriginalFilename()
                             .substring(identityImage.getOriginalFilename().indexOf(".")));
@@ -141,7 +139,7 @@ public class VendorServiceImpl implements VendorService {
                 String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
             }
-            licensePath = TabaldiConfiguration.HOST_VENDOR_IMAGE_FOLDER.getValue()
+            licensePath = configuration.getHostVendorImageFolder()
                     .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
                     .concat(licenseImage.getOriginalFilename()
                             .substring(licenseImage.getOriginalFilename().indexOf(".")));

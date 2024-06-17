@@ -2,11 +2,13 @@ package com.tabaldi.api.serviceImpl;
 
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
+import com.tabaldi.api.payload.InvoicePayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.OrderRepository;
 import com.tabaldi.api.response.OrderMapper;
 import com.tabaldi.api.service.CustomerService;
+import com.tabaldi.api.service.InvoiceService;
 import com.tabaldi.api.service.OrderService;
 import com.tabaldi.api.service.SequencesService;
 import com.tabaldi.api.utils.GenericMapper;
@@ -32,6 +34,7 @@ public class OrderServiceImpl implements OrderService {
     private final CartItemRepository cartItemRepository;
     private final SequencesService sequencesService;
     private final CustomerService customerService;
+    private final InvoiceService invoiceService;
     private final MessageSource messageSource;
 
     @Override
@@ -81,15 +84,50 @@ public class OrderServiceImpl implements OrderService {
                 });
                 List<Order> createdOrders = orderRepository.saveAll(orders);
                 createdOrders.forEach(order -> {
+                    // set cart items for each order related to vendor
                     order.setCartItems(cartItems.stream()
                             .filter(cartItem -> cartItem.getProduct().getVendor()==order.getVendor())
                             .collect(Collectors.toList()));
+
                     cartItems.forEach(cartItem -> {
-                        if(cartItem.getProduct().getVendor()==order.getVendor()) {
+                        if(cartItem.getProduct().getVendor().getVendorId()==order.getVendor().getVendorId()) {
                             cartItem.setOrder(order);
                             cartItemRepository.save(cartItem);
+
+                            try {
+                                if (cartItem.getProduct().getImagesCollection() != null)
+                                    cartItem.getProduct()
+                                            .setImages(GenericMapper
+                                                    .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+                                if (cartItem.getOptionsCollection() != null)
+                                    cartItem.setSelectedOptions(GenericMapper
+                                            .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            }
+                            double itemTotal=cartItem.getPrice() * cartItem.getQuantity();
+                            order.setTotal(order.getTotal() + itemTotal);
+                            cartItem.getSelectedOptions().forEach(option -> {
+                                if (option.getFee() != null)
+                                    order.setTotal(order.getTotal() + option.getFee());
+                            });
                         }
                     });
+
+                    try {
+                        Invoice createdInvoice = invoiceService.saveInvoiceInfo(InvoicePayload.builder()
+                                .orderId(order.getOrderId())
+                                .discount(0.0)
+                                .paymentMethod("Cash On Delivery")
+                                .shippingCost(15)
+                                .taxes(15)
+                                .subtotal(order.getTotal())
+                                .total(order.getTotal()+15+15+0.0)
+                                .build(), order);
+                        order.setTotal(createdInvoice.getSummary().getTotal());
+                    } catch (TabaldiGenericException e) {
+                        throw new RuntimeException(e);
+                    }
                 });
                 return createdOrders;
             }
@@ -137,28 +175,30 @@ public class OrderServiceImpl implements OrderService {
         }
         return orderList.stream().sorted(Comparator.comparing(Order::getOrderDate).reversed()).collect(Collectors.toList());
     }
+    @Override
+    public void fillOrderDetails(Order order) {
+        order.getCartItems().forEach(cartItem -> {
+            try {
+                if(cartItem.getProduct().getImagesCollection()!=null)
+                    cartItem.getProduct()
+                            .setImages(GenericMapper
+                                    .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+                if(cartItem.getOptionsCollection()!=null)
+                    cartItem.setSelectedOptions(GenericMapper
+                            .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+                order.setTotal(invoiceService.getInvoiceByOrderId(order.getOrderId()).getSummary().getTotal());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (TabaldiGenericException e) {
+                throw new RuntimeException(e);
+            }
+        });
+    }
 
     @Override
     public void fillOrdersDetails(List<Order> orderList) {
         orderList.forEach(order -> {
-            order.getCartItems().forEach(cartItem -> {
-                try {
-                    if(cartItem.getProduct().getImagesCollection()!=null)
-                        cartItem.getProduct()
-                                .setImages(GenericMapper
-                                        .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
-                    if(cartItem.getOptionsCollection()!=null)
-                        cartItem.setSelectedOptions(GenericMapper
-                                .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-                order.setTotal(order.getTotal()+cartItem.getPrice()*cartItem.getQuantity());
-                cartItem.getSelectedOptions().forEach(option -> {
-                    if(option.getFee()!=null)
-                        order.setTotal(order.getTotal()+option.getFee());
-                });
-            });
+            this.fillOrderDetails(order);
         });
     }
     @Override
@@ -177,17 +217,20 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public double fetchVendorEarningsFromOrders(List<Order> orders) {
-        AtomicReference<Double> vendorEarnings= new AtomicReference<>((double) 0);
-        orders.forEach(order -> {
+        AtomicReference<Double> vendorEarnings = new AtomicReference<>((double) 0);
+        AtomicReference<Double> companyEarnings = new AtomicReference<>((double) 0);
+        orders
+                .stream().filter(order -> order.getOrderDate().getMonthValue()==5)//OffsetDateTime.now().getMonthValue())
+                .forEach(order -> {
             if(order.getStatus().equals(OrderStatus.DELIVERED)) {
                 order.getCartItems().forEach(cartItem -> {
-                    double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()) / 100 * cartItem.getProduct().getCompanyProfit();
-                    vendorEarnings.updateAndGet(v -> v + (order.getTotal()-companyEarningsPerItem));
+                    double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()+10) / 100 * cartItem.getProduct().getCompanyProfit();
+                    companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
                 });
+                vendorEarnings.updateAndGet(v -> order.getTotal() + v);
             }
         });
-
-        return vendorEarnings.get();
+        return vendorEarnings.get()-companyEarnings.get();
     }
 
     @Override
@@ -209,6 +252,8 @@ public class OrderServiceImpl implements OrderService {
                 }
                 order.setStatus(status);
                 orderRepository.save(order);
+                 if(status.equals(OrderStatus.DELIVERED) || status.equals(OrderStatus.CONFIRMED))
+                    invoiceService.changeOrderInvoiceToPaid(order.getOrderId());
                 return true;
             }
             return false;

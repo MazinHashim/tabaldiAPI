@@ -1,20 +1,20 @@
 package com.tabaldi.api;
 
-import com.tabaldi.api.service.ProductService;
 import com.tabaldi.api.service.SequencesService;
 import com.tabaldi.api.service.VendorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication
 @RequiredArgsConstructor
+@EnableConfigurationProperties(TabaldiConfiguration.class)
 public class TabaldiApiApplication implements CommandLineRunner {
 
 	private final VendorService vendorService;
 	private final SequencesService sequencesService;
-
 	public static void main(String[] args) {
 		SpringApplication.run(TabaldiApiApplication.class, args);
 	}

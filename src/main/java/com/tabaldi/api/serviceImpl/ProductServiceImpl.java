@@ -37,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     private final VendorService vendorService;
     private final MessageSource messageSource;
     private final FileStorageService fileStorageService;
+    private final TabaldiConfiguration configuration;
 
     @Override
     public Product saveProductInfo(ProductPayload payload, List<MultipartFile> productImages) throws TabaldiGenericException, IOException {
@@ -72,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
                     String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
                 }
-                String imagePath = TabaldiConfiguration.HOST_PRODUCT_IMAGE_FOLDER.getValue()
+                String imagePath = configuration.getHostProductImageFolder()
                         .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
                         .concat(image.getOriginalFilename()
                                 .substring(image.getOriginalFilename().indexOf(".")));
@@ -91,9 +92,10 @@ public class ProductServiceImpl implements ProductService {
 //        List<String> imagesPathStr = imagesPaths.stream().map(s -> "\"" + s + "\"")
 //                .collect(Collectors.toList());
 
+        // price = product price + company profit
         Product productParams = Product.builder()
                 .name(payload.getName())
-                .price(payload.getPrice())
+                .price(payload.getPrice() + (payload.getPrice()/100*payload.getCompanyProfit()))
                 .quantity(payload.getQuantity())
                 .companyProfit(payload.getCompanyProfit())
                 .imagesCollection(GenericMapper.objectToJSONMapper(imagesPaths))

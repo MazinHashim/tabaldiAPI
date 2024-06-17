@@ -6,6 +6,7 @@ import com.tabaldi.api.payload.UserPayload;
 import com.tabaldi.api.payload.VendorPayload;
 import com.tabaldi.api.payload.VerifyOtpPayload;
 import com.tabaldi.api.response.*;
+import com.tabaldi.api.service.InvoiceService;
 import com.tabaldi.api.service.ProductService;
 import com.tabaldi.api.service.UserService;
 import com.tabaldi.api.service.VendorService;
@@ -31,6 +32,7 @@ public class VendorController {
 
     private final VendorService vendorService;
     private final ProductService productService;
+    private final InvoiceService invoiceService;
     private final UserService userService;
     private final MessageSource messageSource;
 
@@ -123,6 +125,18 @@ public class VendorController {
         return ResponseEntity.ok(
                 ListResponse.<OrderMapper>genericBuilder()
                         .list(vendorOrders)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
+    @GetMapping("/{vendorId}/invoices")
+    public @ResponseBody ResponseEntity<ListResponse<Invoice>> getInvoicesList (
+            @PathVariable("vendorId") Long vendorId) throws TabaldiGenericException {
+        List<Invoice> invoicesList = invoiceService.getInvoicesList(vendorId); // may add filters
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Invoice", "الفواتير");
+        return ResponseEntity.ok(
+                ListResponse.<Invoice>genericBuilder()
+                        .list(invoicesList)
                         .message(fetchMessage)
                         .build()
         );

@@ -9,11 +9,9 @@ import com.tabaldi.api.payload.FileDataObject;
 import com.tabaldi.api.payload.GetManyFileDataPayload;
 import com.tabaldi.api.response.GetManyFileDataResponse;
 import com.tabaldi.api.service.FileStorageService;
-import com.tabaldi.api.utils.MessagesUtils;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -26,14 +24,15 @@ public class FileStorageServiceImpl implements FileStorageService {
     private Channel channel;
     private ChannelSftp sftp;
     private final MessageSource messageSource;
+    private final TabaldiConfiguration configuration;
 
     private ChannelSftp getSFTP() {
         try {
             Properties config = new Properties();
             config.put("StrictHostKeyChecking", "no");
             JSch jsch = new JSch();
-            this.session = jsch.getSession(TabaldiConfiguration.HOST_USERNAME.getValue(), TabaldiConfiguration.HOST_IP_ADDRESS.getValue(), 22);
-            this.session.setPassword(TabaldiConfiguration.HOST_PASSWORD.getValue());
+            this.session = jsch.getSession(configuration.getHostUsername(), configuration.getHostIpAddress(), 22);
+            this.session.setPassword(configuration.getHostPassword());
             this.session.setConfig(config);
             this.session.connect();
             System.out.println("SSh Connected");

@@ -28,5 +28,6 @@ public interface OrderService {
     List<CartItem> getOrderCartItemsList(Long orderId) throws TabaldiGenericException, IOException;
 
     void fillOrdersDetails(List<Order> orderList);
+    void fillOrderDetails(Order order);
 
 }
