@@ -54,7 +54,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/api/v1/categories/toggle/publish").hasAnyRole(Role.VENDOR.name())
                                 .requestMatchers("/api/v1/categories/**").hasAnyRole(Role.CUSTOMER.name(), Role.VENDOR.name())
                                 .requestMatchers("/api/v1/options/**").hasAnyRole(Role.VENDOR.name())
-                                .requestMatchers("/api/v1/products/*").hasAnyRole(Role.VENDOR.name())
+                                .requestMatchers("/api/v1/products/**").hasAnyRole(Role.VENDOR.name())
                                 .requestMatchers("/api/v1/products/*/cart-items").hasAnyRole(Role.VENDOR.name(), Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/vendors").hasAnyRole(Role.SUPERADMIN.name(), Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/vendors/*/products").hasAnyRole(Role.VENDOR.name(), Role.CUSTOMER.name())

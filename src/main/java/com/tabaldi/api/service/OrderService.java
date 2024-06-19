@@ -15,7 +15,7 @@ import java.util.Map;
 @Service
 public interface OrderService {
     List<Order> getAllOrders();
-    List<Order> getByVendor(Vendor vendor) throws TabaldiGenericException;
+    List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException;
     List<Order> createAndSaveOrderInfo(long customerId) throws TabaldiGenericException, IOException;
     Map<String, Long> countAllOrdersInSystem() throws TabaldiGenericException;
     PendingOrders fetchActiveOrdersByVendor(List<Order> orders);

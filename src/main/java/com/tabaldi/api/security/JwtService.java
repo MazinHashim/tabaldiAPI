@@ -22,7 +22,7 @@ public class JwtService {
 
     @Value("${tabaldi.token.expire.in}")
     private int tokenExpireIn;
-
+//TODO:: hide secret key
     private static final String SECRET_KEY = "3ab774f5aaca3e9fc7d843650319001dfbde392503bc91791633c2f7f9492b5101996f2a7e0051d9a9cd5ad034cc3e2e86691f7f83770510e0baabae1f59ef14";
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);

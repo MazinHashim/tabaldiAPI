@@ -12,6 +12,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -111,6 +112,14 @@ public class ExceptionHandlerAdvice {
                 + ": "+exception.getMessage());
         String message = messageSource.getMessage("error.some.data.lost", null, LocaleContextHolder.getLocale());
         return getCustomErrorResponse(response, message, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({HttpRequestMethodNotSupportedException.class})
+    public @ResponseBody CustomErrorResponse handleHttpRequestMethodNotSupportedExceptions(HttpServletResponse response,
+                                                              HttpRequestMethodNotSupportedException exception) {
+        System.out.println("Data Integrity Violation Exception "+(exception instanceof HttpRequestMethodNotSupportedException)
+                + ": "+exception.getMessage());
+        return getCustomErrorResponse(response, exception.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
     }
     @ExceptionHandler({TabaldiGenericException.class})
     public @ResponseBody CustomErrorResponse handleTabaldiExceptions(HttpServletResponse response, TabaldiGenericException exception) {

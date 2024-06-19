@@ -48,7 +48,7 @@ public class DetailsServiceImpl implements DetailsService {
     @Override
     public VendorHomeDetails getVendorHomeDetails(Long vendorId) throws TabaldiGenericException {
         Vendor vendor = vendorService.getVendorById(vendorId);
-        List<Order> orders = orderService.getByVendor(vendor);
+        List<Order> orders = orderService.getByVendor(vendor, false);
         orderService.fillOrdersDetails(orders);
 
         double vendorEarnings = orderService.fetchVendorEarningsFromOrders(orders);

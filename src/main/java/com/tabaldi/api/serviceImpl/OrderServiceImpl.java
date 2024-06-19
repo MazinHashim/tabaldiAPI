@@ -166,10 +166,11 @@ public class OrderServiceImpl implements OrderService {
                 .build();
     }
 
-    public List<Order> getByVendor(Vendor vendor) throws TabaldiGenericException{
+    @Override
+    public List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException{
         List<Order> orderList = orderRepository.findByVendor(vendor);
 
-        if(orderList.isEmpty()){
+        if(check && orderList.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Customers Orders", "طلبات الزبائن'");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }

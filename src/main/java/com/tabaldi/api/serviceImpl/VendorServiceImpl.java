@@ -239,7 +239,7 @@ public class VendorServiceImpl implements VendorService {
     @Override
     public List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException {
         Vendor vendor = this.getVendorById(vendorId);
-        List<Order> orderList = orderService.getByVendor(vendor);
+        List<Order> orderList = orderService.getByVendor(vendor, true);
 
          orderService.fillOrdersDetails(orderList);
         return orderList;

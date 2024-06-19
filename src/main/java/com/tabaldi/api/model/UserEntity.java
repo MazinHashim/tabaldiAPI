@@ -29,13 +29,6 @@ public class UserEntity implements UserDetails {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
-
-//    @OneToOne(mappedBy = "user")
-//    private Customer customer;
-//    @OneToOne(mappedBy = "user")
-//    private Vendor vendor;
-//    @OneToMany(mappedBy = "user")
-//    private List<UserVerification> userVerification;
     @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
