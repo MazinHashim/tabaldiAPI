@@ -62,6 +62,7 @@ public class UserController {
         return ResponseEntity.ok(AuthenticationResponse.builder()
                 .token(loginSession.getSessionToken())
                 .refreshToken(loginSession.getRefreshToken())
+                .userId(loginSession.getUser().getUserId())
                 .newUser(userVerificationResponse.isNewUser()) // this for customer to add additional info
                 .role( userVerification.getUser()!=null
                         ? userVerification.getUser().getRole().name()
