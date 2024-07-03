@@ -8,8 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +19,9 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("select o from Order o where o.customer.customerId = ?1 and o.vendor.vendorId = ?2 and " +
             "o.status not in ('DELIVERED', 'CANCELED') ORDER BY o.orderDate DESC LIMIT 1")
     Optional<Order> getLastActiveOrderPerVendor(long customerId, long vendorId);
+
+    @Query("select o from Order o where o.status not in ?1")
+    List<Order> findByPendingOrders(Collection<OrderStatus> statuses);
 
     List<Order> findByVendor(Vendor vendor);
 

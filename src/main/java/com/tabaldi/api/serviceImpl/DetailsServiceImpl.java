@@ -54,7 +54,7 @@ public class DetailsServiceImpl implements DetailsService {
         double vendorEarnings = orderService.fetchVendorEarningsFromOrders(orders);
         Long numberOfProducts = vendorService.countAllProductsPerVendor(vendorId);
         List<ProductFrequency> frequentProducts = this.fetchFrequentProductsByOrders(orders, 5);
-        PendingOrders pendingOrders = orderService.fetchActiveOrdersByVendor(orders);
+        PendingOrders pendingOrders = orderService.fetchPendingOrdersByVendor(orders);
         return VendorHomeDetails.builder()
                 .earnings(vendorEarnings)
                 .numberOfProducts(numberOfProducts)

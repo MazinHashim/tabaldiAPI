@@ -4,6 +4,7 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Order;
 import com.tabaldi.api.model.OrderStatus;
+import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.response.*;
 import com.tabaldi.api.service.OrderService;
 import com.tabaldi.api.utils.MessagesUtils;
@@ -36,6 +37,18 @@ public class OrderController {
                 .event("fetched")
                 .order(OrderMapper.mappedBuilder().order(order).build()).build());
 
+    }
+    @GetMapping("/pending")
+    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getPendingOrdersList () throws TabaldiGenericException {
+        PendingOrders ordersList = orderService.getPendingOrdersList(); // may add filters
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
+
+        return ResponseEntity.ok(
+                ListResponse.<OrderMapper>genericBuilder()
+                    .list(ordersList.getOrders())
+                    .message(fetchMessage)
+                    .build()
+        );
     }
 
     @PostMapping("/create/{customerId}")

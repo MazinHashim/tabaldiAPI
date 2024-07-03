@@ -145,9 +145,32 @@ public class OrderServiceImpl implements OrderService {
     public Map<String, Long> countAllOrdersInSystem() {
         return Map.of("all", orderRepository.count(), "oneDay", orderRepository.countByOrderDate());
     }
-
     @Override
-    public PendingOrders fetchActiveOrdersByVendor(List<Order> orders) {
+    public PendingOrders getPendingOrdersList() throws TabaldiGenericException{
+        // fetch not delivered or canceled orders
+        List<Order> ordersList = orderRepository.findByPendingOrders(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED));
+        if(ordersList.isEmpty()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Customer Orders", "طلبات الزبائن");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        this.fillOrdersDetails(ordersList);
+        List<OrderMapper> pendingOrders = ordersList.stream()
+                .map(order-> {
+                    order.getCartItems().forEach(cartItem -> {
+                        cartItem.getProduct().setOptions(null);
+                        cartItem.setCustomer(null);
+                    });
+                    return OrderMapper.mappedBuilder().order(order).build();
+                })
+                .sorted(Comparator.comparing(OrderMapper::getOrderDate).reversed())
+                .collect(Collectors.toList());
+        return PendingOrders.builder()
+                .orders(pendingOrders)
+                .count(pendingOrders.size())
+                .build();
+    }
+    @Override
+    public PendingOrders fetchPendingOrdersByVendor(List<Order> orders) {
         List<OrderMapper> activeOrders = orders.stream()
                 .filter(order -> !order.getStatus().equals(OrderStatus.DELIVERED)
                         && !order.getStatus().equals(OrderStatus.CANCELED))
@@ -249,6 +272,13 @@ public class OrderServiceImpl implements OrderService {
                 }
                 if(status.equals(OrderStatus.CANCELED) && OffsetDateTime.now().minusMinutes(10).isAfter(order.getOrderDate())) {
                     String finalizedOrderMessage = messageSource.getMessage("error.finalized.order", null, LocaleContextHolder.getLocale());
+                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, finalizedOrderMessage);
+                }
+                Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
+                if( !status.equals(OrderStatus.WAITING) &&
+                    !status.equals(OrderStatus.CONFIRMED) &&
+                    invoice.getStatus().equals(InvoiceStatus.UNPAID)){
+                    String finalizedOrderMessage = messageSource.getMessage("error.invoice.not.paid", null, LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, finalizedOrderMessage);
                 }
                 order.setStatus(status);

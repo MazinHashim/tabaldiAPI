@@ -18,7 +18,8 @@ public interface OrderService {
     List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException;
     List<Order> createAndSaveOrderInfo(long customerId) throws TabaldiGenericException, IOException;
     Map<String, Long> countAllOrdersInSystem() throws TabaldiGenericException;
-    PendingOrders fetchActiveOrdersByVendor(List<Order> orders);
+    PendingOrders fetchPendingOrdersByVendor(List<Order> orders);
+    PendingOrders getPendingOrdersList() throws TabaldiGenericException;
     double fetchCompanyEarningsFromOrders(List<Order> orders);
     double fetchVendorEarningsFromOrders(List<Order> orders);
     Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException;

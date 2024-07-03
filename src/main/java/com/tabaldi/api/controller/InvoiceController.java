@@ -27,11 +27,11 @@ public class InvoiceController {
     private final InvoiceService invoiceService;
     private final MessageSource messageSource;
 
-    @GetMapping("/{invoiceId}")
-    public @ResponseBody ResponseEntity<InvoiceResponse> getById (@PathVariable("invoiceId") Long invoiceId)
+    @GetMapping("/order/{orderId}")
+    public @ResponseBody ResponseEntity<InvoiceResponse> getByOrderId (@PathVariable("orderId") Long orderId)
             throws TabaldiGenericException {
-        Invoice invoice = invoiceService.getInvoiceById(invoiceId);
-        String successFetchMessage = MessagesUtils.getFetchMessage(messageSource, "Invoice", "العنوان");
+        Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
+        String successFetchMessage = MessagesUtils.getFetchMessage(messageSource, "Invoice", "الفاتورة");
 
         return ResponseEntity.ok(InvoiceResponse.builder()
                 .message(successFetchMessage)
@@ -44,7 +44,7 @@ public class InvoiceController {
     public @ResponseBody ResponseEntity<DeleteResponse> deleteInvoice (@PathVariable("invoiceId") Long invoiceId)
             throws TabaldiGenericException {
         Boolean isDeleted = invoiceService.deleteInvoiceById(invoiceId);
-        String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Invoice", "العنوان");
+        String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Invoice", "الفاتورة");
 
         return ResponseEntity.ok(DeleteResponse.builder()
                 .message(successDeleteMessage)

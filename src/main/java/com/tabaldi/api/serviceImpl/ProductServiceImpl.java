@@ -95,7 +95,8 @@ public class ProductServiceImpl implements ProductService {
         // price = product price + company profit
         Product productParams = Product.builder()
                 .name(payload.getName())
-                .price(payload.getPrice() + (payload.getPrice()/100*payload.getCompanyProfit()))
+//        (payload.getPrice()/100*payload.getCompanyProfit())
+                .price(payload.getPrice())
                 .quantity(payload.getQuantity())
                 .companyProfit(payload.getCompanyProfit())
                 .imagesCollection(GenericMapper.objectToJSONMapper(imagesPaths))
