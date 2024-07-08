@@ -67,6 +67,7 @@ public class CustomerServiceImpl implements CustomerService {
         Customer customerParams = Customer.builder()
                 .firstName(payload.getFirstName())
                 .lastName(payload.getLastName())
+                .email(payload.getEmail())
                 .gender(payload.getGender())
                 .dateOfBirth(payload.getDateOfBirth())
                 .user(user)

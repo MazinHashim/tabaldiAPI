@@ -10,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,8 +33,10 @@ public class FilesController {
     public @ResponseBody
     FileDataResponse getFileData(@PathVariable("filePath") final String filePath) throws Exception, Throwable {
         if (StringUtils.hasText(filePath)) {
-            String data = Base64.getEncoder().encodeToString(
-                    fileStorageService.fetch(new String(Base64.getDecoder().decode(filePath.getBytes()))));
+
+            String decodedPath = new String(Base64.getDecoder().decode(filePath.getBytes()));
+
+            String data = Base64.getEncoder().encodeToString(fileStorageService.fetch(decodedPath));
             if(data.isEmpty()) {
                 String noFileMessage = messageSource.getMessage("error.no.file", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, noFileMessage);
@@ -49,6 +53,29 @@ public class FilesController {
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredImageUploadMessage);
         }
     }
+    @GetMapping(value = "/get/file/{filePath}")
+    public @ResponseBody
+    ResponseEntity<?> getFile(@PathVariable("filePath") final String filePath) throws Exception, Throwable {
+        if (StringUtils.hasText(filePath)) {
+
+            String decodedPath = new String(Base64.getDecoder().decode(filePath.getBytes()));
+            byte[] data = fileStorageService.fetch(decodedPath);
+            if(data.length==0) {
+                String noFileMessage = messageSource.getMessage("error.no.file", null, LocaleContextHolder.getLocale());
+                throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, noFileMessage);
+            }
+            else {
+                String fileExtension = decodedPath.split("\\.")[1];
+                return ResponseEntity.ok()
+                        .contentType(MediaType.valueOf("image/"+(fileExtension.equals("jpg")?"jpeg":fileExtension)))
+                        .body(data);
+            }
+        } else {
+            String requiredImageUploadMessage = messageSource.getMessage("error.required.upload.file", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredImageUploadMessage);
+        }
+    }
+
     @PostMapping(value = "/get/all/data")
     public @ResponseBody
     GetManyFileDataResponse getManyFileData(@RequestBody final GetManyFileDataPayload payload) throws Exception, Throwable {

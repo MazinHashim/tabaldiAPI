@@ -23,6 +23,9 @@ public class CustomerPayload {
     @NotEmpty
     private String lastName;
     @NotNull
+    @NotEmpty
+    private String email;
+    @NotNull
     private Gender gender;
     @NotNull
     private LocalDate dateOfBirth;

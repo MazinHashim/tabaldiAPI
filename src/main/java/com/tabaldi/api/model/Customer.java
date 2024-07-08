@@ -25,6 +25,8 @@ public class Customer {
     private String firstName;
     @Column(nullable = false)
     private String lastName;
+    @Column(nullable = false)
+    private String email;
     @Column(nullable = true)
     private OffsetDateTime createdAt;
     @Column(nullable = false)
