@@ -4,8 +4,10 @@ import com.tabaldi.api.model.Category;
 import com.tabaldi.api.model.Product;
 import com.tabaldi.api.model.Vendor;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -14,7 +16,10 @@ import java.util.Optional;
 public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("select p from Product p where p.vendor.vendorId = ?1 and upper(p.name) = upper(?2)")
     Optional<Product> findByVendorAndName(long vendorId, String name);
-
+    @Transactional
+    @Modifying
+    @Query("update Product p set p.isPublished = ?1 where p.productId = ?2")
+    int togglePublishedById(boolean isPublished, long productId);
     List<Product> findByVendor(Vendor vendor);
 
     List<Product> findByCategory(Category category);

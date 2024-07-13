@@ -33,6 +33,9 @@ public class Product {
     private double price;
     @Column(nullable = false)
     private double companyProfit;
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean isPublished;
+
     private String description;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)

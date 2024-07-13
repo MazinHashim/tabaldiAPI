@@ -1,5 +1,6 @@
 package com.tabaldi.api.serviceImpl;
 
+import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.SendOtpPayload;
@@ -11,6 +12,7 @@ import com.tabaldi.api.security.JwtService;
 import com.tabaldi.api.service.SessionService;
 import com.tabaldi.api.service.UserService;
 import com.tabaldi.api.utils.MessagesUtils;
+import com.twilio.rest.api.v2010.account.Message;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
@@ -30,11 +32,6 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-    @Value("${tabaldi.resend.times.limit}")
-    private int resendTimesLimit;
-    @Value("${tabaldi.code.expire.in.minutes}")
-    private int expireDuration;
-
     private final UserVerificationRepository userVerificationRepository;
     private final UserRepository userRepository;
     private final CustomerRepository customerRepository;
@@ -43,6 +40,7 @@ public class UserServiceImpl implements UserService {
     private final MessageSource messageSource;
     private final JwtService jwtService;
     private final SessionService sessionService;
+    private final TabaldiConfiguration configuration;
     @Override
     public UserVerification sendOtp(SendOtpPayload payload) throws TabaldiGenericException {
         Pattern pattern = Pattern.compile("05+\\d{8}");
@@ -72,7 +70,7 @@ public class UserServiceImpl implements UserService {
                 if (userVerification.get().getCreatedTime().isBefore(OffsetDateTime.now().minusHours(24))) {
                     resendTimes = 0;
                 }
-                if (resendTimes >= resendTimesLimit) {
+                if (resendTimes >= Integer.parseInt(configuration.getOtpResendTimesLimit())) {
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
                             messageSource.getMessage("error.exceed.resend.limit",null,
                                     LocaleContextHolder.getLocale()));
@@ -90,12 +88,25 @@ public class UserServiceImpl implements UserService {
                     .phone(payload.getPhone())
                     .resendCounter(resendTimes + 1)
                     .createdTime(OffsetDateTime.now())
-                    .expiryTime(OffsetDateTime.now().plusMinutes(expireDuration))
+                    .expiryTime(OffsetDateTime.now().plusMinutes(Integer.parseInt(configuration.getOtpExpirationMin())))
                     .status(VerificationStatus.SENT)
                     .user(userOptional.isPresent() ? userOptional.get() : null)
                     .verifiedTime(null)
                     .keyRef(uuid)
                     .build();
+
+            // send otp sms using twilio gateway
+//            Message message = Message.creator(
+//                            new com.twilio.type.PhoneNumber("whatsapp:+971553733809"),
+//                            new com.twilio.type.PhoneNumber("MG15191d6b71b61e72c1e3445f65be8b01"),
+//                            "HXfef4b2bd8f748aa05877d5a7adef65ff")
+//                    .setContentVariables("{\"1\": \""+otpCode+"\"}")
+//                    .create();
+//            Message message = Message.creator(
+//                    new com.twilio.type.PhoneNumber("+971553733809"),
+//                    new com.twilio.type.PhoneNumber("+14127901077"),
+//                    "Rateena welcome you, the otp for signin is: "+otpCode)
+//            .create();
 
             return userVerificationRepository.saveAndFlush(verification);
         }

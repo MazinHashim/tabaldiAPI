@@ -4,6 +4,7 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Product;
 import com.tabaldi.api.payload.ProductPayload;
+import com.tabaldi.api.response.PublishResponse;
 import com.tabaldi.api.response.ListResponse;
 import com.tabaldi.api.response.ProductResponse;
 import com.tabaldi.api.response.DeleteResponse;
@@ -70,6 +71,17 @@ public class ProductController {
         return ResponseEntity.ok(DeleteResponse.builder()
                 .message(successDeleteMessage)
                 .isDeleted(isDeleted).build());
+
+    }
+    @GetMapping("/toggle/publish/{productId}")
+    public @ResponseBody ResponseEntity<PublishResponse> togglePublishedProduct (@PathVariable("productId") Long productId)
+            throws TabaldiGenericException, IOException {
+        Boolean isPublished = productService.togglePublishedById(productId);
+        String successPublishedMessage = MessagesUtils.getPublishMessage(messageSource, isPublished?"published":"unpublished", isPublished?"نشر":"إيقاف", "Product", "المنتج");
+
+        return ResponseEntity.ok(PublishResponse.builder()
+                .message(successPublishedMessage)
+                .isPublished(isPublished).build());
 
     }
 

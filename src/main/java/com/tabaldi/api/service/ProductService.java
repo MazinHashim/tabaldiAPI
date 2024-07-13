@@ -19,6 +19,7 @@ public interface ProductService {
 
     Boolean deleteProductById(Long productId) throws TabaldiGenericException;
     Long countByCategory(Long categoryId);
+    Boolean togglePublishedById(Long productId) throws TabaldiGenericException, IOException;
     Product getProductById(Long productId) throws TabaldiGenericException, IOException;
     List<CartItem> getProductCartItemsList(Long productId) throws TabaldiGenericException, IOException;
 }

@@ -7,6 +7,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @Builder
@@ -38,4 +39,8 @@ public class Invoice {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToOne
     private Order order;
+
+    public String getFIssueDate(){
+        return issueDate.format(DateTimeFormatter.ofPattern("dd/mm/YYYY HH:mm a"));
+    }
 }

@@ -1,5 +1,6 @@
 package com.tabaldi.api.security;
 
+import com.tabaldi.api.TabaldiConfiguration;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -19,11 +20,7 @@ import java.util.function.Function;
 @Service
 @RequiredArgsConstructor
 public class JwtService {
-
-    @Value("${tabaldi.token.expire.in}")
-    private int tokenExpireIn;
-//TODO:: hide secret key
-    private static final String SECRET_KEY = "3ab774f5aaca3e9fc7d843650319001dfbde392503bc91791633c2f7f9492b5101996f2a7e0051d9a9cd5ad034cc3e2e86691f7f83770510e0baabae1f59ef14";
+    private final TabaldiConfiguration configuration;
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
@@ -44,7 +41,7 @@ public class JwtService {
                 .setClaims(extraClaims)
                 .setSubject(userDetails.getUsername())
                 .setIssuedAt(new Date(System.currentTimeMillis()))
-                .setExpiration(new Date(System.currentTimeMillis() + 1000 * tokenExpireIn))
+                .setExpiration(new Date(System.currentTimeMillis() + 1000 * Integer.parseInt(configuration.getSessionTokenExpiration())))
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
 
@@ -74,7 +71,7 @@ public class JwtService {
     }
 
     private Key getSigningKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET_KEY);
+        byte[] keyBytes = Decoders.BASE64.decode(configuration.getJwtSecretKey());
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

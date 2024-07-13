@@ -50,7 +50,13 @@ public class CartItemServiceImpl implements CartItemService {
     public CartItem saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException {
 
         Product selectedProduct = productService.getProductById(payload.getProductId());
+        if(!selectedProduct.isPublished() || !selectedProduct.getCategory().isPublished()) {
+            String notUnavailableMessage = messageSource.getMessage("error.item.unavailable", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notUnavailableMessage);
+        }
+
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
+
         if(payload.getQuantity()>selectedProduct.getQuantity()) {
             String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notAvailableMessage);
@@ -66,8 +72,11 @@ public class CartItemServiceImpl implements CartItemService {
                 Stream<String> selectedOptionsGroups = selectedOptions.stream()
                         .filter(option -> option.getGroupFlag()!=null)
                         .map((option -> option.getGroupFlag()));
-                if (selectedOptionsGroups.count() != selectedOptionsGroups.distinct().count() ||
-                        requiredOptions.size() != selectedOptionsGroups.distinct().count()) {
+                Stream<String> selectedOptionsGroupsStream = selectedOptionsGroups;
+                long count = selectedOptionsGroupsStream.count();
+                selectedOptionsGroupsStream = selectedOptionsGroups;
+                long distinctCount = selectedOptionsGroupsStream.distinct().count();
+                if (count != distinctCount || requiredOptions.size() != distinctCount) {
                     String requiredOptionsMessage = messageSource.getMessage("error.one.option.required", null, LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOptionsMessage);
                 }

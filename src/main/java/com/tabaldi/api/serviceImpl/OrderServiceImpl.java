@@ -21,7 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -43,11 +43,23 @@ public class OrderServiceImpl implements OrderService {
 
         Customer customer = customerService.getCustomerById(customerId);
         List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId);
+        if(cartItems.stream().anyMatch(cartItem ->
+                !cartItem.getProduct().isPublished() || !cartItem.getProduct().getCategory().isPublished())) {
+            String itemsInOrderNotAvailableMessage = messageSource.getMessage("error.items.in.order.not.available", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsInOrderNotAvailableMessage);
+        }
 //        if user has only one active order, but for many orders should return list
         List<Vendor> vendors = cartItems.stream()
                 .map(cartItem -> cartItem.getProduct().getVendor())
                 .distinct().collect(Collectors.toList());
-        vendors.forEach((vendor -> System.out.println(vendor.getFullName())));
+        LocalTime timeInUAE = LocalTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
+        if(vendors.stream().anyMatch(vendor -> !vendor.isWorking() ||
+                !(timeInUAE.isBefore(vendor.getClosingTime())&&
+                        timeInUAE.isAfter(vendor.getOpeningTime())))) {
+            String itemsFromClosedVendorMessage = messageSource.getMessage("error.items.from.closed.vendor", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsFromClosedVendorMessage);
+        }
+//        vendors.forEach((vendor -> System.out.println(vendor.getFullName())));
         boolean isAllNotRestaurant = vendors.stream()
                 .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
         boolean isAllRestaurant = vendors.stream()

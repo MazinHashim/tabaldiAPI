@@ -47,6 +47,10 @@ tabaldi.configuration.host_username={{IMAGES_HOST_USERNAME}}
 tabaldi.configuration.host_password={{IMAGES_HOST_PASSWORD}}
 tabaldi.configuration.host_vendor_image_folder={{VENDOR_IMAGES_FOLDER_PATH}}
 tabaldi.configuration.host_product_image_folder={{PRODUCT_IMAGES_FOLDER_PATH}}
+tabaldi.configuration.session_token_expiration={{MILLSECONDS}} # for example 86400
+tabaldi.configuration.otp_expiration_min={{NUMBER_IN_MIN}}
+tabaldi.configuration.otp_resend_times_limit={{TIMES_NUMBER}}
+tabaldi.configuration.jwt_secret_key={{JWT_SECRET_KEY}}
 ```
 notes: 
 if you will store images and file in the same server then `host_ip_address`,`host_username` and `host_password` will not affect. e.g: `local` environment.

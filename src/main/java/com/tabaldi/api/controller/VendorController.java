@@ -192,4 +192,16 @@ public class VendorController {
                 .isDeleted(isDeleted).build());
 
     }
+
+    @GetMapping("/toggle/working/{vendorId}")
+    public @ResponseBody ResponseEntity<PublishResponse> toggleWorkingVendor (@PathVariable("vendorId") Long vendorId)
+            throws TabaldiGenericException, IOException {
+        Boolean isWorking = vendorService.toggleWorkingById(vendorId);
+        String successWorkingMessage = MessagesUtils.getPublishMessage(messageSource, isWorking?"opened":"closed", isWorking?"فتح":"إغلاق", "Vendor", "المتجر");
+
+        return ResponseEntity.ok(PublishResponse.builder()
+                .message(successWorkingMessage)
+                .isPublished(isWorking).build());
+
+    }
 }

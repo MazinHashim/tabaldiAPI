@@ -2,6 +2,7 @@ package com.tabaldi.api;
 
 import com.tabaldi.api.service.SequencesService;
 import com.tabaldi.api.service.VendorService;
+import com.twilio.Twilio;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -15,12 +16,16 @@ public class TabaldiApiApplication implements CommandLineRunner {
 
 	private final VendorService vendorService;
 	private final SequencesService sequencesService;
+	private final TabaldiConfiguration configuration;
 	public static void main(String[] args) {
 		SpringApplication.run(TabaldiApiApplication.class, args);
 	}
 
 	@Override
 	public void run(String... args) throws Exception {
+
+		Twilio.init(configuration.getTwilioAccountSid(), configuration.getTwilioAuthToken());
+
 //	vendorService.getVendorProductsList(15L).forEach(product -> {
 //		System.out.println(product.getCategory().getVendor().getFullName());
 //	});

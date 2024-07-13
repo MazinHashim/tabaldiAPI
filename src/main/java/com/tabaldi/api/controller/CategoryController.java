@@ -4,7 +4,7 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.Category;
 import com.tabaldi.api.model.Product;
 import com.tabaldi.api.payload.CategoryPayload;
-import com.tabaldi.api.response.CategoryPublishResponse;
+import com.tabaldi.api.response.PublishResponse;
 import com.tabaldi.api.response.CategoryResponse;
 import com.tabaldi.api.response.DeleteResponse;
 import com.tabaldi.api.response.ListResponse;
@@ -69,12 +69,12 @@ public class CategoryController {
 
     }
     @GetMapping("/toggle/publish/{categoryId}")
-    public @ResponseBody ResponseEntity<CategoryPublishResponse> togglePublishedCategory (@PathVariable("categoryId") Long categoryId)
+    public @ResponseBody ResponseEntity<PublishResponse> togglePublishedCategory (@PathVariable("categoryId") Long categoryId)
             throws TabaldiGenericException {
         Boolean isPublished = categoryService.togglePublishedById(categoryId);
-        String successPublishedMessage = MessagesUtils.getCategoryPublishMessage(messageSource, "published", "تفعيل");
+        String successPublishedMessage = MessagesUtils.getPublishMessage(messageSource, isPublished?"published":"unpublished", isPublished?"نشر":"إيقاف", "Category", "الصنف");
 
-        return ResponseEntity.ok(CategoryPublishResponse.builder()
+        return ResponseEntity.ok(PublishResponse.builder()
                 .message(successPublishedMessage)
                 .isPublished(isPublished).build());
 

@@ -158,6 +158,8 @@ public class VendorServiceImpl implements VendorService {
                 .fullName(payload.getFullName())
                 .vendorType(payload.getVendorType())
                 .maxKilometerDelivery(payload.getMaxKilometerDelivery())
+                .openingTime(payload.getOpeningTime())
+                .closingTime(payload.getClosingTime())
                 .minChargeLongDistance(payload.getMinChargeLongDistance())
                 .user(user)
                 .build();
@@ -179,7 +181,14 @@ public class VendorServiceImpl implements VendorService {
             sequencesService.createSequenceFor("vendors", 1000, createdVendor.getVendorId());
         return createdVendor;
     }
-
+    @Override
+    public Boolean toggleWorkingById(Long vendorId) throws TabaldiGenericException, IOException {
+        Vendor vendor = this.getVendorById(vendorId);
+        int updated = vendorRepository.toggleWorkingById(!vendor.isWorking(), vendor.getVendorId());
+        if(updated>0)
+            return !vendor.isWorking();
+        return vendor.isWorking();
+    }
     @Override
     public Boolean deleteVendorById(Long vendorId) throws TabaldiGenericException {
         Optional<Vendor> vendorOptional = vendorRepository.findById(vendorId);

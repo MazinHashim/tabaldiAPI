@@ -89,13 +89,8 @@ public class ProductServiceImpl implements ProductService {
                     .map(s -> Base64.getEncoder().encodeToString(s.getBytes()))
                     .collect(Collectors.toList());
         }
-//        List<String> imagesPathStr = imagesPaths.stream().map(s -> "\"" + s + "\"")
-//                .collect(Collectors.toList());
-
-        // price = product price + company profit
         Product productParams = Product.builder()
                 .name(payload.getName())
-//        (payload.getPrice()/100*payload.getCompanyProfit())
                 .price(payload.getPrice())
                 .quantity(payload.getQuantity())
                 .companyProfit(payload.getCompanyProfit())
@@ -118,6 +113,14 @@ public class ProductServiceImpl implements ProductService {
             createdProduct.setOptions(optionRepository.saveAll(payload.getOptions()));
         }
         return createdProduct;
+    }
+    @Override
+    public Boolean togglePublishedById(Long productId) throws TabaldiGenericException, IOException {
+        Product product = this.getProductById(productId);
+        int updated = productRepository.togglePublishedById(!product.isPublished(), product.getProductId());
+        if(updated>0)
+            return !product.isPublished();
+        return product.isPublished();
     }
 
     @Override

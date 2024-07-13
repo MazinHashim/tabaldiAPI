@@ -27,11 +27,11 @@ public class MessagesUtils {
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("success.data.deleting", args, locale);
     }
-    public static String getCategoryPublishMessage(MessageSource messageSource, String en, String ar) {
+    public static String getPublishMessage(MessageSource messageSource, String en, String ar, String tyEn, String tyAr) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
-        String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
-        return messageSource.getMessage("success.category.publish", args, locale);
+        String[] args = List.of(langCheck ? ar : en, langCheck ? tyAr : tyEn).toArray(new String[0]);
+        return messageSource.getMessage("success.published", args, locale);
     }
     public static String getStatusChangedMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();

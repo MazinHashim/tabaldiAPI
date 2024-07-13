@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -21,6 +23,10 @@ public class VendorPayload {
     @NotNull
     private VendorType vendorType;
     private Integer maxKilometerDelivery;
+    @NotNull
+    private LocalTime openingTime;
+    @NotNull
+    private LocalTime closingTime;
     private Integer minChargeLongDistance;
     @NotNull
     private Long userId;

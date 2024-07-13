@@ -9,6 +9,6 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class CategoryPublishResponse extends GenericResponse {
+public class PublishResponse extends GenericResponse {
     private boolean isPublished;
 }

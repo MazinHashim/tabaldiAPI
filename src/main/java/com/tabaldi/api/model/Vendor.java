@@ -1,10 +1,13 @@
 package com.tabaldi.api.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Entity
@@ -31,6 +34,12 @@ public class Vendor {
     private VendorType vendorType;
     private Integer maxKilometerDelivery;
     private Integer minChargeLongDistance;
+    @Column(nullable = false)
+    private LocalTime openingTime;
+    @Column(nullable = false)
+    private LocalTime closingTime;
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private boolean isWorking;
 //    @OneToMany(mappedBy = "vendor")
 //    private List<Category> categories;
 //    @OneToMany(mappedBy = "vendor")
@@ -41,4 +50,11 @@ public class Vendor {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToOne
     private UserEntity user;
+
+    public String getFOpeningTime(){
+        return openingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
+    }
+    public String getFClosingTime(){
+        return closingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
+    }
 }
