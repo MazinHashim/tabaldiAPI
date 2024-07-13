@@ -73,9 +73,10 @@ public class CartItemServiceImpl implements CartItemService {
                         .filter(option -> option.getGroupFlag()!=null)
                         .map((option -> option.getGroupFlag()))
                         .collect(Collectors.toList());
-                long count = selectedOptionsGroups.size();
-                long distinctCount = selectedOptionsGroups.stream().distinct().count();
-                if (count != distinctCount || requiredOptions.size() != distinctCount) {
+                long selectedCount = selectedOptionsGroups.size();
+                long requiredCount = requiredOptions.stream()
+                        .map((option -> option.getGroupFlag())).distinct().count();
+                if (selectedCount != requiredCount) {
                     String requiredOptionsMessage = messageSource.getMessage("error.one.option.required", null, LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOptionsMessage);
                 }
