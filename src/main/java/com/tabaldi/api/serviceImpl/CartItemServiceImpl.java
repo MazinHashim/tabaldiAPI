@@ -69,13 +69,12 @@ public class CartItemServiceImpl implements CartItemService {
             selectedOptions = GenericMapper.jsonToListObjectMapper(
                     payload.getOptions()!=null?payload.getOptions():"[]", Option.class);
             if (!requiredOptions.isEmpty()) {
-                Stream<String> selectedOptionsGroups = selectedOptions.stream()
+                List<String> selectedOptionsGroups = selectedOptions.stream()
                         .filter(option -> option.getGroupFlag()!=null)
-                        .map((option -> option.getGroupFlag()));
-                Stream<String> selectedOptionsGroupsStream = selectedOptionsGroups;
-                long count = selectedOptionsGroupsStream.count();
-                selectedOptionsGroupsStream = selectedOptionsGroups;
-                long distinctCount = selectedOptionsGroupsStream.distinct().count();
+                        .map((option -> option.getGroupFlag()))
+                        .collect(Collectors.toList());
+                long count = selectedOptionsGroups.size();
+                long distinctCount = selectedOptionsGroups.stream().distinct().count();
                 if (count != distinctCount || requiredOptions.size() != distinctCount) {
                     String requiredOptionsMessage = messageSource.getMessage("error.one.option.required", null, LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOptionsMessage);
