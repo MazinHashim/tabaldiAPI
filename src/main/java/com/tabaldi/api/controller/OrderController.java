@@ -4,6 +4,7 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Order;
 import com.tabaldi.api.model.OrderStatus;
+import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.response.*;
 import com.tabaldi.api.service.OrderService;
@@ -39,8 +40,8 @@ public class OrderController {
 
     }
     @GetMapping("/pending")
-    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getPendingOrdersList () throws TabaldiGenericException {
-        PendingOrders ordersList = orderService.getPendingOrdersList(); // may add filters
+    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getPendingOrdersList() throws TabaldiGenericException {
+        PendingOrders ordersList = orderService.getPendingOrdersList(null);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
 
         return ResponseEntity.ok(
@@ -50,12 +51,26 @@ public class OrderController {
                     .build()
         );
     }
+    @GetMapping("/pending/{customerId}")
+    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getCustomerPendingOrdersList
+            (@PathVariable("customerId") Long customerId) throws TabaldiGenericException {
+        PendingOrders ordersList = orderService.getPendingOrdersList(customerId);
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
+
+        return ResponseEntity.ok(
+                ListResponse.<OrderMapper>genericBuilder()
+                        .list(ordersList.getOrders())
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
 
     @PostMapping("/create/{customerId}")
     public @ResponseBody ResponseEntity<ListResponse<Order>> createOrder (
-            @PathVariable("customerId") @Valid long customerId) throws TabaldiGenericException, IOException {
+            @PathVariable("customerId") @Valid long customerId,
+            @RequestBody @Valid OrderPayload payload) throws TabaldiGenericException, IOException {
 
-        List<Order> orders = orderService.createAndSaveOrderInfo(customerId);
+        List<Order> orders = orderService.createAndSaveOrderInfo(customerId, payload);
         String event = "created";
         String successSaveMessage = MessagesUtils.getSavedDataMessage(messageSource,
                 "Order", "طلباتك", event, "إنشاء");

@@ -3,6 +3,7 @@ package com.tabaldi.api.serviceImpl;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.InvoicePayload;
+import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.OrderRepository;
@@ -39,7 +40,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public List<Order> createAndSaveOrderInfo(long customerId) throws TabaldiGenericException, IOException {
+    public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException {
 
         Customer customer = customerService.getCustomerById(customerId);
         List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId);
@@ -127,14 +128,16 @@ public class OrderServiceImpl implements OrderService {
                     });
 
                     try {
+                        double discount = payload.getDiscount()==null?0.0:payload.getDiscount();
+                        double taxPercentage = order.getTotal() * payload.getTaxPercentage()/100;
                         Invoice createdInvoice = invoiceService.saveInvoiceInfo(InvoicePayload.builder()
                                 .orderId(order.getOrderId())
-                                .discount(0.0)
-                                .paymentMethod("Cash On Delivery")
-                                .shippingCost(15)
-                                .taxes(15)
+                                .discount(discount)
+                                .paymentMethod(payload.getPaymentMethod())
+                                .shippingCost(payload.getShippingCost())
+                                .taxes(taxPercentage)
                                 .subtotal(order.getTotal())
-                                .total(order.getTotal()+15+15+0.0)
+                                .total(order.getTotal()+taxPercentage+discount+payload.getShippingCost())
                                 .build(), order);
                         order.setTotal(createdInvoice.getSummary().getTotal());
                     } catch (TabaldiGenericException e) {
@@ -158,9 +161,14 @@ public class OrderServiceImpl implements OrderService {
         return Map.of("all", orderRepository.count(), "oneDay", orderRepository.countByOrderDate());
     }
     @Override
-    public PendingOrders getPendingOrdersList() throws TabaldiGenericException{
+    public PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException{
         // fetch not delivered or canceled orders
-        List<Order> ordersList = orderRepository.findByPendingOrders(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED));
+        List<Order> ordersList;
+        if(customerId!=null)
+            ordersList = orderRepository.findPendingOrdersByCustomer(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED), customerId);
+        else
+            ordersList = orderRepository.findByPendingOrders(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED));
+
         if(ordersList.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Customer Orders", "طلبات الزبائن");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);

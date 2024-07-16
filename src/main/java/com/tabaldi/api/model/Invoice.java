@@ -25,7 +25,8 @@ public class Invoice {
     @Column(nullable = false)
     private String invoiceNumber;
     @Column(nullable = false)
-    private String paymentMethod;
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private InvoiceStatus status;

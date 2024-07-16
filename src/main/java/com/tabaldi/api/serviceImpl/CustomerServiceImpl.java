@@ -82,15 +82,10 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public Boolean deleteCustomerById(Long customerId) throws TabaldiGenericException {
-        Optional<Customer> customerOptional = customerRepository.findById(customerId);
-        if (!customerOptional.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Customer", "الزبون");
-            throw  new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
-        } else {
-            Customer customer = customerOptional.get();
-            userService.deleteUserById(customer.getUser().getUserId());
-            return true;
-        }
+        Customer customer = this.getCustomerById(customerId);
+        if(customer==null) return false;
+        userService.deleteUserById(customer.getUser().getUserId());
+        return true;
     }
 
     @Override
@@ -162,14 +157,11 @@ public class CustomerServiceImpl implements CustomerService {
         return cartItems;
     }
     @Override
-    public List<Order> getCustomerOrdersList(Long customerId) throws TabaldiGenericException {
+    public Boolean clearCustomerCartItems(Long customerId) throws TabaldiGenericException {
         Customer customer = this.getCustomerById(customerId);
-        List<Order> orders = orderRepository.findByCustomer(customer);
-        if(orders.isEmpty()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Orders","الطلبات");
-            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
-        }
-        return orders;
+        if(customer==null) return false;
+        cartItemRepository.deleteByCustomerAndOrderIsNull(customer);
+        return true;
     }
     @Override
     public List<Address> getCustomerAddressesList(Long customerId) throws TabaldiGenericException {

@@ -5,7 +5,9 @@ import com.tabaldi.api.model.Customer;
 import com.tabaldi.api.model.Order;
 import com.tabaldi.api.model.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -18,4 +20,8 @@ public interface CartItemRepository extends JpaRepository<CartItem, Long> {
     List<CartItem> findByOrder(Order order);
 
     List<CartItem> findByCustomerAndOrderIsNull(Customer customer);
+
+    @Transactional
+    @Modifying
+    void deleteByCustomerAndOrderIsNull(Customer customer);
 }

@@ -22,6 +22,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
 
     @Query("select o from Order o where o.status not in ?1")
     List<Order> findByPendingOrders(Collection<OrderStatus> statuses);
+    @Query("select o from Order o where o.status not in ?1 and o.customer.customerId=?2")
+    List<Order> findPendingOrdersByCustomer(Collection<OrderStatus> statuses, long customerId);
 
     List<Order> findByVendor(Vendor vendor);
 

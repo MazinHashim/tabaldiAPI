@@ -23,9 +23,9 @@ public interface CustomerService {
     Customer getCustomerById(Long customerId) throws TabaldiGenericException;
     Address getSelectedCustomerAddress(Long customerId) throws TabaldiGenericException;
     List<CartItem> getCustomerCartItemsList(Long customerId) throws TabaldiGenericException, IOException;
+    Boolean clearCustomerCartItems(Long customerId) throws TabaldiGenericException;
     List<CartItem> getCustomerActiveCartItemsList(Long customerId) throws TabaldiGenericException, IOException;
     List<Address> getCustomerAddressesList(Long customerId) throws TabaldiGenericException;
-    List<Order> getCustomerOrdersList(Long customerId) throws TabaldiGenericException;
     Customer getCustomerByUserId(Long userId) throws TabaldiGenericException;
     Customer getProfile() throws TabaldiGenericException;
     Map<String, Long> countAllCustomerInSystem();

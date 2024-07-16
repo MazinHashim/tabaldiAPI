@@ -5,6 +5,7 @@ import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Order;
 import com.tabaldi.api.model.OrderStatus;
 import com.tabaldi.api.model.Vendor;
+import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import org.springframework.stereotype.Service;
 
@@ -16,10 +17,10 @@ import java.util.Map;
 public interface OrderService {
     List<Order> getAllOrders();
     List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException;
-    List<Order> createAndSaveOrderInfo(long customerId) throws TabaldiGenericException, IOException;
+    List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException;
     Map<String, Long> countAllOrdersInSystem() throws TabaldiGenericException;
     PendingOrders fetchPendingOrdersByVendor(List<Order> orders);
-    PendingOrders getPendingOrdersList() throws TabaldiGenericException;
+    PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException;
     double fetchCompanyEarningsFromOrders(List<Order> orders);
     double fetchVendorEarningsFromOrders(List<Order> orders);
     Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException;

@@ -103,10 +103,12 @@ public class UserServiceImpl implements UserService {
 //                    .setContentVariables("{\"1\": \""+otpCode+"\"}")
 //                    .create();
 //            Message message = Message.creator(
-//                    new com.twilio.type.PhoneNumber("+971553733809"),
-//                    new com.twilio.type.PhoneNumber("+14127901077"),
+//                    new com.twilio.type.PhoneNumber("whatsapp:+971553733809"),
+//                    new com.twilio.type.PhoneNumber("whatsapp:+14155238886"), // 14127901077
 //                    "Rateena welcome you, the otp for signin is: "+otpCode)
 //            .create();
+//            System.out.println(message.getStatus());
+//            System.out.println(message.getErrorMessage());
 
             return userVerificationRepository.saveAndFlush(verification);
         }

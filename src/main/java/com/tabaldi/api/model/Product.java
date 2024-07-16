@@ -45,7 +45,7 @@ public class Product {
     @JoinColumn(name = "vendor_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
-    @JsonIgnore
+//    @JsonIgnore
     private Vendor vendor;
     @JoinColumn(name = "category_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

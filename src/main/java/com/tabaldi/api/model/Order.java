@@ -25,6 +25,7 @@ public class Order {
     @Column(nullable = false)
     private String orderNumber;
     private String vendorNotes;
+    private String comment;
     @Column(nullable = false)
     private OffsetDateTime orderDate;
     @Transient

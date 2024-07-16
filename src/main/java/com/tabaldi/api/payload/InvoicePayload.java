@@ -1,6 +1,7 @@
 package com.tabaldi.api.payload;
 
 import com.tabaldi.api.model.InvoiceStatus;
+import com.tabaldi.api.model.PaymentMethod;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -15,9 +16,8 @@ import lombok.NoArgsConstructor;
 public class InvoicePayload {
 
     // invoice number and issueDate is generated in backend
-    @NotNull
     @NotEmpty
-    private String paymentMethod;
+    private PaymentMethod paymentMethod;
     @NotNull
     private double subtotal;
     @NotNull

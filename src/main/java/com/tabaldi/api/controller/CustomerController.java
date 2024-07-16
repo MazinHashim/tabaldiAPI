@@ -121,4 +121,14 @@ public class CustomerController {
                         .build()
         );
     }
+    @DeleteMapping("/{customerId}/clear/cart")
+    public @ResponseBody ResponseEntity<DeleteResponse> clearCustomerCartItems (
+            @PathVariable("customerId") Long customerId) throws TabaldiGenericException, IOException {
+        Boolean isDeleted = customerService.clearCustomerCartItems(customerId);
+        String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Cart Items", "أغراض السلة");
+
+        return ResponseEntity.ok(DeleteResponse.builder()
+                .message(successDeleteMessage)
+                .isDeleted(isDeleted).build());
+    }
 }
