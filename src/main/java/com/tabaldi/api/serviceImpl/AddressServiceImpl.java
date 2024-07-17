@@ -47,10 +47,11 @@ public class AddressServiceImpl implements AddressService {
             if(address.getCustomer()!=null && address.getCustomer().getCustomerId()!=payload.getCustomerId()){
                 String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource,"Address", "العنوان");
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
-            } else if(payload.getLatitude()!=address.getLatitude() || payload.getLongitude()!=address.getLongitude()){
-                String changeCoordinatesMessage = messageSource.getMessage("error.change.coordinates", null, LocaleContextHolder.getLocale());
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeCoordinatesMessage);
             }
+//            else if(payload.getLatitude()!=address.getLatitude() || payload.getLongitude()!=address.getLongitude()){
+//                String changeCoordinatesMessage = messageSource.getMessage("error.change.coordinates", null, LocaleContextHolder.getLocale());
+//                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeCoordinatesMessage);
+//            }
         }
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
         if (payload.getAddressId() == null && this.checkIfLatLngExistsPerCustomer(selectedCustomer,

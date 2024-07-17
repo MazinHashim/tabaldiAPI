@@ -164,9 +164,10 @@ public class OrderServiceImpl implements OrderService {
     public PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException{
         // fetch not delivered or canceled orders
         List<Order> ordersList;
-        if(customerId!=null)
+        if(customerId!=null) {
+            customerService.getCustomerById(customerId);
             ordersList = orderRepository.findPendingOrdersByCustomer(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED), customerId);
-        else
+        } else
             ordersList = orderRepository.findByPendingOrders(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED));
 
         if(ordersList.isEmpty()){
