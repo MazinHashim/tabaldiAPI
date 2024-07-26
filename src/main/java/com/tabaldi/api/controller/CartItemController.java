@@ -3,6 +3,8 @@ package com.tabaldi.api.controller;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.payload.CartItemPayload;
+import com.tabaldi.api.payload.QuantityPayload;
+import com.tabaldi.api.response.CartItemListResponse;
 import com.tabaldi.api.response.CartItemResponse;
 import com.tabaldi.api.response.DeleteResponse;
 import com.tabaldi.api.service.CartItemService;
@@ -14,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/cartItems")
@@ -36,32 +39,46 @@ public class CartItemController {
                 .cartItem(cartItem).build());
 
     }
+    @PostMapping("/update/quantity")
+    public @ResponseBody ResponseEntity<CartItemListResponse> updateQuantityById(
+            @RequestBody @Valid QuantityPayload payload) throws TabaldiGenericException, IOException {
+        List<CartItem> updateCarts = cartItemService.updateQuantityById(payload.getCartItemId(), payload.getNewQuantity());
+        String successFetchMessage = MessagesUtils.getSavedDataMessage(messageSource, "CartItem", "عنصر السلة", "updated", "تعديل");
+
+        return ResponseEntity.ok(CartItemListResponse.builder()
+                .message(successFetchMessage)
+                .event("updated")
+                .cartItems(updateCarts).build());
+
+    }
 
     @PostMapping("/save")
-    public @ResponseBody ResponseEntity<CartItemResponse> saveCartItem (
+    public @ResponseBody ResponseEntity<CartItemListResponse> saveCartItem (
             @RequestBody @Valid CartItemPayload payload) throws TabaldiGenericException, IOException {
 
-        CartItem cartItem = cartItemService.saveCartItemInfo(payload);
+        List<CartItem> cartItems = cartItemService.saveCartItemInfo(payload);
         String successSaveMessage = MessagesUtils.getSavedDataMessage(messageSource,
                 "CartItem", "عنصر السلة", "created", "حفظ");
         return ResponseEntity.ok(
-                CartItemResponse.builder()
+                CartItemListResponse.builder()
                         .event("created")
-                        .cartItem(cartItem)
+                        .cartItems(cartItems)
                         .message(successSaveMessage)
                         .build()
         );
     }
 
     @DeleteMapping("/delete/{cartItemId}")
-    public @ResponseBody ResponseEntity<DeleteResponse> deleteCartItem (@PathVariable("cartItemId") Long cartItemId)
-            throws TabaldiGenericException {
-        Boolean isDeleted = cartItemService.deleteCartItemById(cartItemId);
+    public @ResponseBody ResponseEntity<CartItemListResponse> deleteCartItem (@PathVariable("cartItemId") Long cartItemId)
+            throws TabaldiGenericException, IOException {
+        List<CartItem> afterDeleted = cartItemService.deleteCartItemById(cartItemId);
         String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "CartItem", "عنصر السلة");
 
-        return ResponseEntity.ok(DeleteResponse.builder()
+        return ResponseEntity.ok(CartItemListResponse.builder()
+                .event("deleted")
+                .cartItems(afterDeleted)
                 .message(successDeleteMessage)
-                .isDeleted(isDeleted).build());
+                .build());
 
     }
 }

@@ -41,6 +41,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/api/v1/customers/profile").hasAnyRole( Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/vendors/profile").hasAnyRole(Role.VENDOR.name())
                                 .requestMatchers("/api/v1/cartItems/**").hasAnyRole(Role.CUSTOMER.name())
+                                .requestMatchers("/api/v1/cartItems/update/quantity").hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/customers/save").hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/customers/**").hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/pending/*").hasAnyRole(Role.CUSTOMER.name())

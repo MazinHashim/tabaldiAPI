@@ -45,9 +45,37 @@ public class CartItemServiceImpl implements CartItemService {
         cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
         return selectedCartItem.get();
     }
+    @Override
+    public List<CartItem> updateQuantityById(Long cartItemId, int newQuantity) throws TabaldiGenericException, IOException {
+        Optional<CartItem> selectedCartItem = cartItemRepository.findById(cartItemId);
+        if(!selectedCartItem.isPresent()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Item","عنصر سلة التسوق");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        CartItem cartItem = selectedCartItem.get();
+        cartItem.setQuantity(newQuantity);
+        if(cartItem.getOrder()!=null){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Item","عنصر سلة التسوق");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+        // Save the updated cart item to the repository
+        cartItemRepository.save(cartItem);
+
+        // Use streams to find and update the cart item in the list
+        List<CartItem> updatedCart =  customerService.getCustomerActiveCartItemsList(cartItem.getCustomer().getCustomerId());
+        updatedCart.stream()
+            .filter(item -> item.getItemId()==cartItemId)
+            .findFirst()
+            .ifPresent(item -> {
+                int index = updatedCart.indexOf(item);
+                updatedCart.set(index, cartItem);
+            });
+        return updatedCart;
+    }
 
     @Override
-    public CartItem saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException {
+    public List<CartItem> saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException {
 
         Product selectedProduct = productService.getProductById(payload.getProductId());
         if(!selectedProduct.isPublished() || !selectedProduct.getCategory().isPublished()) {
@@ -57,7 +85,7 @@ public class CartItemServiceImpl implements CartItemService {
 
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
 
-        if(payload.getQuantity()>selectedProduct.getQuantity()) {
+        if(payload.getQuantity() > selectedProduct.getQuantity()) {
             String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notAvailableMessage);
         }
@@ -98,19 +126,27 @@ public class CartItemServiceImpl implements CartItemService {
             cartItemParams.setComment(payload.getComment());
         if(selectedOptions!=null)
             cartItemParams.setSelectedOptions(selectedOptions);
-        return cartItemRepository.save(cartItemParams);
+        cartItemRepository.saveAndFlush(cartItemParams);
+        return customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId());
     }
 
     @Override
-    public Boolean deleteCartItemById(Long cartItemId) throws TabaldiGenericException {
+    public List<CartItem> deleteCartItemById(Long cartItemId) throws TabaldiGenericException, IOException {
         Optional<CartItem> cartItemOptional = cartItemRepository.findById(cartItemId);
         if (!cartItemOptional.isPresent()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"CartItem", "عنصر سلة التسوق");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             CartItem cartItem = cartItemOptional.get();
-            cartItemRepository.deleteById(cartItem.getItemId());
-            return true;
+            if(cartItem.getOrder()!=null){
+                String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"CartItem", "عنصر سلة التسوق");
+                throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+            }else {
+                cartItemRepository.deleteById(cartItem.getItemId());
+                return customerService.getCustomerActiveCartItemsList(cartItem.getCustomer().getCustomerId());
+//            return activeCart.stream().filter(cartItem1 -> cartItem1.getItemId()!=cartItemId)
+//                    .collect(Collectors.toList());
+            }
         }
     }
 }

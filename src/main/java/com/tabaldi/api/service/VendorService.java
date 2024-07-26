@@ -17,7 +17,7 @@ public interface VendorService {
     UserEntity addVendorUser(UserPayload payload, UserVerification userVerification) throws TabaldiGenericException;
 
     Vendor saveVendorInfo(VendorPayload payload, MultipartFile identityImage,
-                          MultipartFile licenseImage, MultipartFile profileImage) throws TabaldiGenericException;
+                          MultipartFile licenseImage, MultipartFile profileImage, MultipartFile coverImage) throws TabaldiGenericException;
     Boolean deleteVendorById(Long vendorId) throws TabaldiGenericException;
     Boolean toggleWorkingById(Long vendorId) throws TabaldiGenericException, IOException;
     List<Vendor> getVendorsList() throws TabaldiGenericException;

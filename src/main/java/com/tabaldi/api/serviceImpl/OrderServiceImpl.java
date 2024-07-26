@@ -7,6 +7,7 @@ import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.OrderRepository;
+import com.tabaldi.api.repository.ProductRepository;
 import com.tabaldi.api.response.OrderMapper;
 import com.tabaldi.api.service.CustomerService;
 import com.tabaldi.api.service.InvoiceService;
@@ -33,6 +34,7 @@ import java.util.stream.Collectors;
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
     private final CartItemRepository cartItemRepository;
+    private final ProductRepository productRepository;
     private final SequencesService sequencesService;
     private final CustomerService customerService;
     private final InvoiceService invoiceService;
@@ -103,14 +105,20 @@ public class OrderServiceImpl implements OrderService {
                             .collect(Collectors.toList()));
 
                     cartItems.forEach(cartItem -> {
+                        // Check if the cart item belongs to the same vendor as the order
                         if(cartItem.getProduct().getVendor().getVendorId()==order.getVendor().getVendorId()) {
+                            // Set the order for the cart item
                             cartItem.setOrder(order);
+                            // Update product quantity
+                            Product product = cartItem.getProduct();
+                            int newQuantity = product.getQuantity() - cartItem.getQuantity();
+                            product.setQuantity(newQuantity);
                             cartItemRepository.save(cartItem);
 
+                            // Handle JSON to List conversion for images and options
                             try {
-                                if (cartItem.getProduct().getImagesCollection() != null)
-                                    cartItem.getProduct()
-                                            .setImages(GenericMapper
+                                if (product.getImagesCollection() != null)
+                                    product.setImages(GenericMapper
                                                     .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
                                 if (cartItem.getOptionsCollection() != null)
                                     cartItem.setSelectedOptions(GenericMapper
@@ -118,14 +126,22 @@ public class OrderServiceImpl implements OrderService {
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
-                            double itemTotal=cartItem.getPrice() * cartItem.getQuantity();
+
+                            // Calculate the total price for the cart item
+                            double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
                             order.setTotal(order.getTotal() + itemTotal);
+
+                            // Add fees for selected options to the order total
                             cartItem.getSelectedOptions().forEach(option -> {
                                 if (option.getFee() != null)
                                     order.setTotal(order.getTotal() + option.getFee());
                             });
                         }
                     });
+                    // Ensure the updated product quantities are saved
+                    cartItems.stream()
+                            .map(CartItem::getProduct)
+                            .forEach(productRepository::save);
 
                     try {
                         double discount = payload.getDiscount()==null?0.0:payload.getDiscount();

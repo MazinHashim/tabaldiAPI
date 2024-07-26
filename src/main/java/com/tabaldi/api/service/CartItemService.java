@@ -12,6 +12,7 @@ import java.util.List;
 @Service
 public interface CartItemService {
     CartItem getCartItemById(Long cartItemId) throws TabaldiGenericException, IOException;
-    CartItem saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException;
-    Boolean deleteCartItemById(Long cartItemId) throws TabaldiGenericException;
+    List<CartItem> updateQuantityById(Long cartItemId, int newQuantity) throws TabaldiGenericException, IOException;
+    List<CartItem> saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException;
+    List<CartItem> deleteCartItemById(Long cartItemId) throws TabaldiGenericException, IOException;
 }

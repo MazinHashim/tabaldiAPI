@@ -163,12 +163,13 @@ public class VendorController {
             @Valid @RequestParam(value = "VendorPayload") final String payload,
             @Valid @RequestParam(value = "identityImage") final MultipartFile identityImage,
             @Valid @RequestParam(value = "licenseImage") final MultipartFile licenseImage,
-            @Valid @RequestParam(value = "profileImage", required = false) final MultipartFile profileImage) throws TabaldiGenericException, IOException {
+            @Valid @RequestParam(value = "profileImage", required = false) final MultipartFile profileImage,
+            @Valid @RequestParam(value = "coverImage", required = false) final MultipartFile coverImage) throws TabaldiGenericException, IOException {
 //        if(){
 //
 //        }
         VendorPayload vendorPayload = GenericMapper.jsonToObjectMapper(payload, VendorPayload.class);
-        Vendor vendor = vendorService.saveVendorInfo(vendorPayload, identityImage, licenseImage, profileImage);
+        Vendor vendor = vendorService.saveVendorInfo(vendorPayload, identityImage, licenseImage, profileImage, coverImage);
         String event = vendorPayload.getVendorId()==null?"created":"updated";
         String successSaveMessage = MessagesUtils.getSavedDataMessage(messageSource,
                 "vendor", "التاجر", event, event.equals("created")?"حفظ":"تعديل");

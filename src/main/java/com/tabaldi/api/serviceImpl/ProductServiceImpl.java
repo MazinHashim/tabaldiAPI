@@ -43,6 +43,7 @@ public class ProductServiceImpl implements ProductService {
     public Product saveProductInfo(ProductPayload payload, List<MultipartFile> productImages) throws TabaldiGenericException, IOException {
         // update product constraints
         List<String> imagesPaths = new ArrayList<>();
+        boolean isPublished=false;
         if (payload.getProductId() != null) {
             Product product = this.getProductById(payload.getProductId());
             if (product.getVendor() != null &&
@@ -52,6 +53,7 @@ public class ProductServiceImpl implements ProductService {
             } else {
                 product.setImages(GenericMapper.jsonToListObjectMapper(product.getImagesCollection(), String.class));
                 imagesPaths = product.getImages();
+                isPublished = product.isPublished();
             }
         }
         Category category = categoryService.getCategoryById(payload.getCategoryId());
@@ -99,8 +101,10 @@ public class ProductServiceImpl implements ProductService {
                 .category(category)
                 .vendor(vendor)
                 .build();
-        if(payload.getProductId()!=null)
+        if(payload.getProductId()!=null) {
             productParams.setProductId(payload.getProductId());
+            productParams.setPublished(isPublished);
+        }
         if(payload.getDescription()!=null)
             productParams.setDescription(payload.getDescription());
         Product createdProduct = productRepository.save(productParams);

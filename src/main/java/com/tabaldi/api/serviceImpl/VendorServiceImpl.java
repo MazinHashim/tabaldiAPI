@@ -11,6 +11,7 @@ import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,6 +42,8 @@ public class VendorServiceImpl implements VendorService {
     private final OrderService orderService;
     private final ProductRepository productRepository;
     private final TabaldiConfiguration configuration;
+    @Value("${spring.profiles.active}")
+    private String profile;
 
 
     @Override
@@ -82,10 +85,11 @@ public class VendorServiceImpl implements VendorService {
     @Override
     @Transactional
     public Vendor saveVendorInfo(VendorPayload payload, MultipartFile identityImage,
-                                 MultipartFile licenseImage, MultipartFile profileImage) throws TabaldiGenericException {
+                                 MultipartFile licenseImage, MultipartFile profileImage, MultipartFile coverImage) throws TabaldiGenericException {
         String licensePath = "";
         String identityPath = "";
         String profilePath = "";
+        String coverPath = "";
         // update vendor constraints
         if (payload.getVendorId() != null) {
             Vendor vendor = this.getVendorById(payload.getVendorId());
@@ -96,6 +100,7 @@ public class VendorServiceImpl implements VendorService {
                 licensePath = vendor.getLicenseImage()!=null?vendor.getLicenseImage():"";
                 identityPath = vendor.getIdentityImage()!=null?vendor.getIdentityImage():"";
                 profilePath = vendor.getProfileImage()!=null?vendor.getProfileImage():"";
+                coverPath = vendor.getCoverImage()!=null?vendor.getCoverImage():"";
             }
         }
         UserEntity user = userService.getUserById(payload.getUserId());
@@ -107,9 +112,10 @@ public class VendorServiceImpl implements VendorService {
             String requiredImageUploadMessage = messageSource.getMessage("error.required.upload.file", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredImageUploadMessage);
         }
-        if (!profilePath.isEmpty()||!identityPath.isEmpty()||!licensePath.isEmpty()) {
+        if (!profilePath.isEmpty()||!coverPath.isEmpty()||!identityPath.isEmpty()||!licensePath.isEmpty()) {
             List urlList = new ArrayList<String>();
             if(!profileImage.isEmpty() && !profilePath.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(profilePath.getBytes())));
+            if(!coverImage.isEmpty() && !coverPath.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(coverPath.getBytes())));
             if(!identityImage.isEmpty() && !identityPath.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(identityPath.getBytes())));
             if(!licenseImage.isEmpty() && !licensePath.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(licensePath.getBytes())));
             fileStorageService.remove(urlList);
@@ -119,10 +125,20 @@ public class VendorServiceImpl implements VendorService {
                 String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
             }
-            profilePath = configuration.getHostProductImageFolder()
+            profilePath = configuration.getHostVendorImageFolder()
                     .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
                     .concat(profileImage.getOriginalFilename()
                             .substring(profileImage.getOriginalFilename().indexOf(".")));
+        }
+        if (!coverImage.isEmpty()) {
+            if (!Arrays.asList("image/jpeg", "image/jpg", "image/png").contains(coverImage.getContentType())) {
+                String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
+                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
+            }
+            coverPath = configuration.getHostVendorImageFolder()
+                    .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
+                    .concat(coverImage.getOriginalFilename()
+                            .substring(coverImage.getOriginalFilename().indexOf(".")));
         }
         if (!identityImage.isEmpty()) {
             if (!Arrays.asList("image/jpeg", "image/jpg", "image/png").contains(identityImage.getContentType())) {
@@ -146,6 +162,7 @@ public class VendorServiceImpl implements VendorService {
         }
         List<FileDataObject> addList = new ArrayList();
         if(!profileImage.isEmpty()) addList.add(new FileDataObject(profileImage, profilePath));
+        if(!coverImage.isEmpty()) addList.add(new FileDataObject(coverImage, coverPath));
         if(!identityImage.isEmpty()) addList.add(new FileDataObject(identityImage, identityPath));
         if(!licenseImage.isEmpty()) addList.add(new FileDataObject(licenseImage, licensePath));
         Boolean saved = fileStorageService.save(addList);
@@ -165,14 +182,17 @@ public class VendorServiceImpl implements VendorService {
                 .build();
         if(payload.getVendorId()!=null){
             vendorParams.setVendorId(payload.getVendorId());
-            if(profilePath.contains("\\")) vendorParams.setProfileImage(Base64.getEncoder().encodeToString(profilePath.getBytes()));
+            if(profilePath.contains(configuration.getHostVendorImageFolder())) vendorParams.setProfileImage(Base64.getEncoder().encodeToString(profilePath.getBytes()));
             else vendorParams.setProfileImage(profilePath);
-            if(identityPath.contains("\\")) vendorParams.setIdentityImage(Base64.getEncoder().encodeToString(identityPath.getBytes()));
+            if(coverPath.contains(configuration.getHostVendorImageFolder())) vendorParams.setCoverImage(Base64.getEncoder().encodeToString(coverPath.getBytes()));
+            else vendorParams.setCoverImage(coverPath);
+            if(identityPath.contains(configuration.getHostVendorImageFolder())) vendorParams.setIdentityImage(Base64.getEncoder().encodeToString(identityPath.getBytes()));
             else vendorParams.setIdentityImage(identityPath);
-            if(licensePath.contains("\\")) vendorParams.setLicenseImage(Base64.getEncoder().encodeToString(licensePath.getBytes()));
+            if(licensePath.contains(configuration.getHostVendorImageFolder())) vendorParams.setLicenseImage(Base64.getEncoder().encodeToString(licensePath.getBytes()));
             else vendorParams.setLicenseImage(licensePath);
         } else {
             vendorParams.setProfileImage(Base64.getEncoder().encodeToString(profilePath.getBytes()));
+            vendorParams.setCoverImage(Base64.getEncoder().encodeToString(coverPath.getBytes()));
             vendorParams.setIdentityImage(Base64.getEncoder().encodeToString(identityPath.getBytes()));
             vendorParams.setLicenseImage(Base64.getEncoder().encodeToString(licensePath.getBytes()));
         }
