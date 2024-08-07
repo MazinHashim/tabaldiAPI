@@ -2,10 +2,11 @@ package com.tabaldi.api.serviceImpl;
 
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
-import com.tabaldi.api.payload.InvoicePayload;
+import com.tabaldi.api.payload.*;
 import com.tabaldi.api.repository.InvoiceRepository;
 import com.tabaldi.api.repository.InvoiceSummaryRepository;
 import com.tabaldi.api.service.InvoiceService;
+import com.tabaldi.api.service.PaymentService;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +23,7 @@ import java.util.stream.Collectors;
 public class InvoiceServiceImpl implements InvoiceService {
 
     private final InvoiceRepository invoiceRepository;
+    private final PaymentService paymentService;
     private final InvoiceSummaryRepository summaryRepository;
     private final MessageSource messageSource;
 
@@ -85,31 +87,54 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public Invoice changeOrderInvoiceToPaid(Long orderId) throws TabaldiGenericException {
+    public Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException {
         Invoice invoice = this.getInvoiceByOrderId(orderId);
         if(invoice.getStatus().equals(InvoiceStatus.PAID)){
-            // change error to already paid
-            String notDeliveredMessage = messageSource.getMessage("error.not.delivered", null, LocaleContextHolder.getLocale());
+            String notDeliveredMessage = messageSource.getMessage("error.invoice.already.paid", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notDeliveredMessage);
-        } else if(invoice.getPaymentMethod().equals("Cash On Delivery")) {
-            if (!invoice.getOrder().getStatus().equals(OrderStatus.CONFIRMED) &&
-                    !invoice.getOrder().getStatus().equals(OrderStatus.DELIVERED)) {
+        } else if(invoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
+            if (!invoice.getOrder().getStatus().equals(OrderStatus.DELIVERED)) {
                 String notDeliveredMessage = messageSource.getMessage("error.not.delivered", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notDeliveredMessage);
-            } else if(invoice.getOrder().getStatus().equals(OrderStatus.DELIVERED)){
+            } else {
                 invoice.setStatus(InvoiceStatus.PAID);
                 return invoiceRepository.save(invoice);
-            } else {
-                return invoice;
             }
-        } else if (!invoice.getOrder().getStatus().equals(OrderStatus.CONFIRMED)) {
-            // change error to not confirmed
-            String notDeliveredMessage = messageSource.getMessage("error.not.delivered", null, LocaleContextHolder.getLocale());
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notDeliveredMessage);
-        } else {
+        } else if (invoice.getOrder().getStatus().equals(OrderStatus.WAITING)) {
+            // Initialize online invoice payment
+            InitPaymentPayload initPaymentPayload = InitPaymentPayload.builder()
+                    .InvoiceAmount(invoice.getSummary().getTotal())
+                    .CurrencyIso("AED")
+                    .build();
+            Map<String, Object> paymentMethodsResponse = paymentService.initializeMyFatoorahPayment(initPaymentPayload);
+            System.out.println("Payment Methods: "+paymentMethodsResponse.toString());
+
+            // Execute online invoice payment
+            ExecutePaymentPayload executePaymentPayload = ExecutePaymentPayload.builder()
+                    .InvoiceValue(invoice.getSummary().getTotal())
+                    .PaymentMethodId(20)
+                    .build();
+            Map<String, Object> executePaymentResponse = paymentService.executePaymentTransaction(executePaymentPayload);
+            System.out.println("Execute Payment: "+executePaymentResponse.toString());
+            if(invoice.getPaymentMethod().equals(PaymentMethod.VISA)
+                    || invoice.getPaymentMethod().equals(PaymentMethod.MASTER_CARD)) {
+                // Directly pay online invoice payment
+                DirectPaymentPayload directPaymentPayload = DirectPaymentPayload.builder()
+                        .Bypass3DS(true)
+                        .PaymentType("Card")
+                        .SaveToken(false)
+                        .Card(cardPayload)
+                        .build();
+                Map<String, Object> data = (HashMap) executePaymentResponse.get("Data");
+                Map<String, Object> directPaymentResponse = paymentService.directPaymentTransaction(directPaymentPayload, data.get("PaymentURL").toString());
+                System.out.println("Direct Payment: " + directPaymentResponse.toString());
+            } else if(invoice.getPaymentMethod().equals(PaymentMethod.APPLE_PAY)){
+                // add apple_pay integration
+            }
             invoice.setStatus(InvoiceStatus.PAID);
             return invoiceRepository.save(invoice);
-        }
+        } else
+            return invoice;
     }
 
     @Override

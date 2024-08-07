@@ -1,6 +1,5 @@
 package com.tabaldi.api.payload;
 
-import com.tabaldi.api.model.PaymentMethod;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -12,14 +11,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class OrderPayload {
-
-    private Double discount;
-    private double shippingCost;
-    private int taxPercentage;
-    private String comment;
+public class DirectPaymentPayload {
     @NotNull
-    private PaymentMethod paymentMethod;
-    private CardPayload card;
-    private String token;
+    private Boolean SaveToken;
+    @NotNull
+    @NotEmpty
+    private String PaymentType;
+    private CardPayload Card;
+    @NotNull
+    private Boolean Bypass3DS;
+    private String Token;
 }

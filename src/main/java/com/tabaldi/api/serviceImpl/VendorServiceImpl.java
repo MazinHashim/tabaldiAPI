@@ -34,13 +34,14 @@ public class VendorServiceImpl implements VendorService {
 
     private final MessageSource messageSource;
 
-    private final FileStorageService fileStorageService;
     private final SequencesService sequencesService;
     private final UserService userService;
     private final SessionService sessionService;
     private final CategoryRepository categoryRepository;
+    private final AdvertisementRepository advertisementRepository;
     private final OrderService orderService;
     private final ProductRepository productRepository;
+    private final FileStorageService fileStorageService;
     private final TabaldiConfiguration configuration;
     @Value("${spring.profiles.active}")
     private String profile;
@@ -90,6 +91,7 @@ public class VendorServiceImpl implements VendorService {
         String identityPath = "";
         String profilePath = "";
         String coverPath = "";
+        boolean isWorking=false;
         // update vendor constraints
         if (payload.getVendorId() != null) {
             Vendor vendor = this.getVendorById(payload.getVendorId());
@@ -101,6 +103,7 @@ public class VendorServiceImpl implements VendorService {
                 identityPath = vendor.getIdentityImage()!=null?vendor.getIdentityImage():"";
                 profilePath = vendor.getProfileImage()!=null?vendor.getProfileImage():"";
                 coverPath = vendor.getCoverImage()!=null?vendor.getCoverImage():"";
+                isWorking = vendor.isWorking();
             }
         }
         UserEntity user = userService.getUserById(payload.getUserId());
@@ -182,6 +185,7 @@ public class VendorServiceImpl implements VendorService {
                 .build();
         if(payload.getVendorId()!=null){
             vendorParams.setVendorId(payload.getVendorId());
+            vendorParams.setWorking(isWorking);
             if(profilePath.contains(configuration.getHostVendorImageFolder())) vendorParams.setProfileImage(Base64.getEncoder().encodeToString(profilePath.getBytes()));
             else vendorParams.setProfileImage(profilePath);
             if(coverPath.contains(configuration.getHostVendorImageFolder())) vendorParams.setCoverImage(Base64.getEncoder().encodeToString(coverPath.getBytes()));
@@ -202,7 +206,7 @@ public class VendorServiceImpl implements VendorService {
         return createdVendor;
     }
     @Override
-    public Boolean toggleWorkingById(Long vendorId) throws TabaldiGenericException, IOException {
+    public Boolean toggleWorkingById(Long vendorId) throws TabaldiGenericException {
         Vendor vendor = this.getVendorById(vendorId);
         int updated = vendorRepository.toggleWorkingById(!vendor.isWorking(), vendor.getVendorId());
         if(updated>0)
@@ -264,6 +268,17 @@ public class VendorServiceImpl implements VendorService {
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         return categoryList;
+    }
+    @Override
+    public List<Advertisement> getVendorAdvertisementsList(Long vendorId) throws TabaldiGenericException {
+        Vendor vendor = this.getVendorById(vendorId);
+        List<Advertisement> advertisementList = advertisementRepository.findByVendor(vendor);
+
+        if(advertisementList.isEmpty()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"advertisements", "الإعلانات");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        return advertisementList;
     }
     @Override
     public List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException {

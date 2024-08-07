@@ -107,6 +107,18 @@ public class VendorController {
                         .build()
         );
     }
+    @GetMapping("/{vendorId}/advertisements")
+    public @ResponseBody ResponseEntity<ListResponse<Advertisement>> getAdvertisementsList (
+            @PathVariable("vendorId") long vendorId) throws TabaldiGenericException {
+        List<Advertisement> advertisementsList = vendorService.getVendorAdvertisementsList(vendorId);
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Vendor Advertisements", "إعلانات البائع");
+        return ResponseEntity.ok(
+                ListResponse.<Advertisement>genericBuilder()
+                        .list(advertisementsList)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
 
     @GetMapping("/{vendorId}/orders")
     public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getOrdersList (
@@ -196,7 +208,7 @@ public class VendorController {
 
     @GetMapping("/toggle/working/{vendorId}")
     public @ResponseBody ResponseEntity<PublishResponse> toggleWorkingVendor (@PathVariable("vendorId") Long vendorId)
-            throws TabaldiGenericException, IOException {
+            throws TabaldiGenericException {
         Boolean isWorking = vendorService.toggleWorkingById(vendorId);
         String successWorkingMessage = MessagesUtils.getPublishMessage(messageSource, isWorking?"opened":"closed", isWorking?"فتح":"إغلاق", "Vendor", "المتجر");
 

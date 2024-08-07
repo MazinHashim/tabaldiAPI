@@ -156,6 +156,9 @@ public class OrderServiceImpl implements OrderService {
                                 .total(order.getTotal()+taxPercentage+discount+payload.getShippingCost())
                                 .build(), order);
                         order.setTotal(createdInvoice.getSummary().getTotal());
+                        if(!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)){
+                            invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
+                        }
                     } catch (TabaldiGenericException e) {
                         throw new RuntimeException(e);
                     }
@@ -313,15 +316,16 @@ public class OrderServiceImpl implements OrderService {
                 }
                 Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
                 if( !status.equals(OrderStatus.WAITING) &&
-                    !status.equals(OrderStatus.CONFIRMED) &&
+                    !status.equals(OrderStatus.DELIVERED) &&
                     invoice.getStatus().equals(InvoiceStatus.UNPAID)){
-                    String finalizedOrderMessage = messageSource.getMessage("error.invoice.not.paid", null, LocaleContextHolder.getLocale());
-                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, finalizedOrderMessage);
+                    String notPaidOrderMessage = messageSource.getMessage("error.invoice.not.paid", null, LocaleContextHolder.getLocale());
+                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notPaidOrderMessage);
                 }
                 order.setStatus(status);
                 orderRepository.save(order);
-                 if(status.equals(OrderStatus.DELIVERED) || status.equals(OrderStatus.CONFIRMED))
-                    invoiceService.changeOrderInvoiceToPaid(order.getOrderId());
+                 if(status.equals(OrderStatus.DELIVERED))
+//                         || status.equals(OrderStatus.CONFIRMED))
+                    invoiceService.payOrderInvoice(order.getOrderId(), null);
                 return true;
             }
             return false;
