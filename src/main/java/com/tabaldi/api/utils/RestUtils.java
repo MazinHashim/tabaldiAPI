@@ -22,8 +22,8 @@ public class RestUtils {
         }
     }
 
-    public static <T> T getRequest(String url, Class<T> responseType, int exceptionCode, String exceptionMessage) throws HttpClientErrorException, TabaldiGenericException {
-        ResponseEntity<T> entity = restTemplate.getForEntity(url, responseType, new Object[0]);
+    public static <T> T getRequest(String url, @Nullable Object request, Class<T> responseType, int exceptionCode, String exceptionMessage) throws HttpClientErrorException, TabaldiGenericException {
+        ResponseEntity<T> entity = restTemplate.getForEntity(url, responseType, request, new Object[0]);
         if (entity.getStatusCode().equals(HttpStatus.OK) && entity.getBody() != null) {
             return entity.getBody();
         } else {

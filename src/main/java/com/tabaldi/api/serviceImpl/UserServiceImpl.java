@@ -1,5 +1,6 @@
 package com.tabaldi.api.serviceImpl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
@@ -10,18 +11,18 @@ import com.tabaldi.api.repository.*;
 import com.tabaldi.api.response.VerificationResponse;
 import com.tabaldi.api.security.JwtService;
 import com.tabaldi.api.service.SessionService;
+import com.tabaldi.api.service.SmsService;
 import com.tabaldi.api.service.UserService;
 import com.tabaldi.api.utils.MessagesUtils;
-import com.twilio.rest.api.v2010.account.Message;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.io.UnsupportedEncodingException;
 import java.time.OffsetDateTime;
 import java.util.Optional;
 import java.util.Random;
@@ -39,10 +40,11 @@ public class UserServiceImpl implements UserService {
     private final SessionRepository sessionRepository;
     private final MessageSource messageSource;
     private final JwtService jwtService;
+    private final SmsService smsService;
     private final SessionService sessionService;
     private final TabaldiConfiguration configuration;
     @Override
-    public UserVerification sendOtp(SendOtpPayload payload) throws TabaldiGenericException {
+    public UserVerification sendOtp(SendOtpPayload payload) throws TabaldiGenericException, UnsupportedEncodingException {
         Pattern pattern = Pattern.compile("05+\\d{8}");
         boolean matches;
         Matcher mat = pattern.matcher(payload.getPhone());
@@ -84,7 +86,7 @@ public class UserServiceImpl implements UserService {
 
             String uuid = RandomString.make(64);
             UserVerification verification = UserVerification.builder()
-                    .code(1111)
+                    .code(otpCode)
                     .phone(payload.getPhone())
                     .resendCounter(resendTimes + 1)
                     .createdTime(OffsetDateTime.now())
@@ -95,20 +97,14 @@ public class UserServiceImpl implements UserService {
                     .keyRef(uuid)
                     .build();
 
-            // send otp sms using twilio gateway
-//            Message message = Message.creator(
-//                            new com.twilio.type.PhoneNumber("whatsapp:+971553733809"),
-//                            new com.twilio.type.PhoneNumber("MG15191d6b71b61e72c1e3445f65be8b01"),
-//                            "HXfef4b2bd8f748aa05877d5a7adef65ff")
-//                    .setContentVariables("{\"1\": \""+otpCode+"\"}")
-//                    .create();
-//            Message message = Message.creator(
-//                    new com.twilio.type.PhoneNumber("whatsapp:+971553733809"),
-//                    new com.twilio.type.PhoneNumber("whatsapp:+14155238886"), // 14127901077
-//                    "Rateena welcome you, the otp for signin is: "+otpCode)
-//            .create();
-//            System.out.println(message.getStatus());
-//            System.out.println(message.getErrorMessage());
+            // send otp sms using smart sms gateway
+            String response = smsService.sendSms(payload.getPhone(), "Welcome your Rateena sign in OTP code is "+otpCode);
+            System.out.println(response);
+//            if(!response.contains("OK")){
+//                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+//                        messageSource.getMessage("error.code.not.sent",null,
+//                                LocaleContextHolder.getLocale()));
+//            }
 
             return userVerificationRepository.saveAndFlush(verification);
         }

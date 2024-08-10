@@ -1,5 +1,6 @@
 package com.tabaldi.api.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.Session;
 import com.tabaldi.api.model.UserEntity;
@@ -19,6 +20,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.UnsupportedEncodingException;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -36,7 +38,7 @@ public class UserController {
     @PostMapping("/send/otp")
     public @ResponseBody ResponseEntity<SendOtpResponse> sendOtp (
             @Valid @RequestBody SendOtpPayload payload
-    ) throws TabaldiGenericException {
+    ) throws TabaldiGenericException, JsonProcessingException, UnsupportedEncodingException {
         Locale locale = LocaleContextHolder.getLocale();
         String sentMessage = messageSource.getMessage("success.otp.send",null, locale);
         UserVerification createdVerification = userService.sendOtp(payload);

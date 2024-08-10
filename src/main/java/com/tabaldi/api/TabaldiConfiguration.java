@@ -14,8 +14,10 @@ public class TabaldiConfiguration {
     private String hostProductImageFolder;
     private String hostVendorImageFolder;
     private String hostAdsImageFolder;
-    private String twilioAccountSid;
-    private String twilioAuthToken;
+    private String smsGatewayUsername;
+    private String smsGatewayPassword;
+    private String smsGatewaySenderId;
+    private String smsGatewayEndpointUrl;
     private String sessionTokenExpiration;
     private String otpExpirationMin;
     private String otpResendTimesLimit;
