@@ -16,6 +16,4 @@ public class UserPayload {
     private @NotNull @NotEmpty String phone;
     private @NotNull @NotEmpty String email;
     private boolean agreeTermsConditions = false;
-    private @NotNull @NotEmpty String keyRef;
-    private Integer otpCode;
 }

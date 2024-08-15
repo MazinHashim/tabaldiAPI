@@ -22,6 +22,9 @@ public class AddressPayload {
     private String street;
     @NotNull
     @NotEmpty
+    private String region;
+    @NotNull
+    @NotEmpty
     private String phone;
     @NotNull
     private double latitude;

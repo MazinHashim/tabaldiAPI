@@ -4,7 +4,6 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.UserPayload;
 import com.tabaldi.api.payload.VendorPayload;
-import com.tabaldi.api.payload.VerifyOtpPayload;
 import com.tabaldi.api.response.*;
 import com.tabaldi.api.service.InvoiceService;
 import com.tabaldi.api.service.ProductService;
@@ -154,21 +153,21 @@ public class VendorController {
         );
     }
 
-    @PostMapping("/add/user")
-    public @ResponseBody ResponseEntity<UserEntity> verifyAndAddVendor (
-            @RequestBody @Valid UserPayload payload
-    ) throws TabaldiGenericException {
-        VerificationResponse verificationResponse = userService.verifyOtp(VerifyOtpPayload.builder()
-                .phone(payload.getPhone())
-                .keyRef(payload.getKeyRef())
-                .allowRegistration(true)
-                .otpCode(payload.getOtpCode())
-                .build());
-        UserVerification userVerification = verificationResponse.getUserVerification();
-        UserEntity user = vendorService.addVendorUser(payload, userVerification);
-        return ResponseEntity.ok(user);
-
-    }
+//    @PostMapping("/add/user")
+//    public @ResponseBody ResponseEntity<UserEntity> verifyAndAddVendor (
+//            @RequestBody @Valid UserPayload payload
+//    ) throws TabaldiGenericException {
+//        VerificationResponse verificationResponse = userService.verifyOtp(VerifyOtpPayload.builder()
+//                .phone(payload.getPhone())
+//                .keyRef(payload.getKeyRef())
+//                .allowRegistration(true)
+//                .otpCode(payload.getOtpCode())
+//                .build());
+//        UserVerification userVerification = verificationResponse.getUserVerification();
+//        UserEntity user = vendorService.addVendorUser(payload, userVerification);
+//        return ResponseEntity.ok(user);
+//
+//    }
 
     @PostMapping(value = "/save", consumes = {"multipart/form-data"}, produces = "application/json")
     public @ResponseBody ResponseEntity<VendorResponse> saveVendor (

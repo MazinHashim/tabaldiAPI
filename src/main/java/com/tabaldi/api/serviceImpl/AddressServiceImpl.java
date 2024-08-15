@@ -62,6 +62,7 @@ public class AddressServiceImpl implements AddressService {
             Address addressParams = Address.builder()
                     .name(payload.getName())
                     .street(payload.getStreet())
+                    .region(payload.getRegion())
                     .phone(payload.getPhone())
                     .latitude(payload.getLatitude())
                     .longitude(payload.getLongitude())

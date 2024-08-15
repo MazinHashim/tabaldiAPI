@@ -41,7 +41,18 @@ public class AdvertisementController {
 
     @GetMapping
     public @ResponseBody ResponseEntity<ListResponse<Advertisement>> getAdvertisementsList () throws TabaldiGenericException {
-        List<Advertisement> advertisementsList = advertisementService.getAdvertisementsList(); // may add filters
+        List<Advertisement> advertisementsList = advertisementService.getAdvertisementsList();
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Advertisements", "الإعلانات");
+        return ResponseEntity.ok(
+                ListResponse.<Advertisement>genericBuilder()
+                        .list(advertisementsList)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
+    @GetMapping("/active")
+    public @ResponseBody ResponseEntity<ListResponse<Advertisement>> getActiveAdvertisementsList () throws TabaldiGenericException {
+        List<Advertisement> advertisementsList = advertisementService.getActiveAdvertisementsList();
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Advertisements", "الإعلانات");
         return ResponseEntity.ok(
                 ListResponse.<Advertisement>genericBuilder()
@@ -54,10 +65,12 @@ public class AdvertisementController {
     @PostMapping(value = "/save", consumes = {"multipart/form-data"}, produces = "application/json")
     public @ResponseBody ResponseEntity<AdvertisementResponse> saveAdvertisement (
             @Valid @RequestParam(value = "AdvertisementPayload") final String payload,
-            @Valid @RequestParam(value = "adsImage") final MultipartFile adsImage) throws TabaldiGenericException, IOException {
+            @Valid @RequestParam(value = "adsImage1") final MultipartFile adsImage1,
+            @Valid @RequestParam(value = "adsImage2") final MultipartFile adsImage2,
+            @Valid @RequestParam(value = "adsImage3") final MultipartFile adsImage3) throws TabaldiGenericException, IOException {
 
         AdvertisementPayload advertisementPayload = GenericMapper.jsonToObjectMapper(payload, AdvertisementPayload.class);
-        Advertisement advertisement = advertisementService.saveAdvertisementInfo(advertisementPayload, adsImage);
+        Advertisement advertisement = advertisementService.saveAdvertisementInfo(advertisementPayload, adsImage1, adsImage2, adsImage3);
         String event = advertisementPayload.getAdvertisementId()==null?"created":"updated";
         String successSaveMessage = MessagesUtils.getSavedDataMessage(messageSource,
                 "advertisement", "الإعلان", event, event.equals("created")?"حفظ":"تعديل");

@@ -14,7 +14,7 @@ import java.util.List;
 @Service
 public interface VendorService {
 
-    UserEntity addVendorUser(UserPayload payload, UserVerification userVerification) throws TabaldiGenericException;
+    UserEntity addVendorUser(UserPayload payload) throws TabaldiGenericException;
 
     Vendor saveVendorInfo(VendorPayload payload, MultipartFile identityImage,
                           MultipartFile licenseImage, MultipartFile profileImage, MultipartFile coverImage) throws TabaldiGenericException;

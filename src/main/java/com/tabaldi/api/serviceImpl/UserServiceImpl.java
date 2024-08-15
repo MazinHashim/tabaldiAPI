@@ -1,6 +1,5 @@
 package com.tabaldi.api.serviceImpl;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
@@ -17,6 +16,7 @@ import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,6 +43,8 @@ public class UserServiceImpl implements UserService {
     private final SmsService smsService;
     private final SessionService sessionService;
     private final TabaldiConfiguration configuration;
+    @Value("${spring.profiles.active}")
+    private String profile;
     @Override
     public UserVerification sendOtp(SendOtpPayload payload) throws TabaldiGenericException, UnsupportedEncodingException {
         Pattern pattern = Pattern.compile("05+\\d{8}");
@@ -74,12 +76,12 @@ public class UserServiceImpl implements UserService {
                 }
                 if (resendTimes >= Integer.parseInt(configuration.getOtpResendTimesLimit())) {
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                            messageSource.getMessage("error.exceed.resend.limit",null,
+                            messageSource.getMessage("error.exceed.resend.limit", null,
                                     LocaleContextHolder.getLocale()));
                 }
                 if (userVerification.get().getExpiryTime().isAfter(OffsetDateTime.now())) {
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                            messageSource.getMessage("error.code.not.expired",null,
+                            messageSource.getMessage("error.code.not.expired", null,
                                     LocaleContextHolder.getLocale()));
                 }
             }
@@ -98,12 +100,14 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             // send otp sms using smart sms gateway
-            String response = smsService.sendSms(payload.getPhone(), "Welcome your Rateena sign in OTP code is "+otpCode);
-            System.out.println(response);
-            if(!response.contains("OK")){
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                        messageSource.getMessage("error.exceed.resend.limit",null,
-                                LocaleContextHolder.getLocale()) + "Error "+response);
+            if(!profile.equals("local")){
+                String response = smsService.sendSms(payload.getPhone(), "Welcome your Rateena sign in OTP code is " + otpCode);
+                System.out.println(response);
+                if (!response.contains("OK")) {
+                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+                            messageSource.getMessage("error.exceed.resend.limit", null,
+                                    LocaleContextHolder.getLocale()) + "Error " + response);
+                }
             }
 
             return userVerificationRepository.saveAndFlush(verification);

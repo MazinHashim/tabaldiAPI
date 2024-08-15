@@ -58,7 +58,7 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public UserEntity addVendorUser(UserPayload payload, UserVerification userVerification) throws TabaldiGenericException {
+    public UserEntity addVendorUser(UserPayload payload) throws TabaldiGenericException {
 
         Optional<UserEntity> userOptional = userRepository.findByPhone(payload.getPhone());
         UserEntity user;
@@ -71,15 +71,8 @@ public class VendorServiceImpl implements VendorService {
                     .build();
             user = userRepository.saveAndFlush(user);
         } else {
-            userVerification.setStatus(VerificationStatus.EXPIRED);
-            userVerification.setVerifiedTime(null);
-            userVerificationRepository.save(userVerification);
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"User", "المستخدم");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
-        }
-        if(userVerification!=null){
-            userVerification.setUser(user);
-            userVerificationRepository.save(userVerification);
         }
         return user;
     }
@@ -92,6 +85,7 @@ public class VendorServiceImpl implements VendorService {
         String profilePath = "";
         String coverPath = "";
         boolean isWorking=false;
+        UserEntity user;
         // update vendor constraints
         if (payload.getVendorId() != null) {
             Vendor vendor = this.getVendorById(payload.getVendorId());
@@ -105,8 +99,15 @@ public class VendorServiceImpl implements VendorService {
                 coverPath = vendor.getCoverImage()!=null?vendor.getCoverImage():"";
                 isWorking = vendor.isWorking();
             }
+            user = userService.getUserById(payload.getUserId());
+        } else {
+            UserPayload userPayload = UserPayload.builder()
+                    .email(payload.getEmail())
+                    .phone(payload.getPhone())
+                    .agreeTermsConditions(true)
+                    .build();
+            user = this.addVendorUser(userPayload);
         }
-        UserEntity user = userService.getUserById(payload.getUserId());
         if(!user.getRole().equals(Role.VENDOR)){
             String mismatchMessage = MessagesUtils.getMismatchRoleMessage(messageSource, "Vendor","البائع");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, mismatchMessage);

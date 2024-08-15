@@ -25,6 +25,8 @@ public class Address {
     @Column(nullable = false)
     private String street;
     @Column(nullable = false)
+    private String region;
+    @Column(nullable = false)
     private String phone;
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean selected;

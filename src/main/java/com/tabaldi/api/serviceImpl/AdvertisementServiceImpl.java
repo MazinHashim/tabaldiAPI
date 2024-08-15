@@ -12,6 +12,7 @@ import com.tabaldi.api.service.FileStorageService;
 import com.tabaldi.api.service.VendorService;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
 import org.springframework.context.MessageSource;
@@ -40,7 +41,20 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"advertisements", "الإعلانات");
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
-        return advertisementList;
+        return advertisementList.stream()
+                .sorted(Comparator.comparing(Advertisement::getCreatedAt).reversed())
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<Advertisement> getActiveAdvertisementsList() throws TabaldiGenericException {
+        List<Advertisement> advertisementList = advertisementRepository.findByIsShownAndExpireInGreaterThan(true, OffsetDateTime.now());
+        if(advertisementList.isEmpty()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"advertisements", "الإعلانات");
+            throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
+        }
+        return advertisementList.stream()
+                .sorted(Comparator.comparing(Advertisement::getCreatedAt).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -54,9 +68,14 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
 
     @Override
-    public Advertisement saveAdvertisementInfo(AdvertisementPayload payload, MultipartFile adsImage) throws TabaldiGenericException {
+    public Advertisement saveAdvertisementInfo(AdvertisementPayload payload,
+                                               @Valid MultipartFile adsImage1,
+                                               @Valid MultipartFile adsImage2,
+                                               @Valid MultipartFile adsImage3) throws TabaldiGenericException {
         // update advertisement constraints
-        String adsPath = "";
+        String adsPath1 = "";
+        String adsPath2 = "";
+        String adsPath3 = "";
         boolean isShowing=false;
         if(payload.getAdvertisementId()!=null){
             Advertisement advertisement = this.getAdvertisementById(payload.getAdvertisementId());
@@ -64,7 +83,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource,"advertisement", "الإعلان");
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
             } else {
-                adsPath = advertisement.getAdsImage()!=null?advertisement.getAdsImage():"";
+                adsPath1 = advertisement.getAdsImage1()!=null?advertisement.getAdsImage1():"";
+                adsPath2 = advertisement.getAdsImage2()!=null?advertisement.getAdsImage2():"";
+                adsPath3 = advertisement.getAdsImage3()!=null?advertisement.getAdsImage3():"";
                 isShowing = advertisement.isShown();
             }
         }
@@ -76,27 +97,24 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             String requiredOneOfMessage = messageSource.getMessage("error.required.one.of.them", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOneOfMessage);
         }
-        if(payload.getVendorId() == null && adsImage.isEmpty()){
+        if(payload.getVendorId() == null && (adsImage1.isEmpty()||adsImage2.isEmpty()||adsImage3.isEmpty())){
             String requiredImageUploadMessage = messageSource.getMessage("error.required.upload.file", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredImageUploadMessage);
         }
-        if (!adsPath.isEmpty()) {
+        if (!adsPath1.isEmpty() || !adsPath2.isEmpty() || !adsPath3.isEmpty()) {
             List urlList = new ArrayList<String>();
-            if(!adsImage.isEmpty() && !adsPath.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath.getBytes())));
+            if(!adsImage1.isEmpty() && !adsPath1.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath1.getBytes())));
+            if(!adsImage2.isEmpty() && !adsPath2.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath2.getBytes())));
+            if(!adsImage3.isEmpty() && !adsPath3.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath3.getBytes())));
             fileStorageService.remove(urlList);
         }
-        if (!adsImage.isEmpty()) {
-            if (!Arrays.asList("image/jpeg", "image/jpg", "image/png").contains(adsImage.getContentType())) {
-                String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
-            }
-            adsPath = configuration.getHostAdsImageFolder()
-                    .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
-                    .concat(adsImage.getOriginalFilename()
-                            .substring(adsImage.getOriginalFilename().indexOf(".")));
-        }
+        adsPath1 = this.checkAndGenerateImagePath(adsImage1, adsPath1);
+        adsPath2 = this.checkAndGenerateImagePath(adsImage2, adsPath2);
+        adsPath3 = this.checkAndGenerateImagePath(adsImage3, adsPath3);
         List<FileDataObject> addList = new ArrayList();
-        if(!adsImage.isEmpty()) addList.add(new FileDataObject(adsImage, adsPath));
+        if(!adsImage1.isEmpty()) addList.add(new FileDataObject(adsImage1, adsPath1));
+        if(!adsImage2.isEmpty()) addList.add(new FileDataObject(adsImage2, adsPath2));
+        if(!adsImage3.isEmpty()) addList.add(new FileDataObject(adsImage3, adsPath3));
         Boolean saved = fileStorageService.save(addList);
         if(!saved){
             String imageNotUploadedMessage = messageSource.getMessage("error.not.uploaded.file", null, LocaleContextHolder.getLocale());
@@ -104,8 +122,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         Advertisement advertisementParams = Advertisement.builder()
                 .title(payload.getTitle())
-                .isShown(true)
-                .expireIn(OffsetDateTime.now().plusDays(10))
                 .build();
         if(payload.getUrl() != null && selectedVendor==null) {
             advertisementParams.setUrl(payload.getUrl());
@@ -113,18 +129,42 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             advertisementParams.setVendor(selectedVendor);
         }
         if(payload.getSubtitle() != null){
-            advertisementParams.setSubTitle(payload.getSubtitle());
+            advertisementParams.setSubtitle(payload.getSubtitle());
         }
         if (payload.getAdvertisementId() != null) {
             advertisementParams.setAdvertisementId(payload.getAdvertisementId());
             advertisementParams.setShown(isShowing);
-            if(adsPath.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage(Base64.getEncoder().encodeToString(adsPath.getBytes()));
-            else advertisementParams.setAdsImage(adsPath);
+            if(adsPath1.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
+            else advertisementParams.setAdsImage1(adsPath1);
+            if(adsPath2.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
+            else advertisementParams.setAdsImage2(adsPath2);
+            if(adsPath3.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
+            else advertisementParams.setAdsImage3(adsPath3);
         } else {
-            advertisementParams.setAdsImage(Base64.getEncoder().encodeToString(adsPath.getBytes()));
+            advertisementParams.setCreatedAt(OffsetDateTime.now());
+            advertisementParams.setExpireIn(OffsetDateTime.now().plusDays(10));
+            advertisementParams.setShown(true);
+            advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
+            advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
+            advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
         }
         return advertisementRepository.save(advertisementParams);
     }
+
+    private String checkAndGenerateImagePath(MultipartFile adsImage1, String path) throws TabaldiGenericException {
+        if (!adsImage1.isEmpty()) {
+            if (!Arrays.asList("image/jpeg", "image/jpg", "image/png").contains(adsImage1.getContentType())) {
+                String imageNotSupportedMessage = messageSource.getMessage("error.not.supported.file", null, LocaleContextHolder.getLocale());
+                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotSupportedMessage);
+            }
+            return configuration.getHostAdsImageFolder()
+                    .concat(String.valueOf(OffsetDateTime.now().toEpochSecond()).concat(RandomString.make(10)))
+                    .concat(adsImage1.getOriginalFilename()
+                            .substring(adsImage1.getOriginalFilename().indexOf(".")));
+        }
+        return path;
+    }
+
     @Override
     public Boolean toggleShownById(Long advertisementId) throws TabaldiGenericException {
         Advertisement advertisement = this.getAdvertisementById(advertisementId);
@@ -142,7 +182,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw  new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             Advertisement advertisement = advertisementOptional.get();
-            List<String> list = List.of(advertisement.getAdsImage());
+            List<String> list = List.of(
+                    advertisement.getAdsImage1(),
+                    advertisement.getAdsImage2(),
+                    advertisement.getAdsImage3());
             fileStorageService.remove(list.stream()
                     .map(path -> new String(Base64.getDecoder().decode(path.getBytes()))).collect(Collectors.toList()));
             advertisementRepository.deleteById(advertisement.getAdvertisementId());

@@ -22,12 +22,13 @@ public class VendorPayload {
     private String fullName;
     @NotNull
     private VendorType vendorType;
+    @NotNull @NotEmpty String phone;
+    @NotNull @NotEmpty String email;
     private Integer maxKilometerDelivery;
     @NotNull
     private LocalTime openingTime;
     @NotNull
     private LocalTime closingTime;
     private Integer minChargeLongDistance;
-    @NotNull
     private Long userId;
 }
