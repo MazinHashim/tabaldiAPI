@@ -77,6 +77,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         String adsPath2 = "";
         String adsPath3 = "";
         boolean isShowing=false;
+        OffsetDateTime createdAt=OffsetDateTime.now();
+        OffsetDateTime expireIn=OffsetDateTime.now().plusDays(10);
         if(payload.getAdvertisementId()!=null){
             Advertisement advertisement = this.getAdvertisementById(payload.getAdvertisementId());
             if(advertisement.getVendor()!=null && advertisement.getVendor().getVendorId()!=payload.getVendorId()){
@@ -87,6 +89,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 adsPath2 = advertisement.getAdsImage2()!=null?advertisement.getAdsImage2():"";
                 adsPath3 = advertisement.getAdsImage3()!=null?advertisement.getAdsImage3():"";
                 isShowing = advertisement.isShown();
+                createdAt = advertisement.getCreatedAt();
+                expireIn = advertisement.getExpireIn();
             }
         }
         Vendor selectedVendor=null;
@@ -122,6 +126,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         Advertisement advertisementParams = Advertisement.builder()
                 .title(payload.getTitle())
+                .createdAt(createdAt)
+                .expireIn(expireIn)
                 .build();
         if(payload.getUrl() != null && selectedVendor==null) {
             advertisementParams.setUrl(payload.getUrl());
@@ -134,6 +140,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if (payload.getAdvertisementId() != null) {
             advertisementParams.setAdvertisementId(payload.getAdvertisementId());
             advertisementParams.setShown(isShowing);
+            advertisementParams.setCreatedAt(createdAt);
+            advertisementParams.setExpireIn(expireIn);
             if(adsPath1.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
             else advertisementParams.setAdsImage1(adsPath1);
             if(adsPath2.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
@@ -141,8 +149,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             if(adsPath3.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
             else advertisementParams.setAdsImage3(adsPath3);
         } else {
-            advertisementParams.setCreatedAt(OffsetDateTime.now());
-            advertisementParams.setExpireIn(OffsetDateTime.now().plusDays(10));
             advertisementParams.setShown(true);
             advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
             advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
