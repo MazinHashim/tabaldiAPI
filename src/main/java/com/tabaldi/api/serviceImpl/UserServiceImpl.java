@@ -100,14 +100,14 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             // send otp sms using smart sms gateway
-            if(!profile.equals("local")){
-                String response = smsService.sendSms(payload.getPhone(), "Welcome your Rateena sign in OTP code is " + otpCode);
-                System.out.println(response);
-                if (!response.contains("OK")) {
-                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                            messageSource.getMessage("error.exceed.resend.limit", null,
-                                    LocaleContextHolder.getLocale()) + "Error " + response);
-                }
+            if(!profile.equals("local") || !profile.equals("dev")){
+//                String response = smsService.sendSms(payload.getPhone(), "Welcome your Rateena sign in OTP code is " + otpCode);
+//                System.out.println(response);
+//                if (!response.contains("OK")) {
+//                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+//                            messageSource.getMessage("error.exceed.resend.limit", null,
+//                                    LocaleContextHolder.getLocale()) + "Error " + response);
+//                }
             }
 
             return userVerificationRepository.saveAndFlush(verification);
