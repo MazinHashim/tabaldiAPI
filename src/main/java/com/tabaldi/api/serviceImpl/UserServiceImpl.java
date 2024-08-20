@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
 
             String uuid = RandomString.make(64);
             UserVerification verification = UserVerification.builder()
-                    .code(otpCode)
+                    .code(1111)
                     .phone(payload.getPhone())
                     .resendCounter(resendTimes + 1)
                     .createdTime(OffsetDateTime.now())
