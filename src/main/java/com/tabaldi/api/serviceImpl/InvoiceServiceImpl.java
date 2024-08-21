@@ -112,7 +112,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             // Execute online invoice payment
             ExecutePaymentPayload executePaymentPayload = ExecutePaymentPayload.builder()
                     .InvoiceValue(invoice.getSummary().getTotal())
-                    .PaymentMethodId(20)
+                    .PaymentMethodId(2)
                     .build();
             Map<String, Object> executePaymentResponse = paymentService.executePaymentTransaction(executePaymentPayload);
             System.out.println("Execute Payment: "+executePaymentResponse.toString());
@@ -132,6 +132,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 // add apple_pay integration
             }
             invoice.setStatus(InvoiceStatus.PAID);
+            invoice.setInvoiceNumber("4303866");
             return invoiceRepository.save(invoice);
         } else
             return invoice;
