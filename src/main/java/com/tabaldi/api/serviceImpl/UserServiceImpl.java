@@ -7,6 +7,7 @@ import com.tabaldi.api.payload.SendOtpPayload;
 import com.tabaldi.api.payload.SessionPayload;
 import com.tabaldi.api.payload.VerifyOtpPayload;
 import com.tabaldi.api.repository.*;
+import com.tabaldi.api.response.UserResponse;
 import com.tabaldi.api.response.VerificationResponse;
 import com.tabaldi.api.security.JwtService;
 import com.tabaldi.api.service.SessionService;
@@ -159,6 +160,31 @@ public class UserServiceImpl implements UserService {
             return vendorRepository.findByUser(user).isPresent();
         }
         return user.getRole().equals(Role.SUPERADMIN);
+    }
+    @Override
+    public UserEntity changeUserPhoneNumber(long userId, String newPhoneNumber, VerifyOtpPayload payload) throws TabaldiGenericException {
+        UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
+        UserEntity authUser = session.getUser();
+
+        UserEntity user = this.getUserById(userId);
+        if(userRepository.findByPhone(newPhoneNumber).isPresent()){
+            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource, "User", "المستخدم");
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
+        }
+
+        if(authUser.getRole().equals(Role.CUSTOMER) && authUser.getPhone().equals(user.getPhone())){
+            VerificationResponse response = this.verifyOtp(payload);
+            if(response.isVerified()) {
+                user.setPhone(newPhoneNumber);
+                userRepository.save(user);
+            }
+        } else {
+            String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource,"phone number", "الرقم");
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
+        }
+        return user;
     }
 
     @Override

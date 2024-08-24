@@ -120,21 +120,21 @@ public class VendorController {
     }
 
     @GetMapping("/{vendorId}/orders")
-    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getOrdersList (
+    public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersList (
             @PathVariable("vendorId") long vendorId) throws TabaldiGenericException {
         List<Order> ordersList = vendorService.getVendorOrdersList(vendorId); // may add filters
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
-        List<OrderMapper> vendorOrders = ordersList.stream()
+        List<Order> vendorOrders = ordersList.stream()
                 .map(order-> {
             order.getCartItems().forEach(cartItem -> {
                 cartItem.getProduct().setOptions(null);
                 cartItem.setCustomer(null);
             });
-            return OrderMapper.mappedBuilder().order(order).build();
+            return order;
         }).collect(Collectors.toList());
 
         return ResponseEntity.ok(
-                ListResponse.<OrderMapper>genericBuilder()
+                ListResponse.<Order>genericBuilder()
                         .list(vendorOrders)
                         .message(fetchMessage)
                         .build()

@@ -22,8 +22,9 @@ public class UserEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", unique = true, nullable = false)
     private Long userId;
+    @Column(unique = true)
     private String email;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String phone;
     private boolean agreeTermsConditions;
     @Enumerated(EnumType.STRING)

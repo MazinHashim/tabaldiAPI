@@ -49,12 +49,25 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<Vendor> getVendorsList() throws TabaldiGenericException {
-        List<Vendor> vendorList = vendorRepository.findAll();
+        UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
+        UserEntity user = session.getUser();
+        List<Vendor> vendorList = !user.getRole().equals(Role.CUSTOMER)
+                ? vendorRepository.findAll()
+                : vendorRepository.findByIsWorking(true);
         if(vendorList.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"vendors", "البائعين");
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
-        return vendorList;
+
+        vendorList.forEach(v-> {
+            Long count = productRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
+            v.setInactiveProductsCount(count.intValue());
+        });
+        return vendorList.stream()
+                .sorted(Comparator.comparing(Vendor::getFullName))
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -100,6 +113,11 @@ public class VendorServiceImpl implements VendorService {
                 isWorking = vendor.isWorking();
             }
             user = userService.getUserById(payload.getUserId());
+            if(!user.getPhone().equals(payload.getPhone()) || !user.getEmail().equals(payload.getEmail())) {
+                user.setPhone(payload.getPhone());
+                user.setEmail(payload.getEmail());
+                userRepository.save(user);
+            }
         } else {
             UserPayload userPayload = UserPayload.builder()
                     .email(payload.getEmail())
@@ -279,7 +297,8 @@ public class VendorServiceImpl implements VendorService {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"advertisements", "الإعلانات");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
-        return advertisementList;
+        return advertisementList.stream().sorted(Comparator.comparing(Advertisement::getFCreatedDate))
+                .collect(Collectors.toList());
     }
     @Override
     public List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException {
@@ -292,8 +311,14 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public List<Product> getVendorProductsList(Long vendorId) throws TabaldiGenericException, IOException {
+        UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
+                .getPrincipal();
+        Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
+        UserEntity user = session.getUser();
         Vendor vendor = this.getVendorById(vendorId);
-        List<Product> products = productRepository.findByVendor(vendor);
+        List<Product> products = !user.getRole().equals(Role.CUSTOMER)
+                ? productRepository.findByVendor(vendor)
+                : productRepository.findByVendorAndIsPublished(vendor, true);
         if(products.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Product","المنتج");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
@@ -301,7 +326,8 @@ public class VendorServiceImpl implements VendorService {
         for (Product product : products) {
             product.setImages(GenericMapper.jsonToListObjectMapper(product.getImagesCollection(), String.class));
         }
-        return products;
+        return products.stream().sorted(Comparator.comparing(Product::getName).reversed())
+                .collect(Collectors.toList());
     }
 
     @Override

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -20,5 +21,5 @@ public interface AdvertisementRepository extends JpaRepository<Advertisement, Lo
     @Query("update Advertisement ads set ads.isShown = ?1 where ads.advertisementId = ?2")
     int toggleShownById(boolean isShown, long advertisementId);
 
-    List<Advertisement> findByIsShownAndExpireInGreaterThan(boolean b, OffsetDateTime now);
+    List<Advertisement> findByIsShownAndExpireDateGreaterThan(boolean b, LocalDate now);
 }

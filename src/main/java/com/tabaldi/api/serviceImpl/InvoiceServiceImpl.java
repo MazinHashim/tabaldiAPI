@@ -112,7 +112,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             // Execute online invoice payment
             ExecutePaymentPayload executePaymentPayload = ExecutePaymentPayload.builder()
                     .InvoiceValue(invoice.getSummary().getTotal())
-                    .PaymentMethodId(2)
+                    .PaymentMethodId(20)
                     .build();
             Map<String, Object> executePaymentResponse = paymentService.executePaymentTransaction(executePaymentPayload);
             System.out.println("Execute Payment: "+executePaymentResponse.toString());

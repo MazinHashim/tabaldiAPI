@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.Comparator;
 import java.util.List;
 
 @RestController
@@ -36,29 +37,44 @@ public class OrderController {
         return ResponseEntity.ok(OrderResponse.builder()
                 .message(successFetchMessage)
                 .event("fetched")
-                .order(OrderMapper.mappedBuilder().order(order).build()).build());
+                .order(order).build());
 
     }
+    @GetMapping("/history")
+    public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersHistoryList() throws TabaldiGenericException {
+        List<Order> ordersList = orderService.getAllOrders().stream()
+                .sorted(Comparator.comparing(Order::getOrderDate).reversed())
+                .toList();
+        orderService.fillOrdersDetails(ordersList);
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
+
+        return ResponseEntity.ok(
+                ListResponse.<Order>genericBuilder()
+                        .list(ordersList)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
     @GetMapping("/pending")
-    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getPendingOrdersList() throws TabaldiGenericException {
+    public @ResponseBody ResponseEntity<ListResponse<Order>> getPendingOrdersList() throws TabaldiGenericException {
         PendingOrders ordersList = orderService.getPendingOrdersList(null);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
 
         return ResponseEntity.ok(
-                ListResponse.<OrderMapper>genericBuilder()
+                ListResponse.<Order>genericBuilder()
                     .list(ordersList.getOrders())
                     .message(fetchMessage)
                     .build()
         );
     }
     @GetMapping("/pending/{customerId}")
-    public @ResponseBody ResponseEntity<ListResponse<OrderMapper>> getCustomerPendingOrdersList
+    public @ResponseBody ResponseEntity<ListResponse<Order>> getCustomerPendingOrdersList
             (@PathVariable("customerId") Long customerId) throws TabaldiGenericException {
         PendingOrders ordersList = orderService.getPendingOrdersList(customerId);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
 
         return ResponseEntity.ok(
-                ListResponse.<OrderMapper>genericBuilder()
+                ListResponse.<Order>genericBuilder()
                         .list(ordersList.getOrders())
                         .message(fetchMessage)
                         .build()

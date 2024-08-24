@@ -1,5 +1,6 @@
 package com.tabaldi.api.response;
 
+import com.tabaldi.api.model.Order;
 import com.tabaldi.api.payload.CustomerFrequency;
 import com.tabaldi.api.payload.VendorFrequency;
 import lombok.AllArgsConstructor;
@@ -19,7 +20,7 @@ public class AdminHomeDetails{
     private long newOrdersPerDay;
     private long numberOfCustomers;
     private long newCustomersPer2Days;
-    private List<OrderMapper> orders;
+    private List<Order> orders;
     private List<CustomerFrequency> frequentCustomers;
     private List<VendorFrequency> frequentVendors;
 }

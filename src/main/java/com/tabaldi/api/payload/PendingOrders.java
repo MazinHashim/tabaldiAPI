@@ -1,6 +1,6 @@
 package com.tabaldi.api.payload;
 
-import com.tabaldi.api.response.OrderMapper;
+import com.tabaldi.api.model.Order;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 public class PendingOrders {
-    private List<OrderMapper> orders;
+    private List<Order> orders;
     private long count;
 }

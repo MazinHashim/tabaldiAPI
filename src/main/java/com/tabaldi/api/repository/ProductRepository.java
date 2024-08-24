@@ -30,4 +30,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     @Query("select count(p) from Product p where p.vendor.vendorId = ?1")
     long countByVendor(long vendorId);
 
+    List<Product> findByVendorAndIsPublished(Vendor vendor, boolean b);
+
+    Long countByIsPublishedAndVendor_vendorId(boolean b, long vendorId);
 }

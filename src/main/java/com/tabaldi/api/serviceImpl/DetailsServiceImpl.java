@@ -27,7 +27,7 @@ public class DetailsServiceImpl implements DetailsService {
     public AdminHomeDetails getAdminHomeDetails() throws TabaldiGenericException {
         List<Order> orders = orderService.getAllOrders();
         orderService.fillOrdersDetails(orders);
-        List<OrderMapper> RecentOrders = getRecentOrders(orders, 5);
+        List<Order> RecentOrders = getRecentOrders(orders, 5);
 
         double companyEarnings = orderService.fetchCompanyEarningsFromOrders(orders);
         Map<String, Long> numberOfOrders = orderService.countAllOrdersInSystem();
@@ -77,7 +77,7 @@ public class DetailsServiceImpl implements DetailsService {
                 .collect(Collectors.toList());
     }
 
-    private List<OrderMapper> getRecentOrders(List<Order> orders, int size) {
+    private List<Order> getRecentOrders(List<Order> orders, int size) {
         return orders.stream()
                 .filter(order -> !order.getStatus().equals(OrderStatus.WAITING))
                 .sorted(Comparator.comparing(Order::getOrderDate).reversed())
@@ -87,7 +87,7 @@ public class DetailsServiceImpl implements DetailsService {
                         cartItem.getProduct().setOptions(null);
                         cartItem.setCustomer(null);
                     });
-                    return OrderMapper.mappedBuilder().order(order).build();
+                    return order;
                 })
                 .collect(Collectors.toList());
     }

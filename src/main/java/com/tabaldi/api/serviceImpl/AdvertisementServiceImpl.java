@@ -20,6 +20,7 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -42,18 +43,18 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
         return advertisementList.stream()
-                .sorted(Comparator.comparing(Advertisement::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(Advertisement::getCreatedDate).reversed())
                 .collect(Collectors.toList());
     }
     @Override
     public List<Advertisement> getActiveAdvertisementsList() throws TabaldiGenericException {
-        List<Advertisement> advertisementList = advertisementRepository.findByIsShownAndExpireInGreaterThan(true, OffsetDateTime.now());
+        List<Advertisement> advertisementList = advertisementRepository.findByIsShownAndExpireDateGreaterThan(true, LocalDate.now());
         if(advertisementList.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"advertisements", "الإعلانات");
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
         return advertisementList.stream()
-                .sorted(Comparator.comparing(Advertisement::getCreatedAt).reversed())
+                .sorted(Comparator.comparing(Advertisement::getCreatedDate).reversed())
                 .collect(Collectors.toList());
     }
 
@@ -77,8 +78,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         String adsPath2 = "";
         String adsPath3 = "";
         boolean isShowing=false;
-        OffsetDateTime createdAt=OffsetDateTime.now();
-        OffsetDateTime expireIn=OffsetDateTime.now().plusDays(10);
         if(payload.getAdvertisementId()!=null){
             Advertisement advertisement = this.getAdvertisementById(payload.getAdvertisementId());
             if(advertisement.getVendor()!=null && advertisement.getVendor().getVendorId()!=payload.getVendorId()){
@@ -89,9 +88,11 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 adsPath2 = advertisement.getAdsImage2()!=null?advertisement.getAdsImage2():"";
                 adsPath3 = advertisement.getAdsImage3()!=null?advertisement.getAdsImage3():"";
                 isShowing = advertisement.isShown();
-                createdAt = advertisement.getCreatedAt();
-                expireIn = advertisement.getExpireIn();
             }
+        }
+        if(payload.getCreateDate().isAfter(payload.getExpireDate())){
+            String invalidDateMessage = messageSource.getMessage("error.invalid.date.exceed", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, invalidDateMessage);
         }
         Vendor selectedVendor=null;
         if(payload.getVendorId()!=null) {
@@ -101,7 +102,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             String requiredOneOfMessage = messageSource.getMessage("error.required.one.of.them", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOneOfMessage);
         }
-        if(payload.getVendorId() == null && (adsImage1.isEmpty()||adsImage2.isEmpty()||adsImage3.isEmpty())){
+        if(payload.getAdvertisementId() == null && (adsImage1.isEmpty()||adsImage2.isEmpty()||adsImage3.isEmpty())){
             String requiredImageUploadMessage = messageSource.getMessage("error.required.upload.file", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredImageUploadMessage);
         }
@@ -126,8 +127,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         Advertisement advertisementParams = Advertisement.builder()
                 .title(payload.getTitle())
-                .createdAt(createdAt)
-                .expireIn(expireIn)
+                .createdDate(payload.getCreateDate())
+                .expireDate(payload.getExpireDate())
+                .startTime(payload.getStartTime())
+                .endTime(payload.getEndTime())
                 .build();
         if(payload.getUrl() != null && selectedVendor==null) {
             advertisementParams.setUrl(payload.getUrl());
@@ -140,8 +143,6 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if (payload.getAdvertisementId() != null) {
             advertisementParams.setAdvertisementId(payload.getAdvertisementId());
             advertisementParams.setShown(isShowing);
-            advertisementParams.setCreatedAt(createdAt);
-            advertisementParams.setExpireIn(expireIn);
             if(adsPath1.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
             else advertisementParams.setAdsImage1(adsPath1);
             if(adsPath2.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));

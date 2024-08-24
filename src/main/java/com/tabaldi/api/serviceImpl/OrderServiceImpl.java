@@ -8,7 +8,6 @@ import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.OrderRepository;
 import com.tabaldi.api.repository.ProductRepository;
-import com.tabaldi.api.response.OrderMapper;
 import com.tabaldi.api.service.CustomerService;
 import com.tabaldi.api.service.InvoiceService;
 import com.tabaldi.api.service.OrderService;
@@ -129,7 +128,9 @@ public class OrderServiceImpl implements OrderService {
 
                             // Calculate the total price for the cart item
                             double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
-                            order.setTotal(order.getTotal() + itemTotal);
+                            double itemTotalWithProfit = itemTotal+(itemTotal*cartItem.getProduct().getCompanyProfit()/100);
+                            double roundedTotal = Math.round(itemTotalWithProfit*2)/2;
+                            order.setTotal(order.getTotal() + roundedTotal);
 
                             // Add fees for selected options to the order total
                             cartItem.getSelectedOptions().forEach(option -> {
@@ -194,15 +195,15 @@ public class OrderServiceImpl implements OrderService {
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         this.fillOrdersDetails(ordersList);
-        List<OrderMapper> pendingOrders = ordersList.stream()
+        List<Order> pendingOrders = ordersList.stream()
                 .map(order-> {
                     order.getCartItems().forEach(cartItem -> {
                         cartItem.getProduct().setOptions(null);
                         cartItem.setCustomer(null);
                     });
-                    return OrderMapper.mappedBuilder().order(order).build();
+                    return order;
                 })
-                .sorted(Comparator.comparing(OrderMapper::getOrderDate).reversed())
+                .sorted(Comparator.comparing(Order::getOrderDate).reversed())
                 .collect(Collectors.toList());
         return PendingOrders.builder()
                 .orders(pendingOrders)
@@ -211,7 +212,7 @@ public class OrderServiceImpl implements OrderService {
     }
     @Override
     public PendingOrders fetchPendingOrdersByVendor(List<Order> orders) {
-        List<OrderMapper> activeOrders = orders.stream()
+        List<Order> activeOrders = orders.stream()
                 .filter(order -> !order.getStatus().equals(OrderStatus.DELIVERED)
                         && !order.getStatus().equals(OrderStatus.CANCELED))
                 .sorted(Comparator.comparing(Order::getOrderDate).reversed())
@@ -220,7 +221,7 @@ public class OrderServiceImpl implements OrderService {
                         cartItem.getProduct().setOptions(null);
                         cartItem.setCustomer(null);
                     });
-                    return OrderMapper.mappedBuilder().order(order).build();
+                    return order;
                 })
                 .collect(Collectors.toList());
         return PendingOrders.builder()
@@ -321,6 +322,10 @@ public class OrderServiceImpl implements OrderService {
                     String notPaidOrderMessage = messageSource.getMessage("error.invoice.not.paid", null, LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notPaidOrderMessage);
                 }
+                if(status.equals(OrderStatus.PROCESSING))
+                    order.setProcessedDate(OffsetDateTime.now());
+                else if(status.equals(OrderStatus.DELIVERED))
+                    order.setDeliveredDate(OffsetDateTime.now());
                 order.setStatus(status);
                 orderRepository.save(order);
                  if(status.equals(OrderStatus.DELIVERED))

@@ -5,6 +5,9 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 
@@ -33,20 +36,28 @@ public class Advertisement {
     private String adsImage3;
     private String url;
     @Column(nullable = false)
-    @JsonIgnore
-    private OffsetDateTime expireIn;
+    private LocalDate createdDate;
     @Column(nullable = false)
-    @JsonIgnore
-    private OffsetDateTime createdAt;
+    private LocalTime startTime;
+    @Column(nullable = false)
+    private LocalDate expireDate;
+    @Column(nullable = false)
+    private LocalTime endTime;
     @JoinColumn(name = "vendor_id")
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToOne
+    @ManyToOne
     private Vendor vendor;
 
-    public String getFExpireIn(){
-        return expireIn.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+    public String getFExpireDate(){
+        return expireDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
-    public String getFCreatedAt(){
-        return createdAt.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+    public String getFCreatedDate(){
+        return createdDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+    }
+    public String getFStartTime(){
+        return startTime.format(DateTimeFormatter.ofPattern("HH:mm:ss a"));
+    }
+    public String getFEndTime(){
+        return endTime.format(DateTimeFormatter.ofPattern("HH:mm:ss a"));
     }
 }

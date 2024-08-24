@@ -7,6 +7,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -19,6 +22,14 @@ public class AdvertisementPayload {
     private String title;
     private String subtitle;
     private String url;
+    @NotNull
+    private LocalDate createDate;
+    @NotNull
+    private LocalDate expireDate;
+    @NotNull
+    private LocalTime startTime;
+    @NotNull
+    private LocalTime endTime;
     @NotNull
     private Long vendorId;
 }

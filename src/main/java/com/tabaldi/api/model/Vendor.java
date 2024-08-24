@@ -41,6 +41,8 @@ public class Vendor {
     private LocalTime closingTime;
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean isWorking;
+    @Transient
+    private int inactiveProductsCount;
 //    @OneToMany(mappedBy = "vendor")
 //    private List<Category> categories;
 //    @OneToMany(mappedBy = "vendor")

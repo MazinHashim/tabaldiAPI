@@ -81,6 +81,19 @@ public class UserController {
                 LocaleContextHolder.getLocale()));
         return ResponseEntity.ok(userVerificationResponse);
     }
+    @PostMapping("/verify/changePhone/{userId}/{newPhoneNumber}")
+    public @ResponseBody ResponseEntity<UserResponse> changeUserPhoneNumber (
+            @PathVariable @Valid long userId,
+            @PathVariable @Valid String newPhoneNumber,
+            @RequestBody @Valid VerifyOtpPayload payload
+    ) throws TabaldiGenericException {
+        UserEntity user = userService.changeUserPhoneNumber(userId, newPhoneNumber, payload);
+        return ResponseEntity.ok(UserResponse.builder()
+                .user(user)
+                .message(messageSource.getMessage("success.phone.changed",null,
+                        LocaleContextHolder.getLocale()))
+                .build());
+    }
 
     @GetMapping("/logout")
     public @ResponseBody ResponseEntity<AuthenticationResponse> logout () throws TabaldiGenericException {

@@ -25,4 +25,6 @@ public interface UserService {
     Session refreshSessionToken(String refreshToken) throws TabaldiGenericException;
     UserEntity getProfile(Long vendorUserId) throws TabaldiGenericException;
     UserEntity getUserById(Long userId) throws TabaldiGenericException;
+
+    UserEntity changeUserPhoneNumber(long userId, String newPhoneNumber, VerifyOtpPayload payload) throws TabaldiGenericException;
 }

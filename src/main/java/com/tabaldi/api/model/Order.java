@@ -7,6 +7,7 @@ import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Entity
@@ -28,6 +29,8 @@ public class Order {
     private String comment;
     @Column(nullable = false)
     private OffsetDateTime orderDate;
+    private OffsetDateTime processedDate;
+    private OffsetDateTime deliveredDate;
     @Transient
     private double total;
     @Column(nullable = false)
@@ -49,6 +52,15 @@ public class Order {
     @JoinColumn(name = "vendor_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
-    @JsonIgnore
     private Vendor vendor;
+
+    public String getFOrderDate(){
+        return orderDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+    }
+    public String getFProcessedDate(){
+        return processedDate==null?null:processedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+    }
+    public String getFDeliveredDate(){
+        return deliveredDate==null?null:deliveredDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+    }
 }
