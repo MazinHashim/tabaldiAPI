@@ -139,6 +139,14 @@ public class OrderServiceImpl implements OrderService {
                             });
                         }
                     });
+                    if(payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal()>70){
+                        String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
+                        try {
+                            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
+                        } catch (TabaldiGenericException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                     // Ensure the updated product quantities are saved
                     cartItems.stream()
                             .map(CartItem::getProduct)
@@ -172,8 +180,12 @@ public class OrderServiceImpl implements OrderService {
         }
     }
     @Override
-    public List<Order> getAllOrders(){
-        return orderRepository.findAll();
+    public List<Order> getAllOrders(Long customerId) throws TabaldiGenericException {
+        if(customerId==null) return orderRepository.findAll();
+        else {
+            Customer customer = customerService.getCustomerById(customerId);
+            return orderRepository.findByCustomer(customer);
+        }
     }
 
     @Override

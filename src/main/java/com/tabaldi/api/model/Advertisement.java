@@ -30,10 +30,10 @@ public class Advertisement {
     private boolean isShown;
     @Column(nullable = false)
     private String adsImage1;
-    @Column(nullable = false)
-    private String adsImage2;
-    @Column(nullable = false)
-    private String adsImage3;
+//    @Column(nullable = false)
+//    private String adsImage2;
+//    @Column(nullable = false)
+//    private String adsImage3;
     private String url;
     @Column(nullable = false)
     private LocalDate createdDate;

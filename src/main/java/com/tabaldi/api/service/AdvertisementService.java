@@ -15,6 +15,8 @@ public interface AdvertisementService {
     List<Advertisement> getActiveAdvertisementsList() throws TabaldiGenericException;
     Boolean toggleShownById(Long advertisementId) throws TabaldiGenericException;
     Advertisement getAdvertisementById(Long advertisementId) throws TabaldiGenericException;
-    Advertisement saveAdvertisementInfo(AdvertisementPayload payload, @Valid MultipartFile adsImage, @Valid MultipartFile adsImage2, @Valid MultipartFile adsImage3) throws TabaldiGenericException;
+    Advertisement saveAdvertisementInfo(AdvertisementPayload payload, @Valid MultipartFile adsImage)
+//            , @Valid MultipartFile adsImage2, @Valid MultipartFile adsImage3)
+            throws TabaldiGenericException;
     Boolean deleteAdvertisementById(Long advertisementId) throws TabaldiGenericException;
 }
