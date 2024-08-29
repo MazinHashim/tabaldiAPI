@@ -41,8 +41,9 @@ public class OrderController {
 
     }
     @GetMapping("/history")
-    public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersHistoryList() throws TabaldiGenericException {
-        List<Order> ordersList = orderService.getAllOrders().stream()
+    public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersHistoryList
+            (@RequestParam(required = false) Long customerId) throws TabaldiGenericException {
+        List<Order> ordersList = orderService.getAllOrders(customerId).stream()
                 .sorted(Comparator.comparing(Order::getOrderDate).reversed())
                 .toList();
         orderService.fillOrdersDetails(ordersList);

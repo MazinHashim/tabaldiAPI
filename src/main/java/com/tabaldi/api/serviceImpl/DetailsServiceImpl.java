@@ -25,7 +25,7 @@ public class DetailsServiceImpl implements DetailsService {
 
     @Override
     public AdminHomeDetails getAdminHomeDetails() throws TabaldiGenericException {
-        List<Order> orders = orderService.getAllOrders();
+        List<Order> orders = orderService.getAllOrders(null);
         orderService.fillOrdersDetails(orders);
         List<Order> RecentOrders = getRecentOrders(orders, 5);
 
