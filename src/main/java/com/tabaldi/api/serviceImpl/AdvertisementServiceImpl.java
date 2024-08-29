@@ -70,13 +70,14 @@ public class AdvertisementServiceImpl implements AdvertisementService {
 
     @Override
     public Advertisement saveAdvertisementInfo(AdvertisementPayload payload,
-                                               @Valid MultipartFile adsImage1,
-                                               @Valid MultipartFile adsImage2,
-                                               @Valid MultipartFile adsImage3) throws TabaldiGenericException {
+                                               @Valid MultipartFile adsImage1
+//                                               @Valid MultipartFile adsImage2,
+//                                               @Valid MultipartFile adsImage3
+    ) throws TabaldiGenericException {
         // update advertisement constraints
         String adsPath1 = "";
-        String adsPath2 = "";
-        String adsPath3 = "";
+//        String adsPath2 = "";
+//        String adsPath3 = "";
         boolean isShowing=false;
         if(payload.getAdvertisementId()!=null){
             Advertisement advertisement = this.getAdvertisementById(payload.getAdvertisementId());
@@ -85,8 +86,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
             } else {
                 adsPath1 = advertisement.getAdsImage1()!=null?advertisement.getAdsImage1():"";
-                adsPath2 = advertisement.getAdsImage2()!=null?advertisement.getAdsImage2():"";
-                adsPath3 = advertisement.getAdsImage3()!=null?advertisement.getAdsImage3():"";
+//                adsPath2 = advertisement.getAdsImage2()!=null?advertisement.getAdsImage2():"";
+//                adsPath3 = advertisement.getAdsImage3()!=null?advertisement.getAdsImage3():"";
                 isShowing = advertisement.isShown();
             }
         }
@@ -102,24 +103,26 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             String requiredOneOfMessage = messageSource.getMessage("error.required.one.of.them", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOneOfMessage);
         }
-        if(payload.getAdvertisementId() == null && (adsImage1.isEmpty()||adsImage2.isEmpty()||adsImage3.isEmpty())){
+        if(payload.getAdvertisementId() == null && (adsImage1.isEmpty())){
+            //||adsImage2.isEmpty()||adsImage3.isEmpty())){
             String requiredImageUploadMessage = messageSource.getMessage("error.required.upload.file", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredImageUploadMessage);
         }
-        if (!adsPath1.isEmpty() || !adsPath2.isEmpty() || !adsPath3.isEmpty()) {
+        if (!adsPath1.isEmpty()){
+//            || !adsPath2.isEmpty() || !adsPath3.isEmpty()) {
             List urlList = new ArrayList<String>();
             if(!adsImage1.isEmpty() && !adsPath1.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath1.getBytes())));
-            if(!adsImage2.isEmpty() && !adsPath2.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath2.getBytes())));
-            if(!adsImage3.isEmpty() && !adsPath3.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath3.getBytes())));
+//            if(!adsImage2.isEmpty() && !adsPath2.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath2.getBytes())));
+//            if(!adsImage3.isEmpty() && !adsPath3.isEmpty()) urlList.add(new String(Base64.getDecoder().decode(adsPath3.getBytes())));
             fileStorageService.remove(urlList);
         }
         adsPath1 = this.checkAndGenerateImagePath(adsImage1, adsPath1);
-        adsPath2 = this.checkAndGenerateImagePath(adsImage2, adsPath2);
-        adsPath3 = this.checkAndGenerateImagePath(adsImage3, adsPath3);
+//        adsPath2 = this.checkAndGenerateImagePath(adsImage2, adsPath2);
+//        adsPath3 = this.checkAndGenerateImagePath(adsImage3, adsPath3);
         List<FileDataObject> addList = new ArrayList();
         if(!adsImage1.isEmpty()) addList.add(new FileDataObject(adsImage1, adsPath1));
-        if(!adsImage2.isEmpty()) addList.add(new FileDataObject(adsImage2, adsPath2));
-        if(!adsImage3.isEmpty()) addList.add(new FileDataObject(adsImage3, adsPath3));
+//        if(!adsImage2.isEmpty()) addList.add(new FileDataObject(adsImage2, adsPath2));
+//        if(!adsImage3.isEmpty()) addList.add(new FileDataObject(adsImage3, adsPath3));
         Boolean saved = fileStorageService.save(addList);
         if(!saved){
             String imageNotUploadedMessage = messageSource.getMessage("error.not.uploaded.file", null, LocaleContextHolder.getLocale());
@@ -145,15 +148,15 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             advertisementParams.setShown(isShowing);
             if(adsPath1.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
             else advertisementParams.setAdsImage1(adsPath1);
-            if(adsPath2.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
-            else advertisementParams.setAdsImage2(adsPath2);
-            if(adsPath3.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
-            else advertisementParams.setAdsImage3(adsPath3);
+//            if(adsPath2.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
+//            else advertisementParams.setAdsImage2(adsPath2);
+//            if(adsPath3.contains(configuration.getHostAdsImageFolder())) advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
+//            else advertisementParams.setAdsImage3(adsPath3);
         } else {
             advertisementParams.setShown(true);
             advertisementParams.setAdsImage1(Base64.getEncoder().encodeToString(adsPath1.getBytes()));
-            advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
-            advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
+//            advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
+//            advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
         }
         return advertisementRepository.save(advertisementParams);
     }
@@ -190,9 +193,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         } else {
             Advertisement advertisement = advertisementOptional.get();
             List<String> list = List.of(
-                    advertisement.getAdsImage1(),
-                    advertisement.getAdsImage2(),
-                    advertisement.getAdsImage3());
+                    advertisement.getAdsImage1());
+//                    advertisement.getAdsImage2(),
+//                    advertisement.getAdsImage3());
             fileStorageService.remove(list.stream()
                     .map(path -> new String(Base64.getDecoder().decode(path.getBytes()))).collect(Collectors.toList()));
             advertisementRepository.deleteById(advertisement.getAdvertisementId());
