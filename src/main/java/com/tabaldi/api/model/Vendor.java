@@ -29,6 +29,9 @@ public class Vendor {
     @Column(nullable = false)
     private String identityImage;
     @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private TabaldiRegion region;
+    @Column(nullable = false)
     private String licenseImage;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
