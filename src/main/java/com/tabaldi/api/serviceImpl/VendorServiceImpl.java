@@ -196,6 +196,7 @@ public class VendorServiceImpl implements VendorService {
         Vendor vendorParams = Vendor.builder()
                 .fullName(payload.getFullName())
                 .vendorType(payload.getVendorType())
+                .region(payload.getRegion())
                 .maxKilometerDelivery(payload.getMaxKilometerDelivery())
                 .openingTime(payload.getOpeningTime())
                 .closingTime(payload.getClosingTime())

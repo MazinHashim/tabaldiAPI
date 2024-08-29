@@ -1,5 +1,6 @@
 package com.tabaldi.api.payload;
 
+import com.tabaldi.api.model.TabaldiRegion;
 import com.tabaldi.api.model.VendorType;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,8 @@ public class VendorPayload {
     private String fullName;
     @NotNull
     private VendorType vendorType;
+    @NotNull
+    private TabaldiRegion region;
     @NotNull @NotEmpty String phone;
     @NotNull @NotEmpty String email;
     private Integer maxKilometerDelivery;
