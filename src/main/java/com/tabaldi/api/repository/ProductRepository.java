@@ -33,4 +33,6 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     List<Product> findByVendorAndIsPublished(Vendor vendor, boolean b);
 
     Long countByIsPublishedAndVendor_vendorId(boolean b, long vendorId);
+
+    List<Product> findByNameContainingIgnoreCase(String query);
 }

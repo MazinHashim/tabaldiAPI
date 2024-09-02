@@ -148,6 +148,18 @@ public class ProductServiceImpl implements ProductService {
         product.setImages(GenericMapper.jsonToListObjectMapper(product.getImagesCollection(), String.class));
         return product;
     }
+    @Override
+    public List<Product> searchProductByQuery(String query) throws TabaldiGenericException, IOException {
+        List<Product> products = productRepository.findByNameContainingIgnoreCase(query);
+        if(products.isEmpty()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Products","المنتجات");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        for (Product product : products) {
+            product.setImages(GenericMapper.jsonToListObjectMapper(product.getImagesCollection(), String.class));
+        }
+        return products;
+    }
 
     @Override
     public Long countByCategory(Long categoryId) {

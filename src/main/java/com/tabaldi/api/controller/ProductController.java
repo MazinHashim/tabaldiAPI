@@ -43,6 +43,19 @@ public class ProductController {
 
     }
 
+    @GetMapping("/search")
+    public @ResponseBody ResponseEntity<ListResponse<Product>> searchProductByQuery (
+            @RequestParam("query") String query) throws TabaldiGenericException, IOException {
+        List<Product> productsList = productService.searchProductByQuery(query); // may add filters
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Products", "المنتجات");
+        return ResponseEntity.ok(
+                ListResponse.<Product>genericBuilder()
+                        .list(productsList)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
+
     @PostMapping("/save")
     public @ResponseBody ResponseEntity<ProductResponse> saveProduct (
             @Valid @RequestParam("productPayload") final String payload,

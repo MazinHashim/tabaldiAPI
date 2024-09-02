@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.validator.constraints.Length;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -22,6 +23,9 @@ public class AdvertisementPayload {
     private String title;
     private String subtitle;
     private String url;
+    @NotNull
+    @Length(min = 1, max = 5)
+    private int priority;
     @NotNull
     private LocalDate createDate;
     @NotNull

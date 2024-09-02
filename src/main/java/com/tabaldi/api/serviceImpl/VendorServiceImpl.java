@@ -298,7 +298,7 @@ public class VendorServiceImpl implements VendorService {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"advertisements", "الإعلانات");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
-        return advertisementList.stream().sorted(Comparator.comparing(Advertisement::getFCreatedDate))
+        return advertisementList.stream().sorted(Comparator.comparing(Advertisement::getPriority))
                 .collect(Collectors.toList());
     }
     @Override

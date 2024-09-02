@@ -26,6 +26,8 @@ public class Advertisement {
     @Column(nullable = false)
     private String title;
     private String subtitle;
+    @Column(nullable = false, columnDefinition = "int default 1")
+    private int priority;
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean isShown;
     @Column(nullable = false)

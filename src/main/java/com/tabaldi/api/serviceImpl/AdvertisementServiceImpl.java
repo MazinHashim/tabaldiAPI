@@ -43,7 +43,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
         return advertisementList.stream()
-                .sorted(Comparator.comparing(Advertisement::getCreatedDate).reversed())
+                .sorted(Comparator.comparing(Advertisement::getPriority).reversed())
                 .collect(Collectors.toList());
     }
     @Override
@@ -54,7 +54,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
         return advertisementList.stream()
-                .sorted(Comparator.comparing(Advertisement::getCreatedDate).reversed())
+                .sorted(Comparator.comparing(Advertisement::getPriority).reversed())
                 .collect(Collectors.toList());
     }
 
@@ -99,7 +99,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if(payload.getVendorId()!=null) {
             selectedVendor = vendorService.getVendorById(payload.getVendorId());
         }
-        if(payload.getUrl() == null && selectedVendor==null){
+        if((payload.getUrl() != null && !payload.getUrl().isEmpty()) && selectedVendor!=null){
             String requiredOneOfMessage = messageSource.getMessage("error.required.one.of.them", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOneOfMessage);
         }
@@ -133,6 +133,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                 .createdDate(payload.getCreateDate())
                 .expireDate(payload.getExpireDate())
                 .startTime(payload.getStartTime())
+                .priority(payload.getPriority())
                 .endTime(payload.getEndTime())
                 .build();
         if(payload.getUrl() != null && selectedVendor==null) {
