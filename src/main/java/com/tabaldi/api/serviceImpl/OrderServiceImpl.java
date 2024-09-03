@@ -168,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
                         if(!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)){
                             invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
                         }
-                    } catch (TabaldiGenericException e) {
+                    } catch (TabaldiGenericException | IOException e) {
                         throw new RuntimeException(e);
                     }
                 });
@@ -311,7 +311,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException {
+    public Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException, IOException {
         Optional<Order> orderOptional = orderRepository.findById(orderId);
         if (!orderOptional.isPresent()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Order", "الطلب");

@@ -4,14 +4,18 @@ import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.payload.*;
 import com.tabaldi.api.service.*;
+import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.HttpHeadersUtils;
 import com.tabaldi.api.utils.RestUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
@@ -21,17 +25,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class PaymentServiceImpl implements PaymentService {
     private final TabaldiConfiguration configuration;
+    final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     @Override
-    public Map<String, Object> initializeMyFatoorahPayment(InitPaymentPayload initPaymentPayload) throws TabaldiGenericException {
+    public Map<String, Object> initializeMyFatoorahPayment(InitPaymentPayload initPaymentPayload) throws TabaldiGenericException, IOException {
         return callMyfatoorahPaymentAPI("/InitiatePayment", initPaymentPayload);
     }
     @Override
-    public Map<String, Object> executePaymentTransaction(ExecutePaymentPayload executePaymentPayload) throws TabaldiGenericException {
+    public Map<String, Object> executePaymentTransaction(ExecutePaymentPayload executePaymentPayload) throws TabaldiGenericException, IOException {
         return callMyfatoorahPaymentAPI("/ExecutePayment", executePaymentPayload);
     }
     @Override
-    public Map<String, Object> directPaymentTransaction(DirectPaymentPayload directPaymentPayload, String paymentURL) throws TabaldiGenericException {
+    public Map<String, Object> directPaymentTransaction(DirectPaymentPayload directPaymentPayload, String paymentURL) throws TabaldiGenericException, IOException {
         try {
             URI uri = new URI(paymentURL);
             String path = uri.getPath();
@@ -43,20 +48,24 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (URISyntaxException e) {e.printStackTrace(); return null;}
     }
 
-    private <T> Map<String, Object> callMyfatoorahPaymentAPI(String endpoint,T paymentPayload) throws TabaldiGenericException {
+    private <T> Map<String, Object> callMyfatoorahPaymentAPI(String endpoint,T paymentPayload) throws TabaldiGenericException, IOException {
         HttpHeaders payloadHeaders = HttpHeadersUtils.getApplicationJsonHeader();
         payloadHeaders.setBearerAuth(configuration.getMyfatoorahApiTestKey());
 
         HttpEntity<T> requestHttp =
                 new HttpEntity<>(paymentPayload, payloadHeaders);
         String url = configuration.getMyfatoorahTestBaseUrl()+endpoint;
-        Map<String, Object> apiResponse = RestUtils.postRequest(url, requestHttp, HashMap.class,
+        logger.info(url);
+        String strResponse = RestUtils.postRequest(url, requestHttp, String.class,
                 HttpServletResponse.SC_BAD_REQUEST, "Failed");
-        if(Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
-            return apiResponse;
+        logger.info(strResponse);
+        if(Boolean.valueOf(strResponse.contains("IsSuccess"))){
+            return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
         } else {
+            Map apiResponse = GenericMapper.jsonToObjectMapper(strResponse, Map.class);
             List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
         }
     }
 }

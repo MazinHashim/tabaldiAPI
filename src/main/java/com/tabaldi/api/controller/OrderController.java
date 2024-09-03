@@ -101,7 +101,7 @@ public class OrderController {
     @GetMapping("/change/status/{orderId}")
     public @ResponseBody ResponseEntity<ChangedStatusResponse> changeOrderStatus (@PathVariable("orderId") Long orderId,
                                                                        @RequestParam("status") String status)
-            throws TabaldiGenericException {
+            throws TabaldiGenericException, IOException {
         OrderStatus orderStatus = this.getOrderStatusFromString(status);
         Boolean isChanged = orderService.changeOrderStatusById(orderId, orderStatus);
         String successChangeMessage = MessagesUtils.getStatusChangedMessage(messageSource, status.toLowerCase(), status.toLowerCase());

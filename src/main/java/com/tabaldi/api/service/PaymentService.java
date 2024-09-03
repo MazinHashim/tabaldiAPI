@@ -6,12 +6,13 @@ import com.tabaldi.api.payload.ExecutePaymentPayload;
 import com.tabaldi.api.payload.InitPaymentPayload;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Map;
 
 @Service
 public interface PaymentService {
-    Map<String, Object> initializeMyFatoorahPayment(InitPaymentPayload payload) throws TabaldiGenericException;
+    Map<String, Object> initializeMyFatoorahPayment(InitPaymentPayload payload) throws TabaldiGenericException, IOException;
 
-    Map<String, Object> executePaymentTransaction(ExecutePaymentPayload payload) throws TabaldiGenericException;
-    Map<String, Object> directPaymentTransaction(DirectPaymentPayload payload, String paymentURL) throws TabaldiGenericException;
+    Map<String, Object> executePaymentTransaction(ExecutePaymentPayload payload) throws TabaldiGenericException, IOException;
+    Map<String, Object> directPaymentTransaction(DirectPaymentPayload payload, String paymentURL) throws TabaldiGenericException, IOException;
 }

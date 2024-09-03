@@ -23,7 +23,7 @@ public interface OrderService {
     PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException;
     double fetchCompanyEarningsFromOrders(List<Order> orders);
     double fetchVendorEarningsFromOrders(List<Order> orders);
-    Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException;
+    Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException, IOException;
 
     Order getOrderById(Long orderId) throws TabaldiGenericException;
 

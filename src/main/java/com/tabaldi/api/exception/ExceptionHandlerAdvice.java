@@ -1,9 +1,12 @@
 package com.tabaldi.api.exception;
 
+import com.tabaldi.api.serviceImpl.PaymentServiceImpl;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.hibernate.PropertyValueException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -20,9 +23,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 
 @ControllerAdvice
@@ -30,11 +35,12 @@ import java.util.NoSuchElementException;
 public class ExceptionHandlerAdvice {
 
     private final MessageSource messageSource;
+    final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     @ExceptionHandler({Exception.class})
     public @ResponseBody CustomErrorResponse handleExceptions(HttpServletResponse response, Exception exception) {
         CustomErrorResponse errorResponse = new CustomErrorResponse(response);
-        exception.printStackTrace();
+        logger.error(exception.getMessage());
         String message = messageSource.getMessage("error.unexpected.error",null,
                 LocaleContextHolder.getLocale());
 
@@ -136,6 +142,7 @@ public class ExceptionHandlerAdvice {
         response.setStatus(status);
         errorResponse.setCode(status);
         errorResponse.setMessage(message);
+        logger.error(errorResponse.getCode() + " : " +errorResponse.getMessage());
         return errorResponse;
     }
 }

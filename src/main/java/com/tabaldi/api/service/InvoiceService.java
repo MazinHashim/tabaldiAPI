@@ -17,6 +17,6 @@ public interface InvoiceService {
     Invoice getInvoiceByOrderId(long orderId) throws TabaldiGenericException;
     Invoice saveInvoiceInfo(InvoicePayload payload, Order order) throws TabaldiGenericException;
     Boolean deleteInvoiceById(Long invoiceId) throws TabaldiGenericException;
-    Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException;
+    Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException;
     List<Invoice> getInvoicesList(long vendorId) throws TabaldiGenericException;
 }
