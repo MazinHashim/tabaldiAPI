@@ -41,6 +41,7 @@ public class ExceptionHandlerAdvice {
     public @ResponseBody CustomErrorResponse handleExceptions(HttpServletResponse response, Exception exception) {
         CustomErrorResponse errorResponse = new CustomErrorResponse(response);
         logger.error(exception.getMessage());
+        exception.printStackTrace();
         String message = messageSource.getMessage("error.unexpected.error",null,
                 LocaleContextHolder.getLocale());
 
