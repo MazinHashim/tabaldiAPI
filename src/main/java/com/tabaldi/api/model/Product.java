@@ -23,6 +23,10 @@ public class Product {
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
+    private String arName;
+    @Column(nullable = false)
+    private String duration;
+    @Column(nullable = false)
     private int quantity;
     @Column(length = 2000, nullable = false)
     @JsonIgnore
@@ -37,6 +41,7 @@ public class Product {
     private boolean isPublished;
 
     private String description;
+    private String arDescription;
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<Option> options;

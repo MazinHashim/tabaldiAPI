@@ -91,6 +91,8 @@ public class ProductServiceImpl implements ProductService {
         }
         Product productParams = Product.builder()
                 .name(payload.getName())
+                .arName(payload.getArName())
+                .duration(payload.getDuration())
                 .price(payload.getPrice())
                 .quantity(payload.getQuantity())
                 .companyProfit(payload.getCompanyProfit())
@@ -105,6 +107,8 @@ public class ProductServiceImpl implements ProductService {
         }
         if(payload.getDescription()!=null)
             productParams.setDescription(payload.getDescription());
+        if(payload.getArDescription()!=null)
+            productParams.setArDescription(payload.getArDescription());
         Product createdProduct = productRepository.save(productParams);
         createdProduct.setImages(productParams.getImages());
         if(payload.getProductId()==null&&(payload.getOptions()!=null&&!payload.getOptions().isEmpty())) {

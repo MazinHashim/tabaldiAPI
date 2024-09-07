@@ -21,12 +21,19 @@ public class ProductPayload {
     @NotEmpty
     private String name;
     @NotNull
+    @NotEmpty
+    private String arName;
+    @NotNull
+    @NotEmpty
+    private String duration;
+    @NotNull
     private double price;
     @NotNull
     private int quantity;
     @NotNull
     private double companyProfit;
     private String description;
+    private String arDescription;
     private List<Option> options;
     @NotNull
     private Long categoryId;

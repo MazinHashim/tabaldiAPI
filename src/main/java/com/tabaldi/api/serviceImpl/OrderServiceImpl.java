@@ -140,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
                         }
                     });
                     if(payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal()>70){
-                        String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
+                        String onlyOneAllowedMessage = messageSource.getMessage("error.order.exceed.allowed.cash", null, LocaleContextHolder.getLocale());
                         try {
                             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
                         } catch (TabaldiGenericException e) {
