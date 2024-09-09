@@ -63,8 +63,8 @@ public class VendorController {
     }
 
     @GetMapping
-    public @ResponseBody ResponseEntity<ListResponse<Vendor>> getVendorsList () throws TabaldiGenericException {
-        List<Vendor> vendorsList = vendorService.getVendorsList(); // may add filters
+    public @ResponseBody ResponseEntity<ListResponse<Vendor>> getVendorsList (@RequestParam("roleName") String roleName) throws TabaldiGenericException {
+        List<Vendor> vendorsList = vendorService.getVendorsList(roleName); // may add filters
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Vendors", "البائعين");
         return ResponseEntity.ok(
                 ListResponse.<Vendor>genericBuilder()
@@ -76,8 +76,8 @@ public class VendorController {
 
     @GetMapping("/{vendorId}/products")
     public @ResponseBody ResponseEntity<ListResponse<Product>> getProductsList (
-            @PathVariable("vendorId") long vendorId) throws TabaldiGenericException, IOException {
-        List<Product> productsList = vendorService.getVendorProductsList(vendorId); // may add filters
+            @PathVariable("vendorId") long vendorId, @RequestParam("roleName") String roleName) throws TabaldiGenericException, IOException {
+        List<Product> productsList = vendorService.getVendorProductsList(vendorId, roleName); // may add filters
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Vendor Products", "منتجات البائع");
         return ResponseEntity.ok(
                 ListResponse.<Product>genericBuilder()

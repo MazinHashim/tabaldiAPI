@@ -34,6 +34,10 @@ public class Vendor {
     @Column(nullable = false)
     private String licenseImage;
     @Column(nullable = false)
+    private double lat;
+    @Column(nullable = false)
+    private double lng;
+    @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private VendorType vendorType;
     private Integer maxKilometerDelivery;

@@ -24,6 +24,10 @@ public class VendorPayload {
     @NotNull
     private VendorType vendorType;
     @NotNull
+    private double lat;
+    @NotNull
+    private double lng;
+    @NotNull
     private TabaldiRegion region;
     @NotNull @NotEmpty String phone;
     @NotNull @NotEmpty String email;

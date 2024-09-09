@@ -20,7 +20,7 @@ public interface VendorService {
                           MultipartFile licenseImage, MultipartFile profileImage, MultipartFile coverImage) throws TabaldiGenericException;
     Boolean deleteVendorById(Long vendorId) throws TabaldiGenericException;
     Boolean toggleWorkingById(Long vendorId) throws TabaldiGenericException;
-    List<Vendor> getVendorsList() throws TabaldiGenericException;
+    List<Vendor> getVendorsList(String roleName) throws TabaldiGenericException;
 
     Vendor getVendorById(Long vendorId) throws TabaldiGenericException;
     Vendor getVendorByUserId(Long userId) throws TabaldiGenericException;
@@ -28,7 +28,7 @@ public interface VendorService {
     List<Category> getVendorCategoriesList(Long vendorId) throws TabaldiGenericException;
     List<Advertisement> getVendorAdvertisementsList(Long vendorId) throws TabaldiGenericException;
     List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException;
-    List<Product> getVendorProductsList(Long vendorId) throws TabaldiGenericException, IOException;
+    List<Product> getVendorProductsList(Long vendorId, String roleName) throws TabaldiGenericException, IOException;
 
     List<VendorFrequency> fetchFrequentVendorByOrders(List<Order> orders, int size) throws TabaldiGenericException;
 

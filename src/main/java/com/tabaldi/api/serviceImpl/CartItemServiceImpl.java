@@ -1,10 +1,7 @@
 package com.tabaldi.api.serviceImpl;
 
 import com.tabaldi.api.exception.TabaldiGenericException;
-import com.tabaldi.api.model.CartItem;
-import com.tabaldi.api.model.Customer;
-import com.tabaldi.api.model.Option;
-import com.tabaldi.api.model.Product;
+import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.CartItemPayload;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.ProductRepository;
@@ -84,6 +81,18 @@ public class CartItemServiceImpl implements CartItemService {
         }
 
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
+        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId());
+        List<Vendor> vendors = cartList.stream()
+                .map(cartItem -> cartItem.getProduct().getVendor())
+                .distinct().collect(Collectors.toList());
+        boolean isAllNotRestaurant = vendors.stream()
+                .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
+        boolean isAllRestaurant = vendors.stream()
+                .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
+        if(!(isAllNotRestaurant || isAllRestaurant)){
+            String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
+        }
 
         if(payload.getQuantity() > selectedProduct.getQuantity()) {
             String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null, LocaleContextHolder.getLocale());

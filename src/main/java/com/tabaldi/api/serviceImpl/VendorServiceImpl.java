@@ -48,12 +48,9 @@ public class VendorServiceImpl implements VendorService {
 
 
     @Override
-    public List<Vendor> getVendorsList() throws TabaldiGenericException {
-        UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
-        UserEntity user = session.getUser();
-        List<Vendor> vendorList = !user.getRole().equals(Role.CUSTOMER)
+    public List<Vendor> getVendorsList(String roleName) throws TabaldiGenericException {
+
+        List<Vendor> vendorList = roleName.equals(Role.SUPERADMIN.name())||roleName.equals(Role.VENDOR.name())
                 ? vendorRepository.findAll()
                 : vendorRepository.findByIsWorking(true);
         if(vendorList.isEmpty()){
@@ -197,6 +194,8 @@ public class VendorServiceImpl implements VendorService {
                 .fullName(payload.getFullName())
                 .vendorType(payload.getVendorType())
                 .region(payload.getRegion())
+                .lat(payload.getLat())
+                .lng(payload.getLng())
                 .maxKilometerDelivery(payload.getMaxKilometerDelivery())
                 .openingTime(payload.getOpeningTime())
                 .closingTime(payload.getClosingTime())
@@ -311,13 +310,10 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public List<Product> getVendorProductsList(Long vendorId) throws TabaldiGenericException, IOException {
-        UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
-        UserEntity user = session.getUser();
+    public List<Product> getVendorProductsList(Long vendorId, String roleName) throws TabaldiGenericException, IOException {
+
         Vendor vendor = this.getVendorById(vendorId);
-        List<Product> products = !user.getRole().equals(Role.CUSTOMER)
+        List<Product> products = roleName.equals(Role.SUPERADMIN.name())||roleName.equals(Role.VENDOR.name())
                 ? productRepository.findByVendor(vendor)
                 : productRepository.findByVendorAndIsPublished(vendor, true);
         if(products.isEmpty()){
