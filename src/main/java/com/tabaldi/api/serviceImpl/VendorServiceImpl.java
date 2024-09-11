@@ -192,6 +192,7 @@ public class VendorServiceImpl implements VendorService {
 
         Vendor vendorParams = Vendor.builder()
                 .fullName(payload.getFullName())
+                .arFullName(payload.getArFullName())
                 .vendorType(payload.getVendorType())
                 .region(payload.getRegion())
                 .lat(payload.getLat())

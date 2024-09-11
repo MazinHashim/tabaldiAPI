@@ -66,6 +66,7 @@ public class CategoryServiceImpl implements CategoryService {
         } else {
             Category categoryParams = Category.builder()
                     .name(payload.getName())
+                    .arName(payload.getArName())
                     .isPublished(payload.getCategoryId() != null
                             ? isUpdatedCategoryPublished
                             : payload.isPublished())

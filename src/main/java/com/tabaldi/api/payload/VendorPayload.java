@@ -22,6 +22,9 @@ public class VendorPayload {
     @NotEmpty
     private String fullName;
     @NotNull
+    @NotEmpty
+    private String arFullName;
+    @NotNull
     private VendorType vendorType;
     @NotNull
     private double lat;

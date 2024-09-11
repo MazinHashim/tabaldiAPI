@@ -25,7 +25,10 @@ public class Advertisement {
     private long advertisementId;
     @Column(nullable = false)
     private String title;
+    @Column(nullable = false)
+    private String arTitle;
     private String subtitle;
+    private String arSubtitle;
     @Column(nullable = false, columnDefinition = "int default 1")
     private int priority;
     @Column(nullable = false, columnDefinition = "boolean default true")

@@ -130,6 +130,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         Advertisement advertisementParams = Advertisement.builder()
                 .title(payload.getTitle())
+                .arTitle(payload.getArTitle())
                 .createdDate(payload.getCreateDate())
                 .expireDate(payload.getExpireDate())
                 .startTime(payload.getStartTime())
@@ -143,6 +144,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         if(payload.getSubtitle() != null){
             advertisementParams.setSubtitle(payload.getSubtitle());
+        }
+        if(payload.getArSubtitle() != null){
+            advertisementParams.setArSubtitle(payload.getArSubtitle());
         }
         if (payload.getAdvertisementId() != null) {
             advertisementParams.setAdvertisementId(payload.getAdvertisementId());

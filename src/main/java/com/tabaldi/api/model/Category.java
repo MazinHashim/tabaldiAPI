@@ -22,6 +22,8 @@ public class Category {
     private long categoryId;
     @Column(nullable = false)
     private String name;
+    @Column(nullable = false)
+    private String arName;
     @Column(nullable = false, columnDefinition = "boolean default true")
     private boolean isPublished;
 //    @OneToMany(mappedBy = "category")

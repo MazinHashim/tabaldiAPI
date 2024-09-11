@@ -24,6 +24,8 @@ public class Vendor {
     private long vendorId;
     @Column(nullable = false)
     private String fullName;
+    @Column(nullable = false)
+    private String arFullName;
     private String profileImage;
     private String coverImage;
     @Column(nullable = false)

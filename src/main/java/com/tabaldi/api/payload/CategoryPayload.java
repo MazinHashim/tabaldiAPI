@@ -17,6 +17,9 @@ public class CategoryPayload {
     @NotNull
     @NotEmpty
     private String name;
+    @NotNull
+    @NotEmpty
+    private String arName;
     boolean isPublished;
     @NotNull
     private Long vendorId;

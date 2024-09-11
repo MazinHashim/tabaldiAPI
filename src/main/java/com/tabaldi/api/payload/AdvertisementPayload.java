@@ -21,7 +21,11 @@ public class AdvertisementPayload {
     @NotNull
     @NotEmpty
     private String title;
+    @NotNull
+    @NotEmpty
+    private String arTitle;
     private String subtitle;
+    private String arSubtitle;
     private String url;
     @NotNull
     @Length(min = 1, max = 5)
