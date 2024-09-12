@@ -144,10 +144,10 @@ public class CustomerServiceImpl implements CustomerService {
         return cartItems;
     }
     @Override
-    public List<CartItem> getCustomerActiveCartItemsList(Long customerId) throws TabaldiGenericException, IOException {
+    public List<CartItem> getCustomerActiveCartItemsList(Long customerId, boolean check) throws TabaldiGenericException, IOException {
         Customer customer = this.getCustomerById(customerId);
         List<CartItem> cartItems = cartItemRepository.findByCustomerAndOrderIsNull(customer);
-        if(cartItems.isEmpty()){
+        if(cartItems.isEmpty() && check){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Items","أغراض السلة");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }

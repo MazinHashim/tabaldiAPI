@@ -53,6 +53,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/api/v1/orders/*/cartItems").hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/change/status/**").hasAnyRole(Role.SUPERADMIN.name(), Role.CUSTOMER.name(), Role.VENDOR.name())
                                 .requestMatchers("/api/v1/invoices/order/*").hasAnyRole(Role.SUPERADMIN.name(), Role.VENDOR.name(), Role.CUSTOMER.name())
+                                .requestMatchers("/api/v1/invoices/*/download").permitAll()
                                 .requestMatchers("/api/v1/addresses/**").hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/categories/save").hasAnyRole(Role.VENDOR.name())
                                 .requestMatchers("/api/v1/categories/delete").hasAnyRole(Role.VENDOR.name())

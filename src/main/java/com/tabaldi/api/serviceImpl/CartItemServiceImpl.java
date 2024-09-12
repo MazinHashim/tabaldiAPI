@@ -60,7 +60,7 @@ public class CartItemServiceImpl implements CartItemService {
         cartItemRepository.save(cartItem);
 
         // Use streams to find and update the cart item in the list
-        List<CartItem> updatedCart =  customerService.getCustomerActiveCartItemsList(cartItem.getCustomer().getCustomerId());
+        List<CartItem> updatedCart =  customerService.getCustomerActiveCartItemsList(cartItem.getCustomer().getCustomerId(), true);
         updatedCart.stream()
             .filter(item -> item.getItemId()==cartItemId)
             .findFirst()
@@ -81,7 +81,7 @@ public class CartItemServiceImpl implements CartItemService {
         }
 
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
-        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId());
+        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId(), false);
         List<Vendor> vendors = cartList.stream()
                 .map(cartItem -> cartItem.getProduct().getVendor())
                 .distinct().collect(Collectors.toList());
@@ -135,8 +135,8 @@ public class CartItemServiceImpl implements CartItemService {
             cartItemParams.setComment(payload.getComment());
         if(selectedOptions!=null)
             cartItemParams.setSelectedOptions(selectedOptions);
-        cartItemRepository.saveAndFlush(cartItemParams);
-        return customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId());
+        cartList.add(cartItemRepository.saveAndFlush(cartItemParams));
+        return cartList;
     }
 
     @Override
@@ -152,7 +152,7 @@ public class CartItemServiceImpl implements CartItemService {
                 throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
             }else {
                 cartItemRepository.deleteById(cartItem.getItemId());
-                return customerService.getCustomerActiveCartItemsList(cartItem.getCustomer().getCustomerId());
+                return customerService.getCustomerActiveCartItemsList(cartItem.getCustomer().getCustomerId(), true);
 //            return activeCart.stream().filter(cartItem1 -> cartItem1.getItemId()!=cartItemId)
 //                    .collect(Collectors.toList());
             }

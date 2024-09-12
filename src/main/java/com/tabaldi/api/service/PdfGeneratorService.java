@@ -1,12 +1,12 @@
 package com.tabaldi.api.service;
 
+import com.tabaldi.api.model.Invoice;
 import org.springframework.stereotype.Service;
 
 import java.io.FileNotFoundException;
-import java.util.Map;
 
 @Service
 public interface PdfGeneratorService {
 
-    void generatePdf(String htmlTemplatePath, Map<String, Object> data, String outputPath) throws FileNotFoundException;
+    byte[] generatePdf(Invoice invoice) throws FileNotFoundException;
 }

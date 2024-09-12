@@ -2,21 +2,20 @@ package com.tabaldi.api.controller;
 
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.Invoice;
-import com.tabaldi.api.model.Product;
-import com.tabaldi.api.payload.InvoicePayload;
 import com.tabaldi.api.response.InvoiceResponse;
 import com.tabaldi.api.response.DeleteResponse;
-import com.tabaldi.api.response.ListResponse;
 import com.tabaldi.api.service.InvoiceService;
+import com.tabaldi.api.service.PdfGeneratorService;
 import com.tabaldi.api.utils.MessagesUtils;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.util.List;
+import java.io.FileNotFoundException;
 
 @RestController
 @RequestMapping("/api/v1/invoices")
@@ -25,6 +24,7 @@ import java.util.List;
 public class InvoiceController {
 
     private final InvoiceService invoiceService;
+    private final PdfGeneratorService pdfGeneratorService;
     private final MessageSource messageSource;
 
     @GetMapping("/order/{orderId}")
@@ -38,6 +38,17 @@ public class InvoiceController {
                 .event("fetched")
                 .invoice(invoice).build());
 
+    }
+    @GetMapping("/{id}/download")
+    public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id) throws TabaldiGenericException, FileNotFoundException {
+        Invoice invoice = invoiceService.getInvoiceById(id);
+        byte[] pdfData = pdfGeneratorService.generatePdf(invoice);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", "invoice_" + id + ".pdf");
+
+        return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{invoiceId}")

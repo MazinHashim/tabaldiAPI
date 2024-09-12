@@ -8,10 +8,7 @@ import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.OrderRepository;
 import com.tabaldi.api.repository.ProductRepository;
-import com.tabaldi.api.service.CustomerService;
-import com.tabaldi.api.service.InvoiceService;
-import com.tabaldi.api.service.OrderService;
-import com.tabaldi.api.service.SequencesService;
+import com.tabaldi.api.service.*;
 import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
@@ -36,6 +33,7 @@ public class OrderServiceImpl implements OrderService {
     private final ProductRepository productRepository;
     private final SequencesService sequencesService;
     private final CustomerService customerService;
+    private final PdfGeneratorService pdfGeneratorService;
     private final InvoiceService invoiceService;
     private final MessageSource messageSource;
 
@@ -44,7 +42,7 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException {
 
         Customer customer = customerService.getCustomerById(customerId);
-        List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId);
+        List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId, true);
         if(cartItems.stream().anyMatch(cartItem ->
                 !cartItem.getProduct().isPublished() || !cartItem.getProduct().getCategory().isPublished())) {
             String itemsInOrderNotAvailableMessage = messageSource.getMessage("error.items.in.order.not.available", null, LocaleContextHolder.getLocale());

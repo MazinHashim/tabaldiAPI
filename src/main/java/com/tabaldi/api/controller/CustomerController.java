@@ -112,7 +112,7 @@ public class CustomerController {
     @GetMapping("/{customerId}/active/cartItems")
     public @ResponseBody ResponseEntity<ListResponse<CartItem>> getCustomerActiveCartItemsList (
             @PathVariable("customerId") Long customerId) throws TabaldiGenericException, IOException {
-        List<CartItem> cartItemsList = customerService.getCustomerActiveCartItemsList(customerId);
+        List<CartItem> cartItemsList = customerService.getCustomerActiveCartItemsList(customerId, true);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Cart Items", "أغراض السلة");
         return ResponseEntity.ok(
                 ListResponse.<CartItem>genericBuilder()

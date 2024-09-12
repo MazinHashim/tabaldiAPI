@@ -33,4 +33,6 @@ public class TabaldiConfiguration {
 
     private String emailUsername;
     private String emailPassword;
+
+    private String pdfFilePath;
 }
