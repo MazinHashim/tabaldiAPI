@@ -65,6 +65,7 @@ tabaldi.configuration.sms_gateway_endpoint_url={{BASE_URL}}
 tabaldi.configuration.sms_gateway_username={{USERNAME}}
 tabaldi.configuration.sms_gateway_password={{API_PASSWORD}}
 tabaldi.configuration.sms_gateway_senderid={{SENDER_ID}}
+tabaldi.configuration.pdf_file_path={{PDF_FILE_PATH}}
 ```
 notes: 
 if you will store images and file in the same server then `host_ip_address`,`host_username` and `host_password` will not affect. e.g: `local` environment.

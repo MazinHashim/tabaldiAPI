@@ -116,7 +116,7 @@ public class OrderServiceImpl implements OrderService {
                             try {
                                 if (product.getImagesCollection() != null)
                                     product.setImages(GenericMapper
-                                                    .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+                                            .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
                                 if (cartItem.getOptionsCollection() != null)
                                     cartItem.setSelectedOptions(GenericMapper
                                             .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
@@ -126,15 +126,17 @@ public class OrderServiceImpl implements OrderService {
 
                             // Calculate the total price for the cart item
                             double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
-                            double itemTotalWithProfit = itemTotal+(itemTotal*cartItem.getProduct().getCompanyProfit()/100);
-                            double roundedTotal = Math.round(itemTotalWithProfit*2)/2;
+                            double itemTotalWithProfit = itemTotal + (itemTotal * cartItem.getProduct().getCompanyProfit() / 100);
+                            double roundedTotal = Math.round(itemTotalWithProfit * 2) / 2;
                             order.setTotal(order.getTotal() + roundedTotal);
 
                             // Add fees for selected options to the order total
-                            cartItem.getSelectedOptions().forEach(option -> {
-                                if (option.getFee() != null)
-                                    order.setTotal(order.getTotal() + option.getFee());
-                            });
+                            if (cartItem.getSelectedOptions() != null) {
+                                cartItem.getSelectedOptions().forEach(option -> {
+                                    if (option.getFee() != null)
+                                        order.setTotal(order.getTotal() + option.getFee());
+                                });
+                            }
                         }
                     });
                     if(payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal()>70){
