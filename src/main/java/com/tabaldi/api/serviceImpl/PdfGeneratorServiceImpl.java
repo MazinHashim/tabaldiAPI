@@ -4,6 +4,7 @@ import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Invoice;
 import com.tabaldi.api.model.Option;
 import com.tabaldi.api.service.PdfGeneratorService;
+import com.tabaldi.api.utils.GenericMapper;
 import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
@@ -105,8 +106,10 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
                 };
                 drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths, itemData);
                 yPosition -= rowHeight;
-                if(item.getSelectedOptions()!=null){
-                    contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+                if(item.getOptionsCollection()!=null){
+                    item.setSelectedOptions(GenericMapper
+                            .jsonToListObjectMapper(item.getOptionsCollection(), Option.class));
+                    contentStream.setFont(PDType1Font.TIMES_BOLD, 10);
                     for (Option option: item.getSelectedOptions()){
                         String[] optionData = {
                                 option.getName(),
