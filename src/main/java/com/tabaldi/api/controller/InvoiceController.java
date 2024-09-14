@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/v1/invoices")
@@ -40,13 +41,13 @@ public class InvoiceController {
 
     }
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id) throws TabaldiGenericException, FileNotFoundException {
+    public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id) throws TabaldiGenericException, IOException {
         Invoice invoice = invoiceService.getInvoiceById(id);
         byte[] pdfData = pdfGeneratorService.generatePdf(invoice);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("attachment", "invoice_" + id + ".pdf");
+        headers.setContentDispositionFormData("attachment", "invoice_" + invoice.getInvoiceNumber() + ".pdf");
 
         return new ResponseEntity<>(pdfData, headers, HttpStatus.OK);
     }
