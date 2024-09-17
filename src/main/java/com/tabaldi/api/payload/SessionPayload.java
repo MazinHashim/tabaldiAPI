@@ -19,4 +19,7 @@ public class SessionPayload {
     @NotNull
     @NotEmpty
     private String token;
+    @NotNull
+    @NotEmpty
+    private String deviceToken;
 }

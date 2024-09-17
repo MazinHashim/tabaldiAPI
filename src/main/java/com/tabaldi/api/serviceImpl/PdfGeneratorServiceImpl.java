@@ -11,26 +11,20 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
 import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
 public class PdfGeneratorServiceImpl implements PdfGeneratorService {
     private final TabaldiConfiguration configuration;
 
-    public byte[] generatePdf(Invoice invoice) throws IOException {
+    public byte[] generatePdf(Invoice invoice, boolean idAuthGenerated) throws IOException {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage();
             document.addPage(page);
@@ -147,9 +141,17 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             // Close the content stream
             contentStream.close();
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            if(!idAuthGenerated) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                document.save(outputStream);
+                return outputStream.toByteArray();
+            }
+            String pathURL = configuration.getInvoicePdfFolder() + "invoice_" + invoice.getInvoiceNumber() + ".pdf";
+            File file = new File(pathURL);
+            file.deleteOnExit();
+            FileOutputStream outputStream = new FileOutputStream(file);
             document.save(outputStream);
-            return outputStream.toByteArray();
+            return null;
         } catch (IOException e) {
             throw new RuntimeException("Error generating PDF", e);
         }

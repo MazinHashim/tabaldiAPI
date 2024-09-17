@@ -33,6 +33,7 @@ public class SessionServiceImpl implements SessionService {
                 .sessionToken(payload.getToken())
                 .refreshToken(RandomString.make(40))
                 .user(payload.getUser())
+                .deviceToken(payload.getDeviceToken())
                 .lastLogin(LocalDateTime.now())
                 .build();
         session = sessionRepository.save(session);
@@ -43,6 +44,7 @@ public class SessionServiceImpl implements SessionService {
 
         loginSession.setLastLogin(LocalDateTime.now());
         loginSession.setSessionToken(payload.getToken());
+        loginSession.setDeviceToken(payload.getDeviceToken());
         loginSession = sessionRepository.save(loginSession);
 
         return loginSession;

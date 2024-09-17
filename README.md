@@ -50,6 +50,7 @@ tabaldi.configuration.host_password={{IMAGES_HOST_PASSWORD}}
 tabaldi.configuration.host_vendor_image_folder={{VENDOR_IMAGES_FOLDER_PATH}}
 tabaldi.configuration.host_product_image_folder={{PRODUCT_IMAGES_FOLDER_PATH}}
 tabaldi.configuration.host_ads_image_folder={{ADS_IMAGES_FOLDER_PATH}}
+tabaldi.configuration.invoice_pdf_folder={{INVOICE_PDF_FOLDER}}
 
 tabaldi.configuration.session_token_expiration={{MILLSECONDS}} # for example 86400
 tabaldi.configuration.otp_expiration_min={{NUMBER_IN_MIN}}
@@ -65,7 +66,7 @@ tabaldi.configuration.sms_gateway_endpoint_url={{BASE_URL}}
 tabaldi.configuration.sms_gateway_username={{USERNAME}}
 tabaldi.configuration.sms_gateway_password={{API_PASSWORD}}
 tabaldi.configuration.sms_gateway_senderid={{SENDER_ID}}
-tabaldi.configuration.pdf_file_path={{PDF_FILE_PATH}}
+tabaldi.configuration.active_profile={{ACTIVE_PROFILE}}
 ```
 notes: 
 if you will store images and file in the same server then `host_ip_address`,`host_username` and `host_password` will not affect. e.g: `local` environment.

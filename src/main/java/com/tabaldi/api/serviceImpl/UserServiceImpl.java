@@ -209,6 +209,10 @@ public class UserServiceImpl implements UserService {
         } else {
             user = userOptional.get();
         }
+        if(user.getRole().equals(Role.CUSTOMER) && (payload.getDeviceToken()==null||payload.getDeviceToken().isEmpty())) {
+            String deviceTokenRequiredMessage = messageSource.getMessage("error.device.token.required", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, deviceTokenRequiredMessage);
+        }
         if(userVerification!=null){
             userVerification.setUser(user);
             userVerificationRepository.save(userVerification);
@@ -221,6 +225,7 @@ public class UserServiceImpl implements UserService {
         // create session for that user to save session token
         SessionPayload sessionPayload = SessionPayload.builder()
                 .token(jwtToken)
+                .deviceToken(payload.getDeviceToken())
                 .user(user)
                 .build();
         Session loginSession;
