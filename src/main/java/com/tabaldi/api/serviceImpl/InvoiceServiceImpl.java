@@ -62,9 +62,11 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .subtotal(payload.getSubtotal())
                     .total(payload.getTotal())
                     .build());
+            Random random = new Random();
+            int invoiceNumber = random.ints(111111, 999999).findFirst().getAsInt();
 
             return invoiceRepository.save(Invoice.builder()
-                    .invoiceNumber("INV-" + UUID.randomUUID())
+                    .invoiceNumber(String.valueOf(invoiceNumber))
                     .issueDate(OffsetDateTime.now())
                     .paymentMethod(payload.getPaymentMethod())
                     .status(InvoiceStatus.UNPAID)
@@ -133,7 +135,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 // add apple_pay integration
             }
             invoice.setStatus(InvoiceStatus.PAID);
-            invoice.setInvoiceNumber("4303866");
+//            invoice.setInvoiceNumber("4303866");
             return invoiceRepository.save(invoice);
         } else
             return invoice;

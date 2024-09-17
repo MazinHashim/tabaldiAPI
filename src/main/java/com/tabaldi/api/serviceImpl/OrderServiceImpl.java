@@ -1,8 +1,10 @@
 package com.tabaldi.api.serviceImpl;
 
+import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.InvoicePayload;
+import com.tabaldi.api.payload.NotificationPayload;
 import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.repository.CartItemRepository;
@@ -29,11 +31,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final SequencesService sequencesService;
     private final CustomerService customerService;
+    private final SessionService sessionService;
     private final PdfGeneratorService pdfGeneratorService;
+    private final TabaldiConfiguration configuration;
+    private final EmailService emailService;
     private final InvoiceService invoiceService;
     private final MessageSource messageSource;
 
@@ -42,9 +48,10 @@ public class OrderServiceImpl implements OrderService {
     public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException {
 
         Customer customer = customerService.getCustomerById(customerId);
+        Session session = sessionService.getSessionByUsername(customer.getUser().getPhone());
         List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId, true);
 
-        // 1/ check if all cart items are available to create an order
+        // 1/ check if all cart items are published to create an order
         if(cartItems.stream().anyMatch(cartItem ->
                 !cartItem.getProduct().isPublished() || !cartItem.getProduct().getCategory().isPublished())) {
             String itemsInOrderNotAvailableMessage = messageSource.getMessage("error.items.in.order.not.available", null, LocaleContextHolder.getLocale());
@@ -69,107 +76,122 @@ public class OrderServiceImpl implements OrderService {
                 .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
         if(isAllNotRestaurant || isAllRestaurant){
 
-            // 4/ check if there is any pending order for any of these vendors
-            AtomicBoolean hasPendingVendorOrder= new AtomicBoolean(false);
-            StringBuilder pending = new StringBuilder();
+//             4/ check if there is any pending order for any of these vendors
+//            AtomicBoolean hasPendingVendorOrder= new AtomicBoolean(false);
+//            StringBuilder pending = new StringBuilder();
+//            vendors.forEach(vendor -> {
+//                Optional<Order> lastOrderCreatedOptional = orderRepository.getLastActiveOrderPerVendor(customerId, vendor.getVendorId());
+//                if(lastOrderCreatedOptional.isPresent()){
+//                    hasPendingVendorOrder.set(true);
+//                    pending.append(vendor.getFullName().concat(", "));
+//                }
+//            });
+//            if(hasPendingVendorOrder.get()){
+//                String pendingVendors = pending.substring(0, pending.lastIndexOf(", ")).trim();
+//                String pendingOrderMessage = MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
+//                        pendingVendors, pendingVendors);
+//                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, pendingOrderMessage);
+//            } else {
+
+            // 5/ if all checks passed successfully, create an order for each vendor
+            List<Order> orders = new ArrayList<>(vendors.size());
+            Address selectedAddress = customerService.getSelectedCustomerAddress(customerId);
             vendors.forEach(vendor -> {
-                Optional<Order> lastOrderCreatedOptional = orderRepository.getLastActiveOrderPerVendor(customerId, vendor.getVendorId());
-                if(lastOrderCreatedOptional.isPresent()){
-                    hasPendingVendorOrder.set(true);
-                    pending.append(vendor.getFullName().concat(", "));
-                }
+            final String orderNumber = this.getOrderNumber(customer, vendor);
+            Order orderParams = Order.builder()
+                    .orderDate(OffsetDateTime.now())
+                    .orderNumber(orderNumber)
+                    .customer(customer)
+                    .vendor(vendor)
+                    .status(OrderStatus.WAITING)
+                    .address(selectedAddress)
+                    .build();
+                orders.add(orderParams);
             });
-            if(hasPendingVendorOrder.get()){
-                String pendingVendors = pending.substring(0, pending.lastIndexOf(", ")).trim();
-                String pendingOrderMessage = MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
-                        pendingVendors, pendingVendors);
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, pendingOrderMessage);
-            } else {
+            List<Order> createdOrders = orderRepository.saveAll(orders);
 
-                // 5/ if all checks passed successfully, create an order for each vendor
-                List<Order> orders = new ArrayList<>(vendors.size());
-                Address selectedAddress = customerService.getSelectedCustomerAddress(customerId);
-                vendors.forEach(vendor -> {
-                final String orderNumber = this.getOrderNumber(customer, vendor);
-                Order orderParams = Order.builder()
-                        .orderDate(OffsetDateTime.now())
-                        .orderNumber(orderNumber)
-                        .customer(customer)
-                        .vendor(vendor)
-                        .status(OrderStatus.WAITING)
-                        .address(selectedAddress)
-                        .build();
-                    orders.add(orderParams);
-                });
-                List<Order> createdOrders = orderRepository.saveAll(orders);
+            // 6/ assign created vendor order to same vendor cart items
+            for (Order order : createdOrders) {// set cart items for each order related to vendor
+                order.setCartItems(cartItems.stream()
+                        .filter(cartItem -> cartItem.getProduct().getVendor() == order.getVendor())
+                        .collect(Collectors.toList()));
 
-                // 6/ assign created vendor order to same vendor cart items
-                for (Order order : createdOrders) {// set cart items for each order related to vendor
-                    order.setCartItems(cartItems.stream()
-                            .filter(cartItem -> cartItem.getProduct().getVendor() == order.getVendor())
-                            .collect(Collectors.toList()));
+                for (CartItem cartItem : cartItems) {// Check if the cart item belongs to the same vendor as the order
+                    if (cartItem.getProduct().getVendor().getVendorId() == order.getVendor().getVendorId()) {
+                        // Set the order for the cart item
+                        cartItem.setOrder(order);
+            // 7/ Update product quantity by decreasing cart item quantity
+                        Product product = cartItem.getProduct();
+                        int newQuantity = product.getQuantity() - cartItem.getQuantity();
+                        product.setQuantity(newQuantity);
+                        cartItemRepository.save(cartItem);
+                        // set images and options of product because it will be returned
+                        if (product.getImagesCollection() != null)
+                            product.setImages(GenericMapper
+                                    .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+                        // set selected options of cart item because it will be added to the order total
+                        if (cartItem.getOptionsCollection() != null)
+                            cartItem.setSelectedOptions(GenericMapper
+                                    .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
 
-                    for (CartItem cartItem : cartItems) {// Check if the cart item belongs to the same vendor as the order
-                        if (cartItem.getProduct().getVendor().getVendorId() == order.getVendor().getVendorId()) {
-                            // Set the order for the cart item
-                            cartItem.setOrder(order);
-                // 7/ Update product quantity by decreasing cart item quantity
-                            Product product = cartItem.getProduct();
-                            int newQuantity = product.getQuantity() - cartItem.getQuantity();
-                            product.setQuantity(newQuantity);
-                            cartItemRepository.save(cartItem);
-                            // set images and options of product because it will be returned
-                            if (product.getImagesCollection() != null)
-                                product.setImages(GenericMapper
-                                        .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
-                            // set selected options of cart item because it will be added to the order total
-                            if (cartItem.getOptionsCollection() != null)
-                                cartItem.setSelectedOptions(GenericMapper
-                                        .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
-
-                //8/ Calculate the total price for the cart item and set order total
-                            double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
+            //8/ Calculate the total price for the cart item and set order total
+                        double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
 //                            double itemTotalWithProfit = itemTotal + (itemTotal * cartItem.getProduct().getCompanyProfit() / 100);
-                            double roundedTotal = Math.round(itemTotal * 2) / 2;
-                            order.setTotal(order.getTotal() + roundedTotal);
+                        double roundedTotal = Math.round(itemTotal * 2) / 2;
+                        order.setTotal(order.getTotal() + roundedTotal);
 
-                            // Add fees for selected options to the order total
-                            if (cartItem.getSelectedOptions() != null) {
-                                cartItem.getSelectedOptions().forEach(option -> {
-                                    if (option.getFee() != null)
-                                        order.setTotal(order.getTotal() + option.getFee());
-                                });
-                            }
+                        // Add fees for selected options to the order total
+                        if (cartItem.getSelectedOptions() != null) {
+                            cartItem.getSelectedOptions().forEach(option -> {
+                                if (option.getFee() != null)
+                                    order.setTotal(order.getTotal() + option.getFee());
+                            });
                         }
                     }
-        // 8/ check if order's payment method is CASH and total is less than 70, the order will be aborted
-                    if (payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal() > 70) {
-                        String onlyOneAllowedMessage = messageSource.getMessage("error.order.exceed.allowed.cash", null, LocaleContextHolder.getLocale());
-                        throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
-                    }
-                    // Ensure the updated product quantities are saved
-                    cartItems.stream()
-                            .map(CartItem::getProduct)
-                            .forEach(productRepository::save);
-        // 9/ Create invoice for each created order
-                    double discount = payload.getDiscount() == null ? 0.0 : payload.getDiscount();
-                    double taxPercentage = order.getTotal() * payload.getTaxPercentage() / 100;
-                    Invoice createdInvoice = invoiceService.saveInvoiceInfo(InvoicePayload.builder()
-                            .orderId(order.getOrderId())
-                            .discount(discount)
-                            .paymentMethod(payload.getPaymentMethod())
-                            .shippingCost(payload.getShippingCost())
-                            .taxes(taxPercentage)
-                            .subtotal(order.getTotal())
-                            .total(order.getTotal() + taxPercentage + discount + payload.getShippingCost())
-                            .build(), order);
-                    order.setTotal(createdInvoice.getSummary().getTotal());
-                    if (!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
-                        invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
-                    }
                 }
-                return createdOrders;
+    // 8/ check if order's payment method is CASH and total is less than 70, the order will be aborted
+                if (payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal() > 70) {
+                    String onlyOneAllowedMessage = messageSource.getMessage("error.order.exceed.allowed.cash", null, LocaleContextHolder.getLocale());
+                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
+                }
+                // Ensure the updated product quantities are saved
+                cartItems.stream()
+                        .map(CartItem::getProduct)
+                        .forEach(productRepository::save);
+    // 9/ Create invoice for each created order
+                double discount = payload.getDiscount() == null ? 0.0 : payload.getDiscount();
+                double taxPercentage = order.getTotal() * payload.getTaxPercentage() / 100;
+                Invoice createdInvoice = invoiceService.saveInvoiceInfo(InvoicePayload.builder()
+                        .orderId(order.getOrderId())
+                        .discount(discount)
+                        .paymentMethod(payload.getPaymentMethod())
+                        .shippingCost(payload.getShippingCost())
+                        .taxes(taxPercentage)
+                        .subtotal(order.getTotal())
+                        .total(order.getTotal() + taxPercentage + discount + payload.getShippingCost())
+                        .build(), order);
+                order.setTotal(createdInvoice.getSummary().getTotal());
+                if (!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
+                    createdInvoice = invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
+                }
+                // send email with attached invoice to customer using email service
+                if(customer.getEmail()!=null && !customer.getEmail().isEmpty()) {
+                    pdfGeneratorService.generatePdf(createdInvoice, true);
+                    emailService.sendEmailWithAttachment(
+                            customer.getEmail(),
+                            "Order Invoice of "+order.getVendor().getFullName(),
+                            "Thanks for your order",
+                            configuration.getInvoicePdfFolder()+"invoice_"+createdInvoice.getInvoiceNumber()+".pdf"
+                    );
+                }
+                // send push notification to customer using firebase service
+                notificationService.sendPushNotificationByToken(NotificationPayload.builder()
+                        .token(session.getDeviceToken())
+                        .title("Rateena Order")
+                        .body("Your order from "+order.getVendor().getFullName()+" has been created")
+                        .build());
             }
+            return createdOrders;
         } else {
             String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);

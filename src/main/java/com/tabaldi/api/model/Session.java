@@ -31,6 +31,7 @@ public class Session {
     @Column(nullable = false)
     private String refreshToken;
     private String sessionToken;
+    private String deviceToken;
     private LocalDateTime lastLogin;
     private LocalDateTime lastLogout;
 

@@ -43,7 +43,7 @@ public class InvoiceController {
     @GetMapping("/{id}/download")
     public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id) throws TabaldiGenericException, IOException {
         Invoice invoice = invoiceService.getInvoiceById(id);
-        byte[] pdfData = pdfGeneratorService.generatePdf(invoice);
+        byte[] pdfData = pdfGeneratorService.generatePdf(invoice, false);
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);

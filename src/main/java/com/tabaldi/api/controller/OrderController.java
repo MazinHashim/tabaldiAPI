@@ -4,9 +4,11 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Order;
 import com.tabaldi.api.model.OrderStatus;
+import com.tabaldi.api.payload.NotificationPayload;
 import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.response.*;
+import com.tabaldi.api.service.NotificationService;
 import com.tabaldi.api.service.OrderService;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.validation.Valid;
@@ -23,11 +25,12 @@ import java.util.List;
 @RequestMapping("/api/v1/orders")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-public class OrderController {
+public class
+OrderController {
 
     private final OrderService orderService;
     private final MessageSource messageSource;
-
+    private final NotificationService notificationService;
     @GetMapping("/{orderId}")
     public @ResponseBody ResponseEntity<OrderResponse> getById (@PathVariable("orderId") Long orderId)
             throws TabaldiGenericException {
