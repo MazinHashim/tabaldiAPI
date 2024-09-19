@@ -178,10 +178,12 @@ public class ProductServiceImpl implements ProductService {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Items","أغراض السلة");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
-        for (CartItem cartItem : cartItems.stream()
-                .filter(cartItem -> cartItem.getOptionsCollection()!=null)
-                .collect(Collectors.toList()))
-            cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+        for (CartItem cartItem : cartItems) {
+            if(cartItem.getOptionsCollection()!=null && !cartItem.getOptionsCollection().isEmpty()) {
+                cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+            }
+            cartItem.getProduct().setImages(GenericMapper.jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+        }
         return cartItems;
     }
 

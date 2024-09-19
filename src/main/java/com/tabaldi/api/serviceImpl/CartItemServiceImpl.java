@@ -34,12 +34,16 @@ public class CartItemServiceImpl implements CartItemService {
     @Override
     public CartItem getCartItemById(Long cartItemId) throws TabaldiGenericException, IOException {
         Optional<CartItem> selectedCartItem = cartItemRepository.findById(cartItemId);
-        if(!selectedCartItem.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Item","عنصر سلة التسوق");
+        if (!selectedCartItem.isPresent()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Item", "عنصر سلة التسوق");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         CartItem cartItem = selectedCartItem.get();
-        cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+        if (cartItem.getSelectedOptions() != null && !cartItem.getSelectedOptions().isEmpty()){
+            cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+        }
+        cartItem.getProduct().setImages(GenericMapper.jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+
         return selectedCartItem.get();
     }
     @Override

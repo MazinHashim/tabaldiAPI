@@ -1,11 +1,13 @@
 package com.tabaldi.api.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.tabaldi.api.utils.GenericMapper;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.io.IOException;
 import java.util.List;
 
 @Entity
@@ -56,4 +58,8 @@ public class Product {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     private Category category;
+
+//    public List<String> getImages() throws IOException {
+//        return GenericMapper.jsonToListObjectMapper(this.imagesCollection, String.class);
+//    }
 }
