@@ -36,14 +36,14 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.drawImage(pdImage, imgOffset, imgOffset, 60, 60);
             contentStream.drawImage(pdImage, 450, headerPosition, 140, 140);
             contentStream.beginText();
-            contentStream.setFont(PDType1Font.TIMES_ROMAN, 42);
+            contentStream.setFont(PDType1Font.HELVETICA, 42);
             contentStream.newLineAtOffset(50, 720);
             contentStream.showText("INVOICE");
             contentStream.endText();
 
             float infoPosition = 680;
             contentStream.beginText();
-            contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
             contentStream.newLineAtOffset(50, infoPosition);
             contentStream.showText("Invoice Number: " + invoice.getInvoiceNumber());
             contentStream.newLineAtOffset(0, -17);
@@ -57,7 +57,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.showText("Issue Date: " + invoice.getFIssueDate());
             contentStream.endText();
             contentStream.beginText();
-            contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
+            contentStream.setFont(PDType1Font.HELVETICA, 12);
             contentStream.newLineAtOffset(350, infoPosition);
             contentStream.showText("Order Number: " + invoice.getOrder().getOrderNumber());
             contentStream.newLineAtOffset(0, -17);
@@ -81,7 +81,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             float[] columnWidths = {270, 85, 85, 100};
 
             // Draw table header
-            contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths, new String[]{"Item", "Quantity", "Price", "Total"});
 
             yPosition -= rowHeight;
@@ -91,7 +91,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             List<CartItem> items = invoice.getOrder().getCartItems();
 
             for (CartItem item : items) {
-                contentStream.setFont(PDType1Font.TIMES_ROMAN, 12);
+                contentStream.setFont(PDType1Font.HELVETICA, 12);
                 String[] itemData = {
                         item.getProduct().getName(),
                         String.valueOf(item.getQuantity()),
@@ -103,7 +103,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
                 if(item.getOptionsCollection()!=null){
                     item.setSelectedOptions(GenericMapper
                             .jsonToListObjectMapper(item.getOptionsCollection(), Option.class));
-                    contentStream.setFont(PDType1Font.TIMES_BOLD, 10);
+                    contentStream.setFont(PDType1Font.HELVETICA_BOLD, 10);
                     for (Option option: item.getSelectedOptions()){
                         String[] optionData = {
                                 option.getName(),
@@ -120,7 +120,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             // Draw total Details row
             yPosition -= rowHeight;
             tableWidth = 220;
-            contentStream.setFont(PDType1Font.TIMES_BOLD, 12);
+            contentStream.setFont(PDType1Font.HELVETICA_BOLD, 12);
             margin = 330;
             columnWidths = new float[]{160, 0, 0, 40};
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
