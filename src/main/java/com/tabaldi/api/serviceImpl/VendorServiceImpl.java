@@ -30,7 +30,6 @@ public class VendorServiceImpl implements VendorService {
 
     private final VendorRepository vendorRepository;
     private final UserRepository userRepository;
-    private final UserVerificationRepository userVerificationRepository;
 
     private final MessageSource messageSource;
 
@@ -43,8 +42,6 @@ public class VendorServiceImpl implements VendorService {
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
     private final TabaldiConfiguration configuration;
-    @Value("${spring.profiles.active}")
-    private String profile;
 
 
     @Override
@@ -261,6 +258,8 @@ public class VendorServiceImpl implements VendorService {
 
     @Override
     public Vendor getVendorByUserId(Long userId) throws TabaldiGenericException {
+        // if you want to check role check it using PathVariable annotation
+        // or in any case you should not access auth user here
         Optional<Vendor> vendor = vendorRepository.findByUser(
                 UserEntity.builder().userId(userId).build());
         if(!vendor.isPresent()){
