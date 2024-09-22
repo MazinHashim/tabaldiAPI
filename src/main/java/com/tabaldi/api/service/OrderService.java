@@ -1,5 +1,6 @@
 package com.tabaldi.api.service;
 
+import com.ibm.icu.text.ArabicShapingException;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Order;
@@ -17,7 +18,7 @@ import java.util.Map;
 public interface OrderService {
     List<Order> getAllOrders(Long customerId) throws TabaldiGenericException;
     List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException;
-    List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException;
+    List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException, ArabicShapingException;
     Map<String, Long> countAllOrdersInSystem() throws TabaldiGenericException;
     PendingOrders fetchPendingOrdersByVendor(List<Order> orders);
     PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException, IOException;

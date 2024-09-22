@@ -1,5 +1,6 @@
 package com.tabaldi.api.serviceImpl;
 
+import com.ibm.icu.text.ArabicShapingException;
 import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
@@ -45,7 +46,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException {
+    public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException, ArabicShapingException {
 
         Customer customer = customerService.getCustomerById(customerId);
         Session session = sessionService.getSessionByUsername(customer.getUser().getPhone());

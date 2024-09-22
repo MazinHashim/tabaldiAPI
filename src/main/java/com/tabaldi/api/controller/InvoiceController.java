@@ -1,5 +1,6 @@
 package com.tabaldi.api.controller;
 
+import com.ibm.icu.text.ArabicShapingException;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.Invoice;
 import com.tabaldi.api.response.InvoiceResponse;
@@ -41,7 +42,7 @@ public class InvoiceController {
 
     }
     @GetMapping("/{id}/download")
-    public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id) throws TabaldiGenericException, IOException {
+    public ResponseEntity<byte[]> downloadInvoice(@PathVariable Long id) throws TabaldiGenericException, IOException, ArabicShapingException {
         Invoice invoice = invoiceService.getInvoiceById(id);
         byte[] pdfData = pdfGeneratorService.generatePdf(invoice, false);
 

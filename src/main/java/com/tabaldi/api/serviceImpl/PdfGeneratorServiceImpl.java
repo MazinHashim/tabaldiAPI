@@ -1,4 +1,7 @@
 package com.tabaldi.api.serviceImpl;
+import com.ibm.icu.text.ArabicShaping;
+import com.ibm.icu.text.ArabicShapingException;
+import com.ibm.icu.text.Bidi;
 import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Invoice;
@@ -25,7 +28,7 @@ import java.util.List;
 public class PdfGeneratorServiceImpl implements PdfGeneratorService {
     private final TabaldiConfiguration configuration;
 
-    public byte[] generatePdf(Invoice invoice, boolean idAuthGenerated) throws IOException {
+    public byte[] generatePdf(Invoice invoice, boolean idAuthGenerated) throws IOException, ArabicShapingException {
         try (PDDocument document = new PDDocument()) {
             PDPage page = new PDPage();
             document.addPage(page);
@@ -98,9 +101,15 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             List<CartItem> items = invoice.getOrder().getCartItems();
 
             for (CartItem item : items) {
+                // Shape and correct the Arabic text using ICU4J
+                ArabicShaping arabicShaping = new ArabicShaping(ArabicShaping.LETTERS_SHAPE);
+                String shapedArabic = arabicShaping.shape(item.getProduct().getName()); // Perform Arabic shaping (joining letters)
+                // Handle BiDi (Bi-Directional) text
+                Bidi bidi = new Bidi(shapedArabic, Bidi.DIRECTION_RIGHT_TO_LEFT);
+                String itemNameBidiArabic = bidi.writeReordered(Bidi.DO_MIRRORING);
                 contentStream.setFont(regFont, 12);
                 String[] itemData = {
-                        item.getProduct().getName(),
+                        itemNameBidiArabic,
                         String.valueOf(item.getQuantity()),
                         String.valueOf(item.getPrice()),
                         String.valueOf(item.getPrice()*item.getQuantity())
