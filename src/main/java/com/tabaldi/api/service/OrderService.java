@@ -20,7 +20,7 @@ public interface OrderService {
     List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException;
     Map<String, Long> countAllOrdersInSystem() throws TabaldiGenericException;
     PendingOrders fetchPendingOrdersByVendor(List<Order> orders);
-    PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException;
+    PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException, IOException;
     double fetchCompanyEarningsFromOrders(List<Order> orders);
     double fetchVendorEarningsFromOrders(List<Order> orders);
     Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException, IOException;
@@ -29,7 +29,7 @@ public interface OrderService {
 
     List<CartItem> getOrderCartItemsList(Long orderId) throws TabaldiGenericException, IOException;
 
-    void fillOrdersDetails(List<Order> orderList);
-    void fillOrderDetails(Order order);
+    void fillOrdersDetails(List<Order> orderList) throws IOException, TabaldiGenericException;
+    void fillOrderDetails(Order order) throws TabaldiGenericException, IOException;
 
 }

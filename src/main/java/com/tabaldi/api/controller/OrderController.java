@@ -45,7 +45,7 @@ OrderController {
     }
     @GetMapping("/history")
     public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersHistoryList
-            (@RequestParam(required = false) Long customerId) throws TabaldiGenericException {
+            (@RequestParam(required = false) Long customerId) throws TabaldiGenericException, IOException {
         List<Order> ordersList = orderService.getAllOrders(customerId).stream()
                 .sorted(Comparator.comparing(Order::getOrderDate).reversed())
                 .toList();
@@ -60,7 +60,7 @@ OrderController {
         );
     }
     @GetMapping("/pending")
-    public @ResponseBody ResponseEntity<ListResponse<Order>> getPendingOrdersList() throws TabaldiGenericException {
+    public @ResponseBody ResponseEntity<ListResponse<Order>> getPendingOrdersList() throws TabaldiGenericException, IOException {
         PendingOrders ordersList = orderService.getPendingOrdersList(null);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
 
@@ -73,7 +73,7 @@ OrderController {
     }
     @GetMapping("/pending/{customerId}")
     public @ResponseBody ResponseEntity<ListResponse<Order>> getCustomerPendingOrdersList
-            (@PathVariable("customerId") Long customerId) throws TabaldiGenericException {
+            (@PathVariable("customerId") Long customerId) throws TabaldiGenericException, IOException {
         PendingOrders ordersList = orderService.getPendingOrdersList(customerId);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
 

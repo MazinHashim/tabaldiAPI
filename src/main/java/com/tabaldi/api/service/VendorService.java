@@ -27,7 +27,7 @@ public interface VendorService {
     public Vendor getProfile() throws TabaldiGenericException;
     List<Category> getVendorCategoriesList(Long vendorId) throws TabaldiGenericException;
     List<Advertisement> getVendorAdvertisementsList(Long vendorId) throws TabaldiGenericException;
-    List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException;
+    List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException, IOException;
     List<Product> getVendorProductsList(Long vendorId, String roleName) throws TabaldiGenericException, IOException;
 
     List<VendorFrequency> fetchFrequentVendorByOrders(List<Order> orders, int size) throws TabaldiGenericException;

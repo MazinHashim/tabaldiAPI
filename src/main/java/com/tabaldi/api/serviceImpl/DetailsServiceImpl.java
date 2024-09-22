@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -24,7 +25,7 @@ public class DetailsServiceImpl implements DetailsService {
     private final MessageSource messageSource;
 
     @Override
-    public AdminHomeDetails getAdminHomeDetails() throws TabaldiGenericException {
+    public AdminHomeDetails getAdminHomeDetails() throws TabaldiGenericException, IOException {
         List<Order> orders = orderService.getAllOrders(null);
         orderService.fillOrdersDetails(orders);
         List<Order> RecentOrders = getRecentOrders(orders, 5);
@@ -46,7 +47,7 @@ public class DetailsServiceImpl implements DetailsService {
                 .build();
     }
     @Override
-    public VendorHomeDetails getVendorHomeDetails(Long vendorId) throws TabaldiGenericException {
+    public VendorHomeDetails getVendorHomeDetails(Long vendorId) throws TabaldiGenericException, IOException {
         Vendor vendor = vendorService.getVendorById(vendorId);
         List<Order> orders = orderService.getByVendor(vendor, false);
         orderService.fillOrdersDetails(orders);

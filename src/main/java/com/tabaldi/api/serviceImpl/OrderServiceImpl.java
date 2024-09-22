@@ -211,7 +211,7 @@ public class OrderServiceImpl implements OrderService {
         return Map.of("all", orderRepository.count(), "oneDay", orderRepository.countByOrderDate());
     }
     @Override
-    public PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException{
+    public PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException, IOException {
         // fetch not delivered or canceled orders
         List<Order> ordersList;
         if(customerId!=null) {
@@ -271,30 +271,24 @@ public class OrderServiceImpl implements OrderService {
         return orderList.stream().sorted(Comparator.comparing(Order::getOrderDate).reversed()).collect(Collectors.toList());
     }
     @Override
-    public void fillOrderDetails(Order order) {
-        order.getCartItems().forEach(cartItem -> {
-            try {
-                if(cartItem.getProduct().getImagesCollection()!=null)
-                    cartItem.getProduct()
-                            .setImages(GenericMapper
-                                    .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
-                if(cartItem.getOptionsCollection()!=null)
-                    cartItem.setSelectedOptions(GenericMapper
-                            .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
-                order.setTotal(invoiceService.getInvoiceByOrderId(order.getOrderId()).getSummary().getTotal());
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            } catch (TabaldiGenericException e) {
-                throw new RuntimeException(e);
-            }
-        });
+    public void fillOrderDetails(Order order) throws TabaldiGenericException, IOException {
+        for (CartItem cartItem : order.getCartItems()) {
+            if (cartItem.getProduct().getImagesCollection() != null)
+                cartItem.getProduct()
+                        .setImages(GenericMapper
+                                .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+            if (cartItem.getOptionsCollection() != null)
+                cartItem.setSelectedOptions(GenericMapper
+                        .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+            order.setTotal(invoiceService.getInvoiceByOrderId(order.getOrderId()).getSummary().getTotal());
+        }
     }
 
     @Override
-    public void fillOrdersDetails(List<Order> orderList) {
-        orderList.forEach(order -> {
+    public void fillOrdersDetails(List<Order> orderList) throws IOException, TabaldiGenericException {
+        for (Order order : orderList) {
             this.fillOrderDetails(order);
-        });
+        }
     }
     @Override
     public double fetchCompanyEarningsFromOrders(List<Order> orders) {

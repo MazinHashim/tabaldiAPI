@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.List;
@@ -76,6 +77,7 @@ public class CartItemServiceImpl implements CartItemService {
     }
 
     @Override
+    @Transactional
     public List<CartItem> saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException {
 
         Product selectedProduct = productService.getProductById(payload.getProductId());
@@ -85,18 +87,6 @@ public class CartItemServiceImpl implements CartItemService {
         }
 
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
-        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId(), false);
-        List<Vendor> vendors = cartList.stream()
-                .map(cartItem -> cartItem.getProduct().getVendor())
-                .distinct().collect(Collectors.toList());
-        boolean isAllNotRestaurant = vendors.stream()
-                .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
-        boolean isAllRestaurant = vendors.stream()
-                .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
-        if(!(isAllNotRestaurant || isAllRestaurant)){
-            String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
-        }
 
         if(payload.getQuantity() > selectedProduct.getQuantity()) {
             String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null, LocaleContextHolder.getLocale());
@@ -139,7 +129,20 @@ public class CartItemServiceImpl implements CartItemService {
             cartItemParams.setComment(payload.getComment());
         if(selectedOptions!=null)
             cartItemParams.setSelectedOptions(selectedOptions);
-        cartList.add(cartItemRepository.saveAndFlush(cartItemParams));
+        cartItemRepository.saveAndFlush(cartItemParams);
+
+        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId(), false);
+        List<Vendor> vendors = cartList.stream()
+                .map(cartItem -> cartItem.getProduct().getVendor())
+                .distinct().collect(Collectors.toList());
+        boolean isAllNotRestaurant = vendors.stream()
+                .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
+        boolean isAllRestaurant = vendors.stream()
+                .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
+        if(!(isAllNotRestaurant || isAllRestaurant)){
+            String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
+        }
         return cartList;
     }
 

@@ -121,7 +121,7 @@ public class VendorController {
 
     @GetMapping("/{vendorId}/orders")
     public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersList (
-            @PathVariable("vendorId") long vendorId) throws TabaldiGenericException {
+            @PathVariable("vendorId") long vendorId) throws TabaldiGenericException, IOException {
         List<Order> ordersList = vendorService.getVendorOrdersList(vendorId); // may add filters
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
         List<Order> vendorOrders = ordersList.stream()
