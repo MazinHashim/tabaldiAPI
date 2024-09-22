@@ -69,7 +69,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.beginText();
             contentStream.setFont(regFont, 12);
             contentStream.newLineAtOffset(350, infoPosition);
-            contentStream.showText("Order Number: " + this.shapeIfArabicText(invoice.getOrder().getOrderNumber()));
+            contentStream.showText("Order Number: " + invoice.getOrder().getOrderNumber());
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Invoice Status: " + invoice.getStatus().name());
             contentStream.newLineAtOffset(0, -17);
