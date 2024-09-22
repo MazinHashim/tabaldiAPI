@@ -62,6 +62,7 @@ public class PaymentServiceImpl implements PaymentService {
         if(Boolean.valueOf(strResponse.contains("IsSuccess"))){
             return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
         } else {
+            // delete order if There was any error happen (maybe not required)
             Map apiResponse = GenericMapper.jsonToObjectMapper(strResponse, Map.class);
             List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
