@@ -392,10 +392,12 @@ public class OrderServiceImpl implements OrderService {
         long orderSequenceNumber = sequencesService.getNextSequenceFor("orders", null );
         long vendorSequenceNumber = sequencesService.getNextSequenceFor("vendors", vendor.getVendorId());
         long customerSequenceNumber = sequencesService.getNextSequenceFor("customers", customer.getCustomerId());
-        String vendorPrefix = vendor.getFullName().substring(0, 2).toUpperCase();
-        String customerPrefix = customer.getFirstName().substring(0, 2).toUpperCase();
+        String vendorPrefix = vendor.getFullName().length() < 2 ? ""
+        : vendor.getFullName().substring(0, 2).toUpperCase();
+        String customerPrefix = customer.getEmail()==null || customer.getEmail().length() < 2 ? ""
+                : customer.getEmail().substring(0, 2).toUpperCase();
         int dayNumberFromToday = now.getDayOfMonth();
-        String orderNumber = String.format("%s%s%04d%04d%04d%02d", customerPrefix, vendorPrefix,
+        String orderNumber = String.format("%s%s%04d%04d%04d%02d",customerPrefix,  vendorPrefix,
                 vendorSequenceNumber, customerSequenceNumber, orderSequenceNumber, dayNumberFromToday);
         return orderNumber;
     }
