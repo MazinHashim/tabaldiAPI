@@ -59,8 +59,8 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Invoice Amount: " + invoice.getSummary().getTotal());
             contentStream.newLineAtOffset(0, -17);
-            contentStream.showText("Customer Name: " + invoice.getOrder().getCustomer().getFirstName()+" "+
-                    invoice.getOrder().getCustomer().getLastName());
+            contentStream.showText("Customer Name: " + this.shapeIfArabicText(invoice.getOrder().getCustomer().getFirstName())+" "+
+                    this.shapeIfArabicText(invoice.getOrder().getCustomer().getLastName()));
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Customer Phone: " + invoice.getOrder().getCustomer().getUser().getPhone());
             contentStream.newLineAtOffset(0, -17);
@@ -69,11 +69,11 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.beginText();
             contentStream.setFont(regFont, 12);
             contentStream.newLineAtOffset(350, infoPosition);
-            contentStream.showText("Order Number: " + invoice.getOrder().getOrderNumber());
+            contentStream.showText("Order Number: " + this.shapeIfArabicText(invoice.getOrder().getOrderNumber()));
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Invoice Status: " + invoice.getStatus().name());
             contentStream.newLineAtOffset(0, -17);
-            contentStream.showText("Vendor Name: " + invoice.getOrder().getVendor().getFullName());
+            contentStream.showText("Vendor Name: " + this.shapeIfArabicText(invoice.getOrder().getVendor().getFullName()));
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Order Status: " + invoice.getOrder().getStatus().name());
             contentStream.newLineAtOffset(0, -17);
@@ -102,14 +102,9 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
 
             for (CartItem item : items) {
                 // Shape and correct the Arabic text using ICU4J
-                ArabicShaping arabicShaping = new ArabicShaping(ArabicShaping.LETTERS_SHAPE);
-                String shapedArabic = arabicShaping.shape(item.getProduct().getName()); // Perform Arabic shaping (joining letters)
-                // Handle BiDi (Bi-Directional) text
-                Bidi bidi = new Bidi(shapedArabic, Bidi.DIRECTION_RIGHT_TO_LEFT);
-                String itemNameBidiArabic = bidi.writeReordered(Bidi.DO_MIRRORING);
                 contentStream.setFont(regFont, 12);
                 String[] itemData = {
-                        itemNameBidiArabic,
+                        this.shapeIfArabicText(item.getProduct().getName()),
                         String.valueOf(item.getQuantity()),
                         String.valueOf(item.getPrice()),
                         String.valueOf(item.getPrice()*item.getQuantity())
@@ -122,7 +117,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
                     contentStream.setFont(boldFont, 10);
                     for (Option option: item.getSelectedOptions()){
                         String[] optionData = {
-                                option.getName(),
+                                this.shapeIfArabicText(option.getName()),
                                 "_",
                                 String.valueOf(option.getFee()!=null?option.getFee():"_"),
                                 String.valueOf(option.getFee()!=null?option.getFee():"_")
@@ -172,6 +167,16 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             throw new RuntimeException("Error generating PDF", e);
         }
     }
+
+    private String shapeIfArabicText(String text) throws ArabicShapingException {
+        ArabicShaping arabicShaping = new ArabicShaping(ArabicShaping.LETTERS_SHAPE);
+        String shapedArabic = arabicShaping.shape(text); // Perform Arabic shaping (joining letters)
+        // Handle BiDi (Bi-Directional) text
+        Bidi bidi = new Bidi(shapedArabic, Bidi.DIRECTION_RIGHT_TO_LEFT);
+        String bidiArabic = bidi.writeReordered(Bidi.DO_MIRRORING);
+        return bidiArabic;
+    }
+
     private void drawTableRow(PDPageContentStream contentStream, float x, float y, float tableWidth, float rowHeight, float[] columnWidths, String[] content) throws IOException {
         // Draw borders for the row
         drawRowBorders(contentStream, x, y, tableWidth, rowHeight, columnWidths.length);
