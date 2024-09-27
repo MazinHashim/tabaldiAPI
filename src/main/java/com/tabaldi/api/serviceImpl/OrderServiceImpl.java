@@ -4,10 +4,7 @@ import com.ibm.icu.text.ArabicShapingException;
 import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
-import com.tabaldi.api.payload.InvoicePayload;
-import com.tabaldi.api.payload.NotificationPayload;
-import com.tabaldi.api.payload.OrderPayload;
-import com.tabaldi.api.payload.PendingOrders;
+import com.tabaldi.api.payload.*;
 import com.tabaldi.api.repository.CartItemRepository;
 import com.tabaldi.api.repository.OrderRepository;
 import com.tabaldi.api.repository.ProductRepository;
@@ -46,67 +43,75 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException, ArabicShapingException {
+    public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload)
+            throws TabaldiGenericException, IOException, ArabicShapingException {
 
         Customer customer = customerService.getCustomerById(customerId);
         Session session = sessionService.getSessionByUsername(customer.getUser().getPhone());
         List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId, true);
 
         // 1/ check if all cart items are published to create an order
-        if(cartItems.stream().anyMatch(cartItem ->
-                !cartItem.getProduct().isPublished() || !cartItem.getProduct().getCategory().isPublished())) {
-            String itemsInOrderNotAvailableMessage = messageSource.getMessage("error.items.in.order.not.available", null, LocaleContextHolder.getLocale());
+        if (cartItems.stream().anyMatch(cartItem -> !cartItem.getProduct().isPublished()
+                || !cartItem.getProduct().getCategory().isPublished())) {
+            String itemsInOrderNotAvailableMessage = messageSource.getMessage("error.items.in.order.not.available",
+                    null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsInOrderNotAvailableMessage);
         }
-//      2/ check if all vendor are not out of service (working),
-//      if one of them out of service should remove it items from the cart
+        // 2/ check if all vendor are not out of service (working),
+        // if one of them out of service should remove it items from the cart
         List<Vendor> vendors = cartItems.stream()
                 .map(cartItem -> cartItem.getProduct().getVendor())
                 .distinct().collect(Collectors.toList());
         LocalTime timeInUAE = LocalTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
-        if(vendors.stream().anyMatch(vendor -> !vendor.isWorking() ||
-                !(timeInUAE.isBefore(vendor.getClosingTime())&&
+        if (vendors.stream().anyMatch(vendor -> !vendor.isWorking() ||
+                !(timeInUAE.isBefore(vendor.getClosingTime()) &&
                         timeInUAE.isAfter(vendor.getOpeningTime())))) {
-            String itemsFromClosedVendorMessage = messageSource.getMessage("error.items.from.closed.vendor", null, LocaleContextHolder.getLocale());
+            String itemsFromClosedVendorMessage = messageSource.getMessage("error.items.from.closed.vendor", null,
+                    LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsFromClosedVendorMessage);
         }
-//      3/ check if all vendors are or are not of same restaurant type
+        // 3/ check if all vendors are or are not of same restaurant type
         boolean isAllNotRestaurant = vendors.stream()
                 .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
         boolean isAllRestaurant = vendors.stream()
                 .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
-        if(isAllNotRestaurant || isAllRestaurant){
+        if (isAllNotRestaurant || (isAllRestaurant && vendors.size() == 1)) {
 
-//             4/ check if there is any pending order for any of these vendors
-//            AtomicBoolean hasPendingVendorOrder= new AtomicBoolean(false);
-//            StringBuilder pending = new StringBuilder();
-//            vendors.forEach(vendor -> {
-//                Optional<Order> lastOrderCreatedOptional = orderRepository.getLastActiveOrderPerVendor(customerId, vendor.getVendorId());
-//                if(lastOrderCreatedOptional.isPresent()){
-//                    hasPendingVendorOrder.set(true);
-//                    pending.append(vendor.getFullName().concat(", "));
-//                }
-//            });
-//            if(hasPendingVendorOrder.get()){
-//                String pendingVendors = pending.substring(0, pending.lastIndexOf(", ")).trim();
-//                String pendingOrderMessage = MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
-//                        pendingVendors, pendingVendors);
-//                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, pendingOrderMessage);
-//            } else {
+            // 4/ check if there is any pending order for any of these vendors
+            // AtomicBoolean hasPendingVendorOrder= new AtomicBoolean(false);
+            // StringBuilder pending = new StringBuilder();
+            // vendors.forEach(vendor -> {
+            // Optional<Order> lastOrderCreatedOptional =
+            // orderRepository.getLastActiveOrderPerVendor(customerId,
+            // vendor.getVendorId());
+            // if(lastOrderCreatedOptional.isPresent()){
+            // hasPendingVendorOrder.set(true);
+            // pending.append(vendor.getFullName().concat(", "));
+            // }
+            // });
+            // if(hasPendingVendorOrder.get()){
+            // String pendingVendors = pending.substring(0, pending.lastIndexOf(",
+            // ")).trim();
+            // String pendingOrderMessage =
+            // MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
+            // pendingVendors, pendingVendors);
+            // throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+            // pendingOrderMessage);
+            // } else {
 
             // 5/ if all checks passed successfully, create an order for each vendor
             List<Order> orders = new ArrayList<>(vendors.size());
             Address selectedAddress = customerService.getSelectedCustomerAddress(customerId);
             vendors.forEach(vendor -> {
-            final String orderNumber = this.getOrderNumber(customer, vendor);
-            Order orderParams = Order.builder()
-                    .orderDate(OffsetDateTime.now())
-                    .orderNumber(orderNumber)
-                    .customer(customer)
-                    .vendor(vendor)
-                    .status(OrderStatus.WAITING)
-                    .address(selectedAddress)
-                    .build();
+                final String orderNumber = this.getOrderNumber(customer, vendor);
+                Order orderParams = Order.builder()
+                        .orderDate(OffsetDateTime.now())
+                        .orderNumber(orderNumber)
+                        .customer(customer)
+                        .vendor(vendor)
+                        .status(OrderStatus.WAITING)
+                        .address(selectedAddress)
+                        .build();
                 orders.add(orderParams);
             });
             List<Order> createdOrders = orderRepository.saveAll(orders);
@@ -121,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
                     if (cartItem.getProduct().getVendor().getVendorId() == order.getVendor().getVendorId()) {
                         // Set the order for the cart item
                         cartItem.setOrder(order);
-            // 7/ Update product quantity by decreasing cart item quantity
+                        // 7/ Update product quantity by decreasing cart item quantity
                         Product product = cartItem.getProduct();
                         int newQuantity = product.getQuantity() - cartItem.getQuantity();
                         product.setQuantity(newQuantity);
@@ -135,9 +140,10 @@ public class OrderServiceImpl implements OrderService {
                             cartItem.setSelectedOptions(GenericMapper
                                     .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
 
-            //8/ Calculate the total price for the cart item and set order total
+                        // 8/ Calculate the total price for the cart item and set order total
                         double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
-//                            double itemTotalWithProfit = itemTotal + (itemTotal * cartItem.getProduct().getCompanyProfit() / 100);
+                        // double itemTotalWithProfit = itemTotal + (itemTotal *
+                        // cartItem.getProduct().getCompanyProfit() / 100);
                         double roundedTotal = Math.round(itemTotal * 2) / 2;
                         order.setTotal(order.getTotal() + roundedTotal);
 
@@ -150,57 +156,70 @@ public class OrderServiceImpl implements OrderService {
                         }
                     }
                 }
-    // 8/ check if order's payment method is CASH and total is less than 70, the order will be aborted
+                // 8/ check if order's payment method is CASH and total is less than 70, the
+                // order will be aborted
                 if (payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal() > 70) {
-                    String onlyOneAllowedMessage = messageSource.getMessage("error.order.exceed.allowed.cash", null, LocaleContextHolder.getLocale());
+                    String onlyOneAllowedMessage = messageSource.getMessage("error.order.exceed.allowed.cash", null,
+                            LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
                 }
                 // Ensure the updated product quantities are saved
                 cartItems.stream()
                         .map(CartItem::getProduct)
                         .forEach(productRepository::save);
-    // 9/ Create invoice for each created order
+                // 9/ Create invoice for each created order
                 double discount = payload.getDiscount() == null ? 0.0 : payload.getDiscount();
                 double taxPercentage = order.getTotal() * payload.getTaxPercentage() / 100;
+                Optional<ShippingCostPayload> shippingCostObj = payload.getShippingCosts().stream()
+                        .filter(cost -> cost.getVendorId() == order.getVendor().getVendorId()).findFirst();
+                if (!shippingCostObj.isPresent()) {
+                    String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "vendor", "البائع");
+                    throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
+                }
+                this.validateRestaurantDelivery(order, shippingCostObj.get().getDistance());
+                double shippingCost = shippingCostObj.get().getShippingCost();
                 Invoice createdInvoice = invoiceService.saveInvoiceInfo(InvoicePayload.builder()
                         .orderId(order.getOrderId())
                         .discount(discount)
                         .paymentMethod(payload.getPaymentMethod())
-                        .shippingCost(payload.getShippingCost())
+                        .shippingCost(shippingCost)
                         .taxes(taxPercentage)
                         .subtotal(order.getTotal())
-                        .total(order.getTotal() + taxPercentage + discount + payload.getShippingCost())
+                        .total(order.getTotal() + taxPercentage + discount + shippingCost)
                         .build(), order);
                 order.setTotal(createdInvoice.getSummary().getTotal());
                 if (!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
                     createdInvoice = invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
                 }
                 // send email with attached invoice to customer using email service
-                if(customer.getEmail()!=null && !customer.getEmail().isEmpty()) {
+                if (customer.getEmail() != null && !customer.getEmail().isEmpty()) {
                     pdfGeneratorService.generatePdf(createdInvoice, true);
                     emailService.sendEmailWithAttachment(
                             customer.getEmail(),
-                            "Order Invoice of "+order.getVendor().getFullName(),
+                            "Order Invoice of " + order.getVendor().getFullName(),
                             "Thanks for your order",
-                            configuration.getInvoicePdfFolder()+"invoice_"+createdInvoice.getInvoiceNumber()+".pdf"
-                    );
+                            configuration.getInvoicePdfFolder() + "invoice_" + createdInvoice.getInvoiceNumber()
+                                    + ".pdf");
                 }
                 // send push notification to customer using firebase service
                 notificationService.sendPushNotificationByToken(NotificationPayload.builder()
                         .token(session.getDeviceToken())
                         .title("Rateena Order")
-                        .body("Your order from "+order.getVendor().getFullName()+" has been created")
+                        .body("Your order from " + order.getVendor().getFullName() + " has been created")
                         .build());
             }
             return createdOrders;
         } else {
-            String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null, LocaleContextHolder.getLocale());
+            String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null,
+                    LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
         }
     }
+
     @Override
     public List<Order> getAllOrders(Long customerId) throws TabaldiGenericException {
-        if(customerId==null) return orderRepository.findAll();
+        if (customerId == null)
+            return orderRepository.findAll();
         else {
             Customer customer = customerService.getCustomerById(customerId);
             return orderRepository.findByCustomer(customer);
@@ -211,23 +230,26 @@ public class OrderServiceImpl implements OrderService {
     public Map<String, Long> countAllOrdersInSystem() {
         return Map.of("all", orderRepository.count(), "oneDay", orderRepository.countByOrderDate());
     }
+
     @Override
     public PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException, IOException {
         // fetch not delivered or canceled orders
         List<Order> ordersList;
-        if(customerId!=null) {
+        if (customerId != null) {
             customerService.getCustomerById(customerId);
-            ordersList = orderRepository.findPendingOrdersByCustomer(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED), customerId);
+            ordersList = orderRepository
+                    .findPendingOrdersByCustomer(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED), customerId);
         } else
             ordersList = orderRepository.findByPendingOrders(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED));
 
-        if(ordersList.isEmpty()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Customer Orders", "طلبات الزبائن");
+        if (ordersList.isEmpty()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Customer Orders",
+                    "طلبات الزبائن");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         this.fillOrdersDetails(ordersList);
         List<Order> pendingOrders = ordersList.stream()
-                .map(order-> {
+                .map(order -> {
                     order.getCartItems().forEach(cartItem -> {
                         cartItem.getProduct().setOptions(null);
                         cartItem.setCustomer(null);
@@ -241,6 +263,7 @@ public class OrderServiceImpl implements OrderService {
                 .count(pendingOrders.size())
                 .build();
     }
+
     @Override
     public PendingOrders fetchPendingOrdersByVendor(List<Order> orders) {
         List<Order> activeOrders = orders.stream()
@@ -262,15 +285,18 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException{
+    public List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException {
         List<Order> orderList = orderRepository.findByVendor(vendor);
 
-        if(check && orderList.isEmpty()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Customers Orders", "طلبات الزبائن'");
+        if (check && orderList.isEmpty()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Customers Orders",
+                    "طلبات الزبائن'");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
-        return orderList.stream().sorted(Comparator.comparing(Order::getOrderDate).reversed()).collect(Collectors.toList());
+        return orderList.stream().sorted(Comparator.comparing(Order::getOrderDate).reversed())
+                .collect(Collectors.toList());
     }
+
     @Override
     public void fillOrderDetails(Order order) throws TabaldiGenericException, IOException {
         for (CartItem cartItem : order.getCartItems()) {
@@ -291,17 +317,20 @@ public class OrderServiceImpl implements OrderService {
             this.fillOrderDetails(order);
         }
     }
+
     @Override
     public double fetchCompanyEarningsFromOrders(List<Order> orders) {
-        AtomicReference<Double> companyEarnings= new AtomicReference<>((double) 0);
-        orders.forEach(order -> {
-            if(order.getStatus().equals(OrderStatus.DELIVERED)) {
-                order.getCartItems().forEach(cartItem -> {
-                    double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()) / 100 * cartItem.getProduct().getCompanyProfit();
-                    companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
+        AtomicReference<Double> companyEarnings = new AtomicReference<>((double) 0);
+        orders.stream()
+                .filter(order -> order.getOrderDate().toLocalDate().isEqual(OffsetDateTime.now().toLocalDate()))
+                .filter(order -> order.getStatus().equals(OrderStatus.DELIVERED))
+                .forEach(order -> {
+                    order.getCartItems().forEach(cartItem -> {
+                        double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()) / 100
+                                * cartItem.getProduct().getCompanyProfit();
+                        companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
+                    });
                 });
-            }
-        });
         return companyEarnings.get();
     }
 
@@ -310,51 +339,56 @@ public class OrderServiceImpl implements OrderService {
         AtomicReference<Double> vendorEarnings = new AtomicReference<>((double) 0);
         AtomicReference<Double> companyEarnings = new AtomicReference<>((double) 0);
         orders
-                .stream().filter(order -> order.getOrderDate().getMonthValue()==5)//OffsetDateTime.now().getMonthValue())
+                .stream()
+                .filter(order -> order.getOrderDate().toLocalDate().isEqual(OffsetDateTime.now().toLocalDate()))
+                .filter(order -> order.getStatus().equals(OrderStatus.DELIVERED))
                 .forEach(order -> {
-            if(order.getStatus().equals(OrderStatus.DELIVERED)) {
-                order.getCartItems().forEach(cartItem -> {
-                    double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()+10) / 100 * cartItem.getProduct().getCompanyProfit();
-                    companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
+                    order.getCartItems().forEach(cartItem -> {
+                        double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity() + 10) / 100
+                                * cartItem.getProduct().getCompanyProfit();
+                        companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
+                    });
+                    vendorEarnings.updateAndGet(v -> order.getTotal() + v);
                 });
-                vendorEarnings.updateAndGet(v -> order.getTotal() + v);
-            }
-        });
-        return vendorEarnings.get()-companyEarnings.get();
+        return vendorEarnings.get() - companyEarnings.get();
     }
 
     @Override
     public Boolean changeOrderStatusById(Long orderId, OrderStatus status) throws TabaldiGenericException, IOException {
         Optional<Order> orderOptional = orderRepository.findById(orderId);
-        if (!orderOptional.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Order", "الطلب");
+        if (!orderOptional.isPresent()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Order", "الطلب");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             Order order = orderOptional.get();
-            if(!isDeliveredOrCanceledAndThrown(order)) {
-                if(status==null){
-                    String notSupportedMessage = messageSource.getMessage("error.status.not.supported", null, LocaleContextHolder.getLocale());
+            if (!isDeliveredOrCanceledAndThrown(order)) {
+                if (status == null) {
+                    String notSupportedMessage = messageSource.getMessage("error.status.not.supported", null,
+                            LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notSupportedMessage);
                 }
-                if(status.equals(OrderStatus.CANCELED) && OffsetDateTime.now().minusMinutes(10).isAfter(order.getOrderDate())) {
-                    String finalizedOrderMessage = messageSource.getMessage("error.finalized.order", null, LocaleContextHolder.getLocale());
+                if (status.equals(OrderStatus.CANCELED)
+                        && OffsetDateTime.now().minusMinutes(10).isAfter(order.getOrderDate())) {
+                    String finalizedOrderMessage = messageSource.getMessage("error.finalized.order", null,
+                            LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, finalizedOrderMessage);
                 }
                 Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
-                if( !status.equals(OrderStatus.WAITING) &&
-                    !status.equals(OrderStatus.DELIVERED) &&
-                    invoice.getStatus().equals(InvoiceStatus.UNPAID)){
-                    String notPaidOrderMessage = messageSource.getMessage("error.invoice.not.paid", null, LocaleContextHolder.getLocale());
+                if (!status.equals(OrderStatus.WAITING) &&
+                        !status.equals(OrderStatus.DELIVERED) &&
+                        invoice.getStatus().equals(InvoiceStatus.UNPAID)) {
+                    String notPaidOrderMessage = messageSource.getMessage("error.invoice.not.paid", null,
+                            LocaleContextHolder.getLocale());
                     throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notPaidOrderMessage);
                 }
-                if(status.equals(OrderStatus.PROCESSING))
+                if (status.equals(OrderStatus.PROCESSING))
                     order.setProcessedDate(OffsetDateTime.now());
-                else if(status.equals(OrderStatus.DELIVERED))
+                else if (status.equals(OrderStatus.DELIVERED))
                     order.setDeliveredDate(OffsetDateTime.now());
                 order.setStatus(status);
                 orderRepository.save(order);
-                 if(status.equals(OrderStatus.DELIVERED))
-//                         || status.equals(OrderStatus.CONFIRMED))
+                if (status.equals(OrderStatus.DELIVERED))
+                    // || status.equals(OrderStatus.CONFIRMED))
                     invoiceService.payOrderInvoice(order.getOrderId(), null);
                 return true;
             }
@@ -365,8 +399,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public Order getOrderById(Long orderId) throws TabaldiGenericException {
         Optional<Order> selectedOrder = orderRepository.findById(orderId);
-        if(!selectedOrder.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Order","الطلب");
+        if (!selectedOrder.isPresent()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Order", "الطلب");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         return selectedOrder.get();
@@ -376,43 +410,61 @@ public class OrderServiceImpl implements OrderService {
     public List<CartItem> getOrderCartItemsList(Long orderId) throws TabaldiGenericException, IOException {
         Order order = this.getOrderById(orderId);
         List<CartItem> cartItems = cartItemRepository.findByOrder(order);
-        if(cartItems.isEmpty()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Items","أغراض السلة");
+        if (cartItems.isEmpty()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Items", "أغراض السلة");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         for (CartItem cartItem : cartItems.stream()
-                .filter(cartItem -> cartItem.getOptionsCollection()!=null)
+                .filter(cartItem -> cartItem.getOptionsCollection() != null)
                 .collect(Collectors.toList()))
-            cartItem.setSelectedOptions(GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+            cartItem.setSelectedOptions(
+                    GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
         return cartItems;
     }
 
     private String getOrderNumber(Customer customer, Vendor vendor) {
         OffsetDateTime now = OffsetDateTime.now();
-        long orderSequenceNumber = sequencesService.getNextSequenceFor("orders", null );
+        long orderSequenceNumber = sequencesService.getNextSequenceFor("orders", null);
         long vendorSequenceNumber = sequencesService.getNextSequenceFor("vendors", vendor.getVendorId());
         long customerSequenceNumber = sequencesService.getNextSequenceFor("customers", customer.getCustomerId());
         String vendorPrefix = vendor.getFullName().length() < 2 ? ""
-        : vendor.getFullName().substring(0, 2).toUpperCase();
-        String customerPrefix = customer.getEmail()==null || customer.getEmail().length() < 2 ? ""
+                : vendor.getFullName().substring(0, 2).toUpperCase();
+        String customerPrefix = customer.getEmail() == null || customer.getEmail().length() < 2 ? ""
                 : customer.getEmail().substring(0, 2).toUpperCase();
         int dayNumberFromToday = now.getDayOfMonth();
-        String orderNumber = String.format("%s%s%04d%04d%04d%02d",customerPrefix,  vendorPrefix,
+        String orderNumber = String.format("%s%s%04d%04d%04d%02d", customerPrefix, vendorPrefix,
                 vendorSequenceNumber, customerSequenceNumber, orderSequenceNumber, dayNumberFromToday);
         return orderNumber;
     }
 
     private boolean isDeliveredOrCanceledAndThrown(Order order) throws TabaldiGenericException {
-        if(order.getStatus().equals(OrderStatus.CANCELED)){
+        if (order.getStatus().equals(OrderStatus.CANCELED)) {
             String orderStatus = OrderStatus.CANCELED.name().toLowerCase();
             String orderStatusMessage = MessagesUtils.getOrderStatusMessage(messageSource, orderStatus, orderStatus);
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, orderStatusMessage);
-        } else if(order.getStatus().equals(OrderStatus.DELIVERED)){
+        } else if (order.getStatus().equals(OrderStatus.DELIVERED)) {
             String orderStatus = OrderStatus.DELIVERED.name().toLowerCase();
             String orderStatusMessage = MessagesUtils.getOrderStatusMessage(messageSource, orderStatus, orderStatus);
-            throw  new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, orderStatusMessage);
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, orderStatusMessage);
         } else {
             return false;
+        }
+    }
+
+    private void validateRestaurantDelivery(Order order, double orderDistance)
+            throws TabaldiGenericException {
+        Vendor vendor = order.getVendor();
+        if (vendor.getVendorType() != VendorType.RESTAURANT || vendor.getMaxKilometerDelivery() == null) {
+            return; // Not applicable for non-restaurant vendors or those without max delivery
+                    // distance
+        }
+
+        if (orderDistance > vendor.getMaxKilometerDelivery() &&
+                order.getTotal() > vendor.getMinChargeLongDistance()) {
+
+            String errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
+                    vendor.getMinChargeLongDistance().toString(), vendor.getMinChargeLongDistance().toString());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
         }
     }
 }

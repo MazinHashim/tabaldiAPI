@@ -8,6 +8,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @AllArgsConstructor
@@ -15,11 +17,13 @@ import lombok.NoArgsConstructor;
 public class OrderPayload {
 
     private Double discount;
-    private double shippingCost;
     private int taxPercentage;
     private String comment;
     @NotNull
     private PaymentMethod paymentMethod;
     private CardPayload card;
+    @NotNull
+    @NotEmpty
+    private List<ShippingCostPayload> shippingCosts;
     private String token;
 }

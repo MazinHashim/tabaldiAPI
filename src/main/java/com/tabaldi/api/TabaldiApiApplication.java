@@ -6,6 +6,7 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.tabaldi.api.service.EmailService;
 import lombok.RequiredArgsConstructor;
+
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -19,12 +20,13 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @EnableConfigurationProperties(TabaldiConfiguration.class)
 public class TabaldiApiApplication implements CommandLineRunner {
-//	private final EmailService emailService;
-//	private final TabaldiConfiguration configuration;
+	// private final EmailService emailService;
+	// private final TabaldiConfiguration configuration;
+
 	@Bean
 	FirebaseMessaging firebaseMessaging() throws IOException {
-		ClassPathResource serviceAccount =
-				new ClassPathResource("rateena-cf40d-firebase-adminsdk-x3a5o-3c1068eec5.json");
+		ClassPathResource serviceAccount = new ClassPathResource(
+				"rateena-cf40d-firebase-adminsdk-x3a5o-3c1068eec5.json");
 
 		FirebaseOptions options = FirebaseOptions.builder()
 				.setCredentials(GoogleCredentials.fromStream(serviceAccount.getInputStream()))
@@ -33,32 +35,36 @@ public class TabaldiApiApplication implements CommandLineRunner {
 		return FirebaseMessaging.getInstance(FirebaseApp.initializeApp(options));
 
 	}
+
 	public static void main(String[] args) {
 		SpringApplication.run(TabaldiApiApplication.class, args);
+		System.out.println("Rateena API Application started");
 	}
+
 	@Override
 	public void run(String... args) throws Exception {
-//		String pathURL = configuration.getInvoicePdfFolder() + "invoice_" + 4303866 + ".pdf";
-//		emailService.sendEmailWithAttachment(
-//				"maz05@gmail.com", "Test Message", "This is first test message",
-//				pathURL
-//				);
-//		notificationService.sendPushNotificationByToken(NotificationPayload.builder()
-//			.token("")
-//			.title("Rateena test Notification")
-//			.body("This is awesome service to send push notification")
-//		.build());
-//	vendorService.getVendorProductsList(15L).forEach(product -> {
-//		System.out.println(product.getCategory().getVendor().getFullName());
-//	});
-//		sequencesService.createSequenceFor("customer", 1000, 2);
-//		sequencesService.createSequenceFor("customer", 1000, 3);
-//		sequencesService.getNextSequenceFor("customer", 2);
-//		sequencesService.getNextSequenceFor("customer", 2);
-//		sequencesService.getNextSequenceFor("customer", 2);
-//		sequencesService.getNextSequenceFor("customer", 2);
-//		sequencesService.getNextSequenceFor("customer", 3);
-//		sequencesService.getNextSequenceFor("customer", 3);
-//		sequencesService.getNextSequenceFor("customer", 3);
+		// String pathURL = configuration.getInvoicePdfFolder() + "invoice_" + 4303866 +
+		// ".pdf";
+		// emailService.sendEmailWithAttachment(
+		// "maz05@gmail.com", "Test Message", "This is first test message",
+		// pathURL
+		// );
+		// notificationService.sendPushNotificationByToken(NotificationPayload.builder()
+		// .token("")
+		// .title("Rateena test Notification")
+		// .body("This is awesome service to send push notification")
+		// .build());
+		// vendorService.getVendorProductsList(15L).forEach(product -> {
+		// System.out.println(product.getCategory().getVendor().getFullName());
+		// });
+		// sequencesService.createSequenceFor("customer", 1000, 2);
+		// sequencesService.createSequenceFor("customer", 1000, 3);
+		// sequencesService.getNextSequenceFor("customer", 2);
+		// sequencesService.getNextSequenceFor("customer", 2);
+		// sequencesService.getNextSequenceFor("customer", 2);
+		// sequencesService.getNextSequenceFor("customer", 2);
+		// sequencesService.getNextSequenceFor("customer", 3);
+		// sequencesService.getNextSequenceFor("customer", 3);
+		// sequencesService.getNextSequenceFor("customer", 3);
 	}
 }

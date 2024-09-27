@@ -21,9 +21,15 @@ public class TabaldiConfiguration {
     private String smsGatewaySenderId;
     private String smsGatewayEndpointUrl;
 
-    private String sessionTokenExpiration;
-    private String otpExpirationMin;
-    private String otpResendTimesLimit;
+    @Setter
+    private String sessionTokenExpiration = "7776000";
+
+    @Setter
+    private String otpExpirationMin = "1";
+
+    @Setter
+    private String otpResendTimesLimit = "5";
+
     private String jwtSecretKey;
 
     private String myfatoorahApiTestKey;

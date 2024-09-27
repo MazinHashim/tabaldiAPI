@@ -46,21 +46,23 @@ public class UserServiceImpl implements UserService {
     private final TabaldiConfiguration configuration;
     @Value("${spring.profiles.active}")
     private String profile;
+
     @Override
-    public UserVerification sendOtp(SendOtpPayload payload) throws TabaldiGenericException, UnsupportedEncodingException {
+    public UserVerification sendOtp(SendOtpPayload payload)
+            throws TabaldiGenericException, UnsupportedEncodingException {
         Pattern pattern = Pattern.compile("05+\\d{8}");
         boolean matches;
         Matcher mat = pattern.matcher(payload.getPhone());
         matches = mat.matches();
-        if(!matches){
+        if (!matches) {
             String phoneInvalidMessage = MessagesUtils.getInvalidFormatMessage(messageSource,
-                     payload.getPhone(), payload.getPhone(),"phone", "رقم الهاتف");
+                    payload.getPhone(), payload.getPhone(), "phone", "رقم الهاتف");
 
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, phoneInvalidMessage);
         }
         Optional<UserEntity> userOptional = userRepository.findByPhone(payload.getPhone());
-        if(!userOptional.isPresent() && payload.isCheckExistence()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"User", "المستخدم");
+        if (!userOptional.isPresent() && payload.isCheckExistence()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "User", "المستخدم");
 
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
@@ -68,7 +70,8 @@ public class UserServiceImpl implements UserService {
             int otpCode = random.ints(1111, 9999).findFirst().getAsInt();
 
             // get last active otp which will expire after expireDuration
-            Optional<UserVerification> userVerification = userVerificationRepository.findLastSentCode(payload.getPhone());
+            Optional<UserVerification> userVerification = userVerificationRepository
+                    .findLastSentCode(payload.getPhone());
             int resendTimes = 0;
             if (userVerification.isPresent()) {
                 resendTimes = userVerification.get().getResendCounter();
@@ -101,14 +104,15 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             // send otp sms using smart sms gateway
-            if(!profile.equals("local") || !profile.equals("dev")){
-//                String response = smsService.sendSms(payload.getPhone(), "Welcome your Rateena sign in OTP code is " + otpCode);
-//                System.out.println(response);
-//                if (!response.contains("OK")) {
-//                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-//                            messageSource.getMessage("error.exceed.resend.limit", null,
-//                                    LocaleContextHolder.getLocale()) + "Error " + response);
-//                }
+            if (!profile.equals("local") || !profile.equals("dev")) {
+                // String response = smsService.sendSms(payload.getPhone(), "Welcome your
+                // Rateena sign in OTP code is " + otpCode);
+                // System.out.println(response);
+                // if (!response.contains("OK")) {
+                // throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+                // messageSource.getMessage("error.exceed.resend.limit", null,
+                // LocaleContextHolder.getLocale()) + "Error " + response);
+                // }
             }
 
             return userVerificationRepository.saveAndFlush(verification);
@@ -118,10 +122,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public VerificationResponse verifyOtp(VerifyOtpPayload payload) throws TabaldiGenericException {
 
-        UserVerification userVerification =
-                userVerificationRepository.findByPhoneAndCodeAndKeyRef(payload.getPhone(), payload.getOtpCode(),
-                        payload.getKeyRef()).orElseThrow(()->{
-                    String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Otp", "كود التحقق");
+        UserVerification userVerification = userVerificationRepository
+                .findByPhoneAndCodeAndKeyRef(payload.getPhone(), payload.getOtpCode(),
+                        payload.getKeyRef())
+                .orElseThrow(() -> {
+                    String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Otp", "كود التحقق");
 
                     return new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
                 });
@@ -131,7 +136,7 @@ public class UserServiceImpl implements UserService {
             userVerification.setStatus(VerificationStatus.EXPIRED);
             userVerificationRepository.save(userVerification);
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                    messageSource.getMessage("error.verification.code.expired",null,
+                    messageSource.getMessage("error.verification.code.expired", null,
                             LocaleContextHolder.getLocale()));
         } else {
             // this code to check if there is user with phone payload.getPhone()?
@@ -152,36 +157,40 @@ public class UserServiceImpl implements UserService {
                     .build();
         }
     }
+
     @Override
-    public boolean checkUserExistRegardlessOfRole(UserEntity user){
-        if(user.getRole().equals(Role.CUSTOMER)){
+    public boolean checkUserExistRegardlessOfRole(UserEntity user) {
+        if (user.getRole().equals(Role.CUSTOMER)) {
             return customerRepository.findByUser(user).isPresent();
-        } else if(user.getRole().equals(Role.VENDOR)){
+        } else if (user.getRole().equals(Role.VENDOR)) {
             return vendorRepository.findByUser(user).isPresent();
         }
         return user.getRole().equals(Role.SUPERADMIN);
     }
+
     @Override
-    public UserEntity changeUserPhoneNumber(long userId, String newPhoneNumber, VerifyOtpPayload payload) throws TabaldiGenericException {
+    public UserEntity changeUserPhoneNumber(long userId, String newPhoneNumber, VerifyOtpPayload payload)
+            throws TabaldiGenericException {
         UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
                 .getPrincipal();
         Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
         UserEntity authUser = session.getUser();
 
         UserEntity user = this.getUserById(userId);
-        if(userRepository.findByPhone(newPhoneNumber).isPresent()){
+        if (userRepository.findByPhone(newPhoneNumber).isPresent()) {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource, "User", "المستخدم");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
 
-        if(authUser.getRole().equals(Role.CUSTOMER) && authUser.getPhone().equals(user.getPhone())){
+        if (authUser.getRole().equals(Role.CUSTOMER) && authUser.getPhone().equals(user.getPhone())) {
             VerificationResponse response = this.verifyOtp(payload);
-            if(response.isVerified()) {
+            if (response.isVerified()) {
                 user.setPhone(newPhoneNumber);
                 userRepository.save(user);
             }
         } else {
-            String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource,"phone number", "الرقم");
+            String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource, "phone number",
+                    "الرقم");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
         }
         return user;
@@ -192,8 +201,8 @@ public class UserServiceImpl implements UserService {
 
         Optional<UserEntity> userOptional = userRepository.findByPhone(payload.getPhone());
         UserEntity user;
-        if(!userOptional.isPresent()){
-            if(payload.isAllowRegistration()){
+        if (!userOptional.isPresent()) {
+            if (payload.isAllowRegistration()) {
                 user = UserEntity.builder()
                         .phone(payload.getPhone())
                         .role(Role.CUSTOMER)
@@ -203,23 +212,25 @@ public class UserServiceImpl implements UserService {
                 userVerification.setStatus(VerificationStatus.EXPIRED);
                 userVerification.setVerifiedTime(null);
                 userVerificationRepository.save(userVerification);
-                String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"User", "المستخدم");
+                String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "User", "المستخدم");
                 throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
             }
         } else {
             user = userOptional.get();
         }
-        if(user.getRole().equals(Role.CUSTOMER) && (payload.getDeviceToken()==null||payload.getDeviceToken().isEmpty())) {
-            String deviceTokenRequiredMessage = messageSource.getMessage("error.device.token.required", null, LocaleContextHolder.getLocale());
+        if (user.getRole().equals(Role.CUSTOMER)
+                && (payload.getDeviceToken() == null || payload.getDeviceToken().isEmpty())) {
+            String deviceTokenRequiredMessage = messageSource.getMessage("error.device.token.required", null,
+                    LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, deviceTokenRequiredMessage);
         }
-        if(userVerification!=null){
+        if (userVerification != null) {
             userVerification.setUser(user);
             userVerificationRepository.save(userVerification);
         }
-//        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
-//                user, null, user.getAuthorities()
-//        ));
+        // authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+        // user, null, user.getAuthorities()
+        // ));
         // Generate session token for that user
         var jwtToken = jwtService.generateToken(user);
         // create session for that user to save session token
@@ -230,7 +241,7 @@ public class UserServiceImpl implements UserService {
                 .build();
         Session loginSession;
         Optional<Session> sessionOptional = sessionRepository.findByUser(user);
-        if(sessionOptional.isPresent()) {
+        if (sessionOptional.isPresent()) {
             loginSession = sessionService.updateLoginSession(sessionPayload, sessionOptional.get());
         } else {
             loginSession = sessionService.createSession(sessionPayload);
@@ -262,7 +273,7 @@ public class UserServiceImpl implements UserService {
                 .getPrincipal();
         Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
         UserEntity user = session.getUser();
-        if(user.getRole().equals(Role.SUPERADMIN) && vendorUserId!=null){
+        if (user.getRole().equals(Role.SUPERADMIN) && vendorUserId != null) {
             user = getUserById(vendorUserId);
         }
         return user;
@@ -271,9 +282,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEntity getUserById(Long userId) throws TabaldiGenericException {
         Optional<UserEntity> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"User", "المستخدم");
-            throw  new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        if (!userOptional.isPresent()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "User", "المستخدم");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         return userOptional.get();
     }
@@ -281,9 +292,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public Boolean deleteUserById(Long userId) throws TabaldiGenericException {
         Optional<UserEntity> userOptional = userRepository.findById(userId);
-        if (!userOptional.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"User", "المستخدم");
-            throw  new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        if (!userOptional.isPresent()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "User", "المستخدم");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             userRepository.deleteById(userOptional.get().getUserId());
             return true;

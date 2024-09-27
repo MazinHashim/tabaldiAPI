@@ -52,6 +52,8 @@ public class Vendor {
     private boolean isWorking;
     @Transient
     private int inactiveProductsCount;
+    @Transient
+    private int inactiveCategoriesCount;
 //    @OneToMany(mappedBy = "vendor")
 //    private List<Category> categories;
 //    @OneToMany(mappedBy = "vendor")

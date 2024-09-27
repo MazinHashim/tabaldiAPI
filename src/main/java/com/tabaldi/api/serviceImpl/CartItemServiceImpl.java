@@ -129,7 +129,7 @@ public class CartItemServiceImpl implements CartItemService {
             cartItemParams.setComment(payload.getComment());
         if(selectedOptions!=null)
             cartItemParams.setSelectedOptions(selectedOptions);
-        cartItemRepository.saveAndFlush(cartItemParams);
+        cartItemRepository.save(cartItemParams);
 
         List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId(), false);
         List<Vendor> vendors = cartList.stream()

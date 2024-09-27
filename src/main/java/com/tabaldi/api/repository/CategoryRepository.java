@@ -21,4 +21,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("select c from Category c where c.vendor.vendorId = ?1 and upper(c.name) = upper(?2)")
     Optional<Category> findByVendorAndName(long vendorId, String name);
+
+    Long countByIsPublishedAndVendor_vendorId(boolean b, long vendorId);
 }

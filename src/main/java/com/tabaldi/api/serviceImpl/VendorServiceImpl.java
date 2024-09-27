@@ -56,8 +56,10 @@ public class VendorServiceImpl implements VendorService {
         }
 
         vendorList.forEach(v-> {
-            Long count = productRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
-            v.setInactiveProductsCount(count.intValue());
+            Long productCount = productRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
+            Long categoryCount = categoryRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
+            v.setInactiveProductsCount(productCount.intValue());
+            v.setInactiveCategoriesCount(categoryCount.intValue());
         });
         return vendorList.stream()
                 .sorted(Comparator.comparing(Vendor::getFullName))

@@ -14,7 +14,9 @@ public class MessagesUtils {
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("success.data.fetching", args, locale);
     }
-    public static String getSavedDataMessage(MessageSource messageSource, String en, String ar, String tyEn, String tyAr) {
+
+    public static String getSavedDataMessage(MessageSource messageSource, String en, String ar, String tyEn,
+            String tyAr) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
         String[] args = List.of(langCheck ? ar : en, langCheck ? tyAr : tyEn).toArray(new String[0]);
@@ -27,12 +29,15 @@ public class MessagesUtils {
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("success.data.deleting", args, locale);
     }
-    public static String getPublishMessage(MessageSource messageSource, String en, String ar, String tyEn, String tyAr) {
+
+    public static String getPublishMessage(MessageSource messageSource, String en, String ar, String tyEn,
+            String tyAr) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
         String[] args = List.of(langCheck ? ar : en, langCheck ? tyAr : tyEn).toArray(new String[0]);
         return messageSource.getMessage("success.published", args, locale);
     }
+
     public static String getStatusChangedMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
@@ -46,6 +51,7 @@ public class MessagesUtils {
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("error.not.found", args, locale);
     }
+
     public static String getAlreadySelectedMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
@@ -60,24 +66,34 @@ public class MessagesUtils {
         return messageSource.getMessage("error.order.current.status", args, locale);
     }
 
+    public static String getOrderExceededScopeMessage(MessageSource messageSource, String en, String ar) {
+        Locale locale = LocaleContextHolder.getLocale();
+        boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
+        String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
+        return messageSource.getMessage("error.order.exceed.scope", args, locale);
+    }
+
     public static String getAlreadyExistMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("error.already.exist", args, locale);
     }
+
     public static String getAlreadyHasPendingOrderMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("error.pending.order", args, locale);
     }
+
     public static String getMismatchRoleMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("error.mismatch.role", args, locale);
     }
+
     public static String getNotChangeUserMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
@@ -85,7 +101,8 @@ public class MessagesUtils {
         return messageSource.getMessage("error.change.user.not.allowed", args, locale);
     }
 
-    public static String getInvalidFormatMessage(MessageSource messageSource, String en, String ar, String tyEn, String tyAr) {
+    public static String getInvalidFormatMessage(MessageSource messageSource, String en, String ar, String tyEn,
+            String tyAr) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
         String[] args = List.of(langCheck ? ar : en, langCheck ? tyAr : tyEn).toArray(new String[0]);
