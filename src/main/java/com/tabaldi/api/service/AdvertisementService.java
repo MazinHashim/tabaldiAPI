@@ -22,7 +22,7 @@ public interface AdvertisementService {
 
     Advertisement getAdvertisementById(Long advertisementId) throws TabaldiGenericException;
 
-    Advertisement saveAdvertisementInfo(AdvertisementPayload payload, @Valid MultipartFile adsImage)
+    List<Advertisement> saveAdvertisementInfo(AdvertisementPayload payload, @Valid MultipartFile adsImage)
             // , @Valid MultipartFile adsImage2, @Valid MultipartFile adsImage3)
             throws TabaldiGenericException;
 

@@ -22,7 +22,7 @@ public class Advertisement {
     @Id
     @GeneratedValue(strategy = GenerationType.TABLE)
     @Column(name = "advertisement_id", unique = true, nullable = false)
-    private long advertisementId;
+    private Long advertisementId;
     @Column(nullable = false)
     private String title;
     @Column(nullable = false)
@@ -35,10 +35,10 @@ public class Advertisement {
     private boolean isShown;
     @Column(nullable = false)
     private String adsImage1;
-//    @Column(nullable = false)
-//    private String adsImage2;
-//    @Column(nullable = false)
-//    private String adsImage3;
+    // @Column(nullable = false)
+    // private String adsImage2;
+    // @Column(nullable = false)
+    // private String adsImage3;
     private String url;
     @Column(nullable = false)
     private LocalDate createdDate;
@@ -53,16 +53,19 @@ public class Advertisement {
     @ManyToOne
     private Vendor vendor;
 
-    public String getFExpireDate(){
+    public String getFExpireDate() {
         return expireDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
-    public String getFCreatedDate(){
+
+    public String getFCreatedDate() {
         return createdDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
-    public String getFStartTime(){
+
+    public String getFStartTime() {
         return startTime.format(DateTimeFormatter.ofPattern("HH:mm:ss a"));
     }
-    public String getFEndTime(){
+
+    public String getFEndTime() {
         return endTime.format(DateTimeFormatter.ofPattern("HH:mm:ss a"));
     }
 }

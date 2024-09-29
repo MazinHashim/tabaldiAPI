@@ -27,5 +27,9 @@ public interface AdvertisementRepository extends JpaRepository<Advertisement, Lo
 
     List<Advertisement> findByVendorIsNull();
 
+    int deleteByPriorityAndVendorIsNull(int priority);
+
+    int deleteByPriorityAndVendorVendorType(int priority, VendorType vendorType);
+
     List<Advertisement> findByVendorVendorType(VendorType vendorType);
 }

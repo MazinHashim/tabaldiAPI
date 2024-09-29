@@ -1,6 +1,5 @@
 package com.tabaldi.api.response;
 
-import com.tabaldi.api.model.Address;
 import com.tabaldi.api.model.Advertisement;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -11,7 +10,7 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 @AllArgsConstructor
 @NoArgsConstructor
-public class AdvertisementResponse extends GenericResponse{
+public class AdvertisementResponse extends GenericResponse {
     private String event;
     private Advertisement advertisement;
 }

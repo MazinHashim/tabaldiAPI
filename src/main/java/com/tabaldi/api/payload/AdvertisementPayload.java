@@ -27,6 +27,8 @@ public class AdvertisementPayload {
     private String subtitle;
     private String arSubtitle;
     private String url;
+    @Builder.Default
+    private boolean replacePriority = false;
     @NotNull
     @Length(min = 1, max = 5)
     private int priority;

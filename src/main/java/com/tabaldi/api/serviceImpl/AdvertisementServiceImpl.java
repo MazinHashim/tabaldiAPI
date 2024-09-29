@@ -4,6 +4,7 @@ import com.tabaldi.api.TabaldiConfiguration;
 import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.Advertisement;
 import com.tabaldi.api.model.Vendor;
+import com.tabaldi.api.model.VendorType;
 import com.tabaldi.api.payload.AdvertisementPayload;
 import com.tabaldi.api.payload.FileDataObject;
 import com.tabaldi.api.repository.AdvertisementRepository;
@@ -12,6 +13,7 @@ import com.tabaldi.api.service.FileStorageService;
 import com.tabaldi.api.service.VendorService;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
@@ -72,7 +74,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     }
 
     @Override
-    public Advertisement saveAdvertisementInfo(AdvertisementPayload payload,
+    @Transactional
+    public List<Advertisement> saveAdvertisementInfo(AdvertisementPayload payload,
             @Valid MultipartFile adsImage1
     // @Valid MultipartFile adsImage2,
     // @Valid MultipartFile adsImage3
@@ -82,8 +85,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         // String adsPath2 = "";
         // String adsPath3 = "";
         boolean isShowing = false;
+        Advertisement advertisement = null;
         if (payload.getAdvertisementId() != null) {
-            Advertisement advertisement = this.getAdvertisementById(payload.getAdvertisementId());
+            advertisement = this.getAdvertisementById(payload.getAdvertisementId());
             if (advertisement.getVendor() != null && advertisement.getVendor().getVendorId() != payload.getVendorId()) {
                 String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource, "advertisement",
                         "الإعلان");
@@ -106,8 +110,8 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         if (payload.getVendorId() != null) {
             selectedVendor = vendorService.getVendorById(payload.getVendorId());
         }
-        // Check if priority is unique for each vendor type or null vendors
-        checkUniquePriority(payload.getPriority(), selectedVendor, payload.getAdvertisementId());
+        this.validateAndEnsureUniquePriorityReplacingIfNecessary(payload.getPriority(), selectedVendor, advertisement,
+                payload.isReplacePriority());
         if ((payload.getUrl() != null && !payload.getUrl().isEmpty()) && selectedVendor != null) {
             String requiredOneOfMessage = messageSource.getMessage("error.required.one.of.them", null,
                     LocaleContextHolder.getLocale());
@@ -121,7 +125,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         if (!adsPath1.isEmpty()) {
             // || !adsPath2.isEmpty() || !adsPath3.isEmpty()) {
-            List urlList = new ArrayList<String>();
+            List<String> urlList = new ArrayList<String>();
             if (!adsImage1.isEmpty() && !adsPath1.isEmpty())
                 urlList.add(new String(Base64.getDecoder().decode(adsPath1.getBytes())));
             // if(!adsImage2.isEmpty() && !adsPath2.isEmpty()) urlList.add(new
@@ -133,7 +137,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         adsPath1 = this.checkAndGenerateImagePath(adsImage1, adsPath1);
         // adsPath2 = this.checkAndGenerateImagePath(adsImage2, adsPath2);
         // adsPath3 = this.checkAndGenerateImagePath(adsImage3, adsPath3);
-        List<FileDataObject> addList = new ArrayList();
+        List<FileDataObject> addList = new ArrayList<FileDataObject>();
         if (!adsImage1.isEmpty())
             addList.add(new FileDataObject(adsImage1, adsPath1));
         // if(!adsImage2.isEmpty()) addList.add(new FileDataObject(adsImage2,
@@ -185,7 +189,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             // advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
             // advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
         }
-        return advertisementRepository.save(advertisementParams);
+        List<Advertisement> advertisements = this.getAdvertisementsList();
+        advertisements.add(advertisementRepository.save(advertisementParams));
+        return advertisements;
     }
 
     private String checkAndGenerateImagePath(MultipartFile adsImage1, String path) throws TabaldiGenericException {
@@ -203,7 +209,9 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         return path;
     }
 
-    private void checkUniquePriority(Integer priority, Vendor vendor, Long advertisementId)
+    private void validateAndEnsureUniquePriorityReplacingIfNecessary(Integer priority, Vendor vendor,
+            Advertisement advertisement,
+            boolean isReplacePriority)
             throws TabaldiGenericException {
         List<Advertisement> existingAds;
         if (vendor == null) {
@@ -212,13 +220,30 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             existingAds = advertisementRepository.findByVendorVendorType(vendor.getVendorType());
         }
         boolean priorityExists = existingAds.stream()
-                .filter(ad -> ad.getAdvertisementId() != advertisementId)
+                .filter(ad -> ad
+                        .getAdvertisementId() != (advertisement == null ? null : advertisement.getAdvertisementId()))
                 .anyMatch(ad -> ad.getPriority() == priority);
 
+        String errorMessage = messageSource.getMessage("error.duplicate.priority", null,
+                LocaleContextHolder.getLocale());
+
+        // Handle priority conflicts when adding a new advertisement or updating an
+        // existing one
         if (priorityExists) {
-            String errorMessage = messageSource.getMessage("error.duplicate.priority", null,
-                    LocaleContextHolder.getLocale());
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+            if (!isReplacePriority) {
+                // Throw an exception if trying to add a new ad with existing priority or update
+                // with a conflicting priority
+                if (advertisement == null || (advertisement != null && advertisement.getPriority() != priority)) {
+                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+                }
+            } else if (advertisement == null || (advertisement != null && advertisement.getPriority() != priority)) {
+                // Replace existing advertisement with the same priority
+                if (vendor == null) {
+                    advertisementRepository.deleteByPriorityAndVendorIsNull(priority);
+                } else {
+                    advertisementRepository.deleteByPriorityAndVendorVendorType(priority, vendor.getVendorType());
+                }
+            }
         }
     }
 
@@ -279,6 +304,21 @@ public class AdvertisementServiceImpl implements AdvertisementService {
                     .collect(Collectors.joining(" | "));
 
             availablePriorities.put(key, availablePrioritiesForGroup);
+        }
+        // Add entries for vendor types that don't have any advertisements
+        for (VendorType vendorType : VendorType.values()) {
+            if (!availablePriorities.containsKey(vendorType.name())) {
+                availablePriorities.put(vendorType.name(), IntStream.rangeClosed(1, maxPriority)
+                        .mapToObj(i -> "إعلان " + i)
+                        .collect(Collectors.joining(" | ")));
+            }
+        }
+
+        // Add entry for EXTERNAL_ADS if it doesn't exist
+        if (!availablePriorities.containsKey("EXTERNAL_ADS")) {
+            availablePriorities.put("EXTERNAL_ADS", IntStream.rangeClosed(1, maxPriority)
+                    .mapToObj(i -> "إعلان " + i)
+                    .collect(Collectors.joining(" | ")));
         }
 
         return availablePriorities;
