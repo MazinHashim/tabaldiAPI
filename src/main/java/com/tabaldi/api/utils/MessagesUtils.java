@@ -52,6 +52,13 @@ public class MessagesUtils {
         return messageSource.getMessage("error.not.found", args, locale);
     }
 
+    public static String getAltreadyUpdatedByTransactionMessage(MessageSource messageSource, String en, String ar) {
+        Locale locale = LocaleContextHolder.getLocale();
+        boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
+        String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
+        return messageSource.getMessage("error.already.updated.by.transaction", args, locale);
+    }
+
     public static String getAlreadySelectedMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
