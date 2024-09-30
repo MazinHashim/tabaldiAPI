@@ -1,4 +1,5 @@
 package com.tabaldi.api.serviceImpl;
+
 import com.ibm.icu.text.ArabicShaping;
 import com.ibm.icu.text.ArabicShapingException;
 import com.ibm.icu.text.Bidi;
@@ -13,7 +14,6 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.font.PDType0Font;
-import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.stereotype.Service;
 
@@ -59,8 +59,9 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Invoice Amount: " + invoice.getSummary().getTotal());
             contentStream.newLineAtOffset(0, -17);
-            contentStream.showText("Customer Name: " + this.shapeIfArabicText(invoice.getOrder().getCustomer().getFirstName())+" "+
-                    this.shapeIfArabicText(invoice.getOrder().getCustomer().getLastName()));
+            contentStream.showText(
+                    "Customer Name: " + this.shapeIfArabicText(invoice.getOrder().getCustomer().getFirstName()) + " " +
+                            this.shapeIfArabicText(invoice.getOrder().getCustomer().getLastName()));
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Customer Phone: " + invoice.getOrder().getCustomer().getUser().getPhone());
             contentStream.newLineAtOffset(0, -17);
@@ -73,7 +74,8 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Invoice Status: " + invoice.getStatus().name());
             contentStream.newLineAtOffset(0, -17);
-            contentStream.showText("Vendor Name: " + this.shapeIfArabicText(invoice.getOrder().getVendor().getFullName()));
+            contentStream
+                    .showText("Vendor Name: " + this.shapeIfArabicText(invoice.getOrder().getVendor().getFullName()));
             contentStream.newLineAtOffset(0, -17);
             contentStream.showText("Order Status: " + invoice.getOrder().getStatus().name());
             contentStream.newLineAtOffset(0, -17);
@@ -85,14 +87,14 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             float margin = 50;
             float tableWidth = 500;
             float rowHeight = 20;
-            float cellMargin = 5;
 
             // Define column widths
-            float[] columnWidths = {270, 85, 85, 100};
+            float[] columnWidths = { 270, 85, 85, 100 };
 
             // Draw table header
             contentStream.setFont(boldFont, 12);
-            drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths, new String[]{"Item", "Quantity", "Price", "Total"});
+            drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
+                    new String[] { "Item", "Quantity", "Price", "Total" });
 
             yPosition -= rowHeight;
 
@@ -107,20 +109,20 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
                         this.shapeIfArabicText(item.getProduct().getName()),
                         String.valueOf(item.getQuantity()),
                         String.valueOf(item.getPrice()),
-                        String.valueOf(item.getPrice()*item.getQuantity())
+                        String.valueOf(item.getPrice() * item.getQuantity())
                 };
                 drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths, itemData);
                 yPosition -= rowHeight;
-                if(item.getOptionsCollection()!=null){
+                if (item.getOptionsCollection() != null) {
                     item.setSelectedOptions(GenericMapper
                             .jsonToListObjectMapper(item.getOptionsCollection(), Option.class));
                     contentStream.setFont(boldFont, 10);
-                    for (Option option: item.getSelectedOptions()){
+                    for (Option option : item.getSelectedOptions()) {
                         String[] optionData = {
                                 this.shapeIfArabicText(option.getName()),
                                 "_",
-                                String.valueOf(option.getFee()!=null?option.getFee():"_"),
-                                String.valueOf(option.getFee()!=null?option.getFee():"_")
+                                String.valueOf(option.getFee() != null ? option.getFee() : "_"),
+                                String.valueOf(option.getFee() != null ? option.getFee() : "_")
                         };
                         drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths, optionData);
                         yPosition -= rowHeight;
@@ -133,26 +135,26 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
             tableWidth = 220;
             contentStream.setFont(boldFont, 12);
             margin = 330;
-            columnWidths = new float[]{160, 0, 0, 40};
+            columnWidths = new float[] { 160, 0, 0, 40 };
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
-                    new String[]{"Shipping", invoice.getSummary().getShippingCost()+" AED", "", ""});
+                    new String[] { "Shipping", invoice.getSummary().getShippingCost() + " AED", "", "" });
             yPosition -= rowHeight;
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
-                    new String[]{"Tax(VAT)", invoice.getSummary().getTaxes()+" AED", "", ""});
+                    new String[] { "Tax(VAT)", invoice.getSummary().getTaxes() + " AED", "", "" });
             yPosition -= rowHeight;
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
-                    new String[]{"Discount", invoice.getSummary().getDiscount()+" AED", "", ""});
+                    new String[] { "Discount", invoice.getSummary().getDiscount() + " AED", "", "" });
             yPosition -= rowHeight;
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
-                    new String[]{"Subtotal", invoice.getSummary().getSubtotal()+" AED", "", ""});
+                    new String[] { "Subtotal", invoice.getSummary().getSubtotal() + " AED", "", "" });
             yPosition -= rowHeight;
             drawTableRow(contentStream, margin, yPosition, tableWidth, rowHeight, columnWidths,
-                    new String[]{"Total", invoice.getSummary().getTotal()+" AED", "", ""});
+                    new String[] { "Total", invoice.getSummary().getTotal() + " AED", "", "" });
 
             // Close the content stream
             contentStream.close();
 
-            if(!idAuthGenerated) {
+            if (!idAuthGenerated) {
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
                 document.save(outputStream);
                 return outputStream.toByteArray();
@@ -177,7 +179,8 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
         return bidiArabic;
     }
 
-    private void drawTableRow(PDPageContentStream contentStream, float x, float y, float tableWidth, float rowHeight, float[] columnWidths, String[] content) throws IOException {
+    private void drawTableRow(PDPageContentStream contentStream, float x, float y, float tableWidth, float rowHeight,
+            float[] columnWidths, String[] content) throws IOException {
         // Draw borders for the row
         drawRowBorders(contentStream, x, y, tableWidth, rowHeight, columnWidths.length);
 
@@ -197,7 +200,8 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
         }
     }
 
-    private void drawRowBorders(PDPageContentStream contentStream, float x, float y, float tableWidth, float rowHeight, int columns) throws IOException {
+    private void drawRowBorders(PDPageContentStream contentStream, float x, float y, float tableWidth, float rowHeight,
+            int columns) throws IOException {
         float columnWidth = tableWidth / columns;
 
         // Draw the top border of the row
@@ -210,11 +214,11 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
         contentStream.lineTo(x + tableWidth, y - rowHeight);
         contentStream.stroke();
 
-//        // Draw vertical lines for each column
-//        for (int i = 0; i <= columns; i++) {
-//            contentStream.moveTo(x + i * columnWidth, y);
-//            contentStream.lineTo(x + i * columnWidth, y - rowHeight);
-//            contentStream.stroke();
-//        }
+        // // Draw vertical lines for each column
+        // for (int i = 0; i <= columns; i++) {
+        // contentStream.moveTo(x + i * columnWidth, y);
+        // contentStream.lineTo(x + i * columnWidth, y - rowHeight);
+        // contentStream.stroke();
+        // }
     }
 }
