@@ -78,7 +78,7 @@ public class SecurityConfiguration {
                                                                 .hasAnyRole(Role.CUSTOMER.name())
                                                                 .requestMatchers("/api/v1/categories/save")
                                                                 .hasAnyRole(Role.SUPERADMIN.name(), Role.VENDOR.name())
-                                                                .requestMatchers("/api/v1/categories/delete")
+                                                                .requestMatchers("/api/v1/categories/delete/*")
                                                                 .hasAnyRole(Role.SUPERADMIN.name(), Role.VENDOR.name())
                                                                 .requestMatchers("/api/v1/categories/toggle/publish/*")
                                                                 .hasAnyRole(Role.SUPERADMIN.name())
