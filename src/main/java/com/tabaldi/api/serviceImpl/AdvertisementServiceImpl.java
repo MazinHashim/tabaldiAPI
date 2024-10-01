@@ -189,7 +189,10 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             // advertisementParams.setAdsImage2(Base64.getEncoder().encodeToString(adsPath2.getBytes()));
             // advertisementParams.setAdsImage3(Base64.getEncoder().encodeToString(adsPath3.getBytes()));
         }
-        List<Advertisement> advertisements = this.getAdvertisementsList();
+        List<Advertisement> advertisements = this.getAdvertisementsList().stream()
+                .filter(ad -> payload.getAdvertisementId() != null
+                        && ad.getAdvertisementId() != payload.getAdvertisementId())
+                .collect(Collectors.toList());
         advertisements.add(advertisementRepository.save(advertisementParams));
         return advertisements;
     }
