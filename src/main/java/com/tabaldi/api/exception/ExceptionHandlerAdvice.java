@@ -28,7 +28,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 public class ExceptionHandlerAdvice {
 
     private final MessageSource messageSource;
-    final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
+    final Logger logger = LoggerFactory.getLogger(ExceptionHandlerAdvice.class);
 
     @ExceptionHandler({ Exception.class })
     public @ResponseBody CustomErrorResponse handleExceptions(HttpServletResponse response, Exception exception) {

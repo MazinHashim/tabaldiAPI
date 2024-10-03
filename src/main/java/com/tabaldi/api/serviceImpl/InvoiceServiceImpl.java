@@ -50,8 +50,9 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     public Invoice saveInvoiceInfo(InvoicePayload payload, Order order) throws TabaldiGenericException {
-        if(!order.getStatus().equals(OrderStatus.WAITING)){
-            String notConfirmedMessage = messageSource.getMessage("error.not.waiting", null, LocaleContextHolder.getLocale());
+        if (!order.getStatus().equals(OrderStatus.WAITING)) {
+            String notConfirmedMessage = messageSource.getMessage("error.not.waiting", null,
+                    LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notConfirmedMessage);
         } else {
 
@@ -79,9 +80,9 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public Boolean deleteInvoiceById(Long invoiceId) throws TabaldiGenericException {
         Optional<Invoice> invoiceOptional = invoiceRepository.findById(invoiceId);
-        if (!invoiceOptional.isPresent()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Invoice", "الفاتورة");
-            throw  new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        if (!invoiceOptional.isPresent()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Invoice", "الفاتورة");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             Invoice invoice = invoiceOptional.get();
             invoiceRepository.deleteById(invoice.getInvoiceId());
@@ -92,12 +93,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException {
         Invoice invoice = this.getInvoiceByOrderId(orderId);
-        if(invoice.getStatus().equals(InvoiceStatus.PAID)){
-            String notDeliveredMessage = messageSource.getMessage("error.invoice.already.paid", null, LocaleContextHolder.getLocale());
+        if (invoice.getStatus().equals(InvoiceStatus.PAID)) {
+            String notDeliveredMessage = messageSource.getMessage("error.invoice.already.paid", null,
+                    LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notDeliveredMessage);
-        } else if(invoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
+        } else if (invoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
             if (!invoice.getOrder().getStatus().equals(OrderStatus.DELIVERED)) {
-                String notDeliveredMessage = messageSource.getMessage("error.not.delivered", null, LocaleContextHolder.getLocale());
+                String notDeliveredMessage = messageSource.getMessage("error.not.delivered", null,
+                        LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notDeliveredMessage);
             } else {
                 invoice.setStatus(InvoiceStatus.PAID);
@@ -110,16 +113,17 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .CurrencyIso("AED")
                     .build();
             Map<String, Object> paymentMethodsResponse = paymentService.initializeMyFatoorahPayment(initPaymentPayload);
-            System.out.println("Payment Methods: "+paymentMethodsResponse.toString());
+            System.out.println("Payment Methods: " + paymentMethodsResponse.toString());
 
             // Execute online invoice payment
             ExecutePaymentPayload executePaymentPayload = ExecutePaymentPayload.builder()
                     .InvoiceValue(invoice.getSummary().getTotal())
                     .PaymentMethodId(20)
                     .build();
-            Map<String, Object> executePaymentResponse = paymentService.executePaymentTransaction(executePaymentPayload);
-            System.out.println("Execute Payment: "+executePaymentResponse.toString());
-            if(invoice.getPaymentMethod().equals(PaymentMethod.VISA)
+            Map<String, Object> executePaymentResponse = paymentService
+                    .executePaymentTransaction(executePaymentPayload);
+            System.out.println("Execute Payment: " + executePaymentResponse.toString());
+            if (invoice.getPaymentMethod().equals(PaymentMethod.VISA)
                     || invoice.getPaymentMethod().equals(PaymentMethod.MASTER_CARD)) {
                 // Directly pay online invoice payment
                 DirectPaymentPayload directPaymentPayload = DirectPaymentPayload.builder()
@@ -129,13 +133,14 @@ public class InvoiceServiceImpl implements InvoiceService {
                         .Card(cardPayload)
                         .build();
                 Map<String, Object> data = (HashMap) executePaymentResponse.get("Data");
-                Map<String, Object> directPaymentResponse = paymentService.directPaymentTransaction(directPaymentPayload, data.get("PaymentURL").toString());
+                Map<String, Object> directPaymentResponse = paymentService
+                        .directPaymentTransaction(directPaymentPayload, data.get("PaymentURL").toString());
                 System.out.println("Direct Payment: " + directPaymentResponse.toString());
-            } else if(invoice.getPaymentMethod().equals(PaymentMethod.APPLE_PAY)){
+            } else if (invoice.getPaymentMethod().equals(PaymentMethod.APPLE_PAY)) {
                 // add apple_pay integration
             }
             invoice.setStatus(InvoiceStatus.PAID);
-//            invoice.setInvoiceNumber("4303866");
+            // invoice.setInvoiceNumber("4303866");
             return invoiceRepository.save(invoice);
         } else
             return invoice;
@@ -144,10 +149,11 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public List<Invoice> getInvoicesList(long vendorId) throws TabaldiGenericException {
         List<Invoice> invoiceList = invoiceRepository.findByVendorId(vendorId);
-        if(invoiceList.isEmpty()){
-            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"invoices", "الفواتير");
+        if (invoiceList.isEmpty()) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "invoices", "الفواتير");
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
-        return invoiceList.stream().sorted(Comparator.comparing(Invoice::getIssueDate).reversed()).collect(Collectors.toList());
+        return invoiceList.stream().sorted(Comparator.comparing(Invoice::getIssueDate).reversed())
+                .collect(Collectors.toList());
     }
 }

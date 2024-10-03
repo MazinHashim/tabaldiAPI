@@ -188,6 +188,7 @@ public class OrderServiceImpl implements OrderService {
                         .total(order.getTotal() + taxPercentage + discount + shippingCost)
                         .build(), order);
                 order.setTotal(createdInvoice.getSummary().getTotal());
+                order.setPaymentMethod(createdInvoice.getPaymentMethod());
                 if (!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
                     createdInvoice = invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
                 }
@@ -307,7 +308,9 @@ public class OrderServiceImpl implements OrderService {
             if (cartItem.getOptionsCollection() != null)
                 cartItem.setSelectedOptions(GenericMapper
                         .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
-            order.setTotal(invoiceService.getInvoiceByOrderId(order.getOrderId()).getSummary().getTotal());
+            Invoice invoice = invoiceService.getInvoiceByOrderId(order.getOrderId());
+            order.setTotal(invoice.getSummary().getTotal());
+            order.setPaymentMethod(invoice.getPaymentMethod());
         }
     }
 

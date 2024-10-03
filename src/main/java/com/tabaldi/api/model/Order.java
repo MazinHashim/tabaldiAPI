@@ -18,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "orders")
 public class Order {
-//
+    //
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "order_id", unique = true, nullable = false)
@@ -33,6 +33,8 @@ public class Order {
     private OffsetDateTime deliveredDate;
     @Transient
     private double total;
+    @Transient
+    private PaymentMethod paymentMethod;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
@@ -54,13 +56,15 @@ public class Order {
     @ManyToOne
     private Vendor vendor;
 
-    public String getFOrderDate(){
+    public String getFOrderDate() {
         return orderDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
     }
-    public String getFProcessedDate(){
-        return processedDate==null?null:processedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+
+    public String getFProcessedDate() {
+        return processedDate == null ? null : processedDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
     }
-    public String getFDeliveredDate(){
-        return deliveredDate==null?null:deliveredDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
+
+    public String getFDeliveredDate() {
+        return deliveredDate == null ? null : deliveredDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm a"));
     }
 }
