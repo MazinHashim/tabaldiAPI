@@ -35,6 +35,8 @@ public class Order {
     private double total;
     @Transient
     private PaymentMethod paymentMethod;
+    @Transient
+    private double shippingCost;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private OrderStatus status;

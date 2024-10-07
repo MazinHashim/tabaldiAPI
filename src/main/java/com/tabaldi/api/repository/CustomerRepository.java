@@ -16,4 +16,6 @@ public interface CustomerRepository extends JpaRepository<Customer, Long> {
     @Query("SELECT COUNT(c) FROM Customer c WHERE c.createdAt BETWEEN :startDate AND :endDate")
     long countByCustomerDate(@Param("startDate") OffsetDateTime startDate, @Param("endDate") OffsetDateTime endDate);
     Optional<Customer> findByUser(UserEntity user);
+
+    boolean existsByEmail(String email);
 }

@@ -189,6 +189,7 @@ public class OrderServiceImpl implements OrderService {
                         .build(), order);
                 order.setTotal(createdInvoice.getSummary().getTotal());
                 order.setPaymentMethod(createdInvoice.getPaymentMethod());
+                order.setShippingCost(createdInvoice.getSummary().getShippingCost());
                 if (!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
                     createdInvoice = invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
                 }
@@ -311,6 +312,7 @@ public class OrderServiceImpl implements OrderService {
             Invoice invoice = invoiceService.getInvoiceByOrderId(order.getOrderId());
             order.setTotal(invoice.getSummary().getTotal());
             order.setPaymentMethod(invoice.getPaymentMethod());
+            order.setShippingCost(invoice.getSummary().getShippingCost());
         }
     }
 

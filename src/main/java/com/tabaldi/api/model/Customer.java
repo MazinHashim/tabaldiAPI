@@ -25,9 +25,9 @@ public class Customer {
     private String firstName;
     @Column(nullable = false)
     private String lastName;
-    @Column(nullable = false)
+    @Column(nullable = false, unique = true)
     private String email;
-    @Column(nullable = true)
+    @Column(nullable = false)
     private OffsetDateTime createdAt;
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)

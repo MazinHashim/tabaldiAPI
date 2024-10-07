@@ -49,10 +49,15 @@ public class CustomerServiceImpl implements CustomerService {
         // update customer constraints
         if(payload.getCustomerId()!=null){
             Customer customer = this.getCustomerById(payload.getCustomerId());
-            if(customer.getUser()!=null &&
-                    customer.getUser().getUserId()!=payload.getUserId()){
+            if(customer.getUser().getUserId()!=payload.getUserId()){
                 String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource,"Customer", "الزبون");
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
+            }
+            if(customer.getEmail()!=null && !customer.getEmail().equals(payload.getEmail())){
+                if(customerRepository.existsByEmail(payload.getEmail())){
+                    String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"Customer", "الزبون");
+                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
+                }
             }
         }
         UserEntity user = userService.getUserById(payload.getUserId());
@@ -60,7 +65,8 @@ public class CustomerServiceImpl implements CustomerService {
             String mismatchMessage = MessagesUtils.getMismatchRoleMessage(messageSource, "Customer","الزبون");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, mismatchMessage);
         }
-        if(payload.getCustomerId()==null && userService.checkUserExistRegardlessOfRole(user)){
+        if(payload.getCustomerId()==null && userService.checkUserExistRegardlessOfRole(user)
+                && customerRepository.existsByEmail(payload.getEmail())){
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource, "Customer", "الزبون");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
