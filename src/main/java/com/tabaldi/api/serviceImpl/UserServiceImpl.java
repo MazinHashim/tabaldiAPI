@@ -163,7 +163,8 @@ public class UserServiceImpl implements UserService {
         if (user.getRole().equals(Role.CUSTOMER)) {
             return customerRepository.findByUser(user).isPresent();
         } else if (user.getRole().equals(Role.VENDOR)) {
-            return vendorRepository.findByUser(user).isPresent();
+
+            return userRepository.findById(user.getUserId()).isPresent();
         }
         return user.getRole().equals(Role.SUPERADMIN);
     }
@@ -193,6 +194,17 @@ public class UserServiceImpl implements UserService {
                     "الرقم");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
         }
+        return user;
+    }
+
+    @Override
+    public UserEntity getExistByEmailOrPhone(String email, String phone) {
+
+        UserEntity user = null;
+        Optional<UserEntity> userEntityP = userRepository.findByPhone(phone);
+        Optional<UserEntity> userEntityE = userRepository.findByEmail(email);
+        if(userEntityP.isPresent()) user = userEntityP.get();
+        if(userEntityE.isPresent()) user = userEntityE.get();
         return user;
     }
 
@@ -275,6 +287,11 @@ public class UserServiceImpl implements UserService {
         UserEntity user = session.getUser();
         if (user.getRole().equals(Role.SUPERADMIN) && vendorUserId != null) {
             user = getUserById(vendorUserId);
+        }
+        if(user.getVendor()!=null){
+            user.getVendor().setUserId(user.getUserId());
+            user.getVendor().setUserEmail(user.getEmail());
+            user.getVendor().setUserPhone(user.getPhone());
         }
         return user;
     }

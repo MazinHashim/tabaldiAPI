@@ -35,6 +35,8 @@ public class Product {
     private String imagesCollection;
     @Transient
     private List<String> images;
+    @Transient
+    private double finalPrice;
     @Column(nullable = false)
     private double price;
     @Column(nullable = false)
@@ -59,7 +61,8 @@ public class Product {
     @ManyToOne
     private Category category;
 
-//    public List<String> getImages() throws IOException {
-//        return GenericMapper.jsonToListObjectMapper(this.imagesCollection, String.class);
-//    }
+
+    public double getFinalPrice() {
+        return this.price + (this.price * this.companyProfit / 100);
+    }
 }

@@ -54,16 +54,20 @@ public class Vendor {
     private int inactiveProductsCount;
     @Transient
     private int inactiveCategoriesCount;
+    @Transient
+    private String userPhone;
+    @Transient
+    private String userEmail;
+    @Transient
+    private Long userId;
 //    @OneToMany(mappedBy = "vendor")
 //    private List<Category> categories;
 //    @OneToMany(mappedBy = "vendor")
 //    private List<Product> products;
 //    @OneToMany(mappedBy = "vendor")
 //    private List<Orders> orders;
-    @JoinColumn(name = "user_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToOne
-    private UserEntity user;
+//    @OneToMany(mappedBy = "vendor")
+//    private List<UserEntity> users;
 
     public String getFOpeningTime(){
         return openingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
@@ -71,4 +75,5 @@ public class Vendor {
     public String getFClosingTime(){
         return closingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
     }
+
 }

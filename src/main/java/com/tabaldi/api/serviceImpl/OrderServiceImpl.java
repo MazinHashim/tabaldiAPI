@@ -142,8 +142,6 @@ public class OrderServiceImpl implements OrderService {
 
                         // 8/ Calculate the total price for the cart item and set order total
                         double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
-                        // double itemTotalWithProfit = itemTotal + (itemTotal *
-                        // cartItem.getProduct().getCompanyProfit() / 100);
                         double roundedTotal = Math.round(itemTotal * 2) / 2;
                         order.setTotal(order.getTotal() + roundedTotal);
 
@@ -151,7 +149,7 @@ public class OrderServiceImpl implements OrderService {
                         if (cartItem.getSelectedOptions() != null) {
                             cartItem.getSelectedOptions().forEach(option -> {
                                 if (option.getFee() != null)
-                                    order.setTotal(order.getTotal() + option.getFee());
+                                    order.setTotal(order.getTotal() + (option.getFee()*cartItem.getQuantity()));
                             });
                         }
                     }

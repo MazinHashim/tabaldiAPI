@@ -13,7 +13,7 @@ import java.util.Optional;
 
 @Repository
 public interface VendorRepository extends JpaRepository<Vendor, Long> {
-    Optional<Vendor> findByUser(UserEntity user);
+//    Optional<Vendor> findByUser(UserEntity user);
     @Transactional
     @Modifying
     @Query("update Vendor v set v.isWorking = ?1 where v.vendorId = ?2")

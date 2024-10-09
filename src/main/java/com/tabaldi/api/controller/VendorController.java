@@ -5,16 +5,14 @@ import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.UserPayload;
 import com.tabaldi.api.payload.VendorPayload;
 import com.tabaldi.api.response.*;
-import com.tabaldi.api.service.InvoiceService;
-import com.tabaldi.api.service.ProductService;
-import com.tabaldi.api.service.UserService;
-import com.tabaldi.api.service.VendorService;
+import com.tabaldi.api.service.*;
 import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -31,6 +29,7 @@ public class VendorController {
 
     private final VendorService vendorService;
     private final ProductService productService;
+    private final SessionService sessionService;
     private final InvoiceService invoiceService;
     private final UserService userService;
     private final MessageSource messageSource;
@@ -46,20 +45,6 @@ public class VendorController {
                 .event("fetched")
                 .vendor(vendor).build());
 
-    }
-
-    @GetMapping("/profile")
-    public @ResponseBody ResponseEntity<VendorResponse> profile() throws TabaldiGenericException {
-        Vendor vendor = vendorService.getProfile();
-        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Vendor", "البائع");
-        return ResponseEntity.ok(
-                VendorProfileResponse.builder()
-                        .event("fetched")
-                        .newUser(!userService.checkUserExistRegardlessOfRole(vendor.getUser()))
-                        .vendor(vendor)
-                        .message(fetchMessage)
-                        .build()
-        );
     }
 
     @GetMapping
@@ -118,6 +103,18 @@ public class VendorController {
                         .build()
         );
     }
+    @GetMapping("/{vendorId}/users")
+    public @ResponseBody ResponseEntity<ListResponse<UserEntity>> getUsersList (
+            @PathVariable("vendorId") long vendorId) throws TabaldiGenericException {
+        List<UserEntity> usersList = vendorService.getVendorUsersList(vendorId);
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Users", "المستخدمين");
+        return ResponseEntity.ok(
+                ListResponse.<UserEntity>genericBuilder()
+                        .list(usersList)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
 
     @GetMapping("/{vendorId}/orders")
     public @ResponseBody ResponseEntity<ListResponse<Order>> getOrdersList (
@@ -153,21 +150,22 @@ public class VendorController {
         );
     }
 
-//    @PostMapping("/add/user")
-//    public @ResponseBody ResponseEntity<UserEntity> verifyAndAddVendor (
-//            @RequestBody @Valid UserPayload payload
-//    ) throws TabaldiGenericException {
-//        VerificationResponse verificationResponse = userService.verifyOtp(VerifyOtpPayload.builder()
-//                .phone(payload.getPhone())
-//                .keyRef(payload.getKeyRef())
-//                .allowRegistration(true)
-//                .otpCode(payload.getOtpCode())
-//                .build());
-//        UserVerification userVerification = verificationResponse.getUserVerification();
-//        UserEntity user = vendorService.addVendorUser(payload, userVerification);
-//        return ResponseEntity.ok(user);
-//
-//    }
+    @PostMapping("/add/user")
+    public @ResponseBody ResponseEntity<UserResponse> addVendorUser (
+            @RequestBody @Valid UserPayload payload
+    ) throws TabaldiGenericException {
+        String event = payload.getUserId()==null?"created":"updated";
+        String successSaveMessage = MessagesUtils.getSavedDataMessage(messageSource,
+                "User", "المستخدم", event, event.equals("created")?"حفظ":"تعديل");
+        UserEntity user = vendorService.addVendorUser(payload);
+        return ResponseEntity.ok(
+                UserResponse.builder()
+                        .user(user)
+                        .message(successSaveMessage)
+                        .build()
+        );
+
+    }
 
     @PostMapping(value = "/save", consumes = {"multipart/form-data"}, produces = "application/json")
     public @ResponseBody ResponseEntity<VendorResponse> saveVendor (
@@ -198,6 +196,17 @@ public class VendorController {
             throws TabaldiGenericException {
         Boolean isDeleted = vendorService.deleteVendorById(vendorId);
         String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Vendor", "التاجر");
+
+        return ResponseEntity.ok(DeleteResponse.builder()
+                .message(successDeleteMessage)
+                .isDeleted(isDeleted).build());
+
+    }
+    @DeleteMapping("/delete/user/{userId}")
+    public @ResponseBody ResponseEntity<DeleteResponse> deleteVendorUser (@PathVariable("userId") Long userId)
+            throws TabaldiGenericException {
+        Boolean isDeleted = vendorService.deleteUserById(userId);
+        String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "User", "المستخدم");
 
         return ResponseEntity.ok(DeleteResponse.builder()
                 .message(successDeleteMessage)

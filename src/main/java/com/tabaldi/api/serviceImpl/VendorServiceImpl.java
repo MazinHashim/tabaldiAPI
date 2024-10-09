@@ -35,7 +35,6 @@ public class VendorServiceImpl implements VendorService {
 
     private final SequencesService sequencesService;
     private final UserService userService;
-    private final SessionService sessionService;
     private final CategoryRepository categoryRepository;
     private final AdvertisementRepository advertisementRepository;
     private final OrderService orderService;
@@ -58,8 +57,12 @@ public class VendorServiceImpl implements VendorService {
         vendorList.forEach(v-> {
             Long productCount = productRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
             Long categoryCount = categoryRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
+            UserEntity user = userRepository.findByVendorAndRole(v, Role.VENDOR).stream().findFirst().get();
             v.setInactiveProductsCount(productCount.intValue());
             v.setInactiveCategoriesCount(categoryCount.intValue());
+            v.setUserId(user.getUserId());
+            v.setUserEmail(user.getEmail());
+            v.setUserPhone(user.getPhone());
         });
         return vendorList.stream()
                 .sorted(Comparator.comparing(Vendor::getFullName))
@@ -69,15 +72,33 @@ public class VendorServiceImpl implements VendorService {
     @Override
     public UserEntity addVendorUser(UserPayload payload) throws TabaldiGenericException {
 
-        Optional<UserEntity> userOptional = userRepository.findByPhone(payload.getPhone());
-        UserEntity user;
-        if(!userOptional.isPresent()){
+        UserEntity user=null;
+        if(payload.getUserId()!=null) {
+            user = userService.getUserById(payload.getUserId());
+        }
+        UserEntity existUser = userService.getExistByEmailOrPhone(payload.getEmail(), payload.getPhone());
+        Vendor selectedVendor=null;
+        if(payload.getVendorId()!=null) {
+            selectedVendor = this.getVendorById(payload.getVendorId());
+        }
+        if(existUser==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
                     .email(payload.getEmail())
                     .agreeTermsConditions(payload.isAgreeTermsConditions())
-                    .role(Role.VENDOR)
+                    .role(payload.getRole())
                     .build();
+            if(payload.getUserId()!=null){
+                user.setUserId(payload.getUserId());
+            }
+            if(selectedVendor!=null){
+                user.setVendor(selectedVendor);
+            }
+            user = userRepository.saveAndFlush(user);
+        } else if(user!=null && existUser.getUserId()==user.getUserId()){
+            user.setPhone(payload.getPhone());
+            user.setEmail(payload.getEmail());
+            System.out.println("Yes It Passed Through here...");
             user = userRepository.saveAndFlush(user);
         } else {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"User", "المستخدم");
@@ -98,16 +119,11 @@ public class VendorServiceImpl implements VendorService {
         // update vendor constraints
         if (payload.getVendorId() != null) {
             Vendor vendor = this.getVendorById(payload.getVendorId());
-            if (vendor.getUser() != null && vendor.getUser().getUserId() != payload.getUserId()) {
-                String changeNotAllowedMessage = MessagesUtils.getNotChangeUserMessage(messageSource, "Vendor", "التاجر");
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, changeNotAllowedMessage);
-            } else {
-                licensePath = vendor.getLicenseImage()!=null?vendor.getLicenseImage():"";
-                identityPath = vendor.getIdentityImage()!=null?vendor.getIdentityImage():"";
-                profilePath = vendor.getProfileImage()!=null?vendor.getProfileImage():"";
-                coverPath = vendor.getCoverImage()!=null?vendor.getCoverImage():"";
-                isWorking = vendor.isWorking();
-            }
+            licensePath = vendor.getLicenseImage()!=null?vendor.getLicenseImage():"";
+            identityPath = vendor.getIdentityImage()!=null?vendor.getIdentityImage():"";
+            profilePath = vendor.getProfileImage()!=null?vendor.getProfileImage():"";
+            coverPath = vendor.getCoverImage()!=null?vendor.getCoverImage():"";
+            isWorking = vendor.isWorking();
             user = userService.getUserById(payload.getUserId());
             if(!user.getPhone().equals(payload.getPhone()) || !user.getEmail().equals(payload.getEmail())) {
                 user.setPhone(payload.getPhone());
@@ -119,6 +135,7 @@ public class VendorServiceImpl implements VendorService {
                     .email(payload.getEmail())
                     .phone(payload.getPhone())
                     .agreeTermsConditions(true)
+                    .role(Role.VENDOR)
                     .build();
             user = this.addVendorUser(userPayload);
         }
@@ -200,7 +217,6 @@ public class VendorServiceImpl implements VendorService {
                 .openingTime(payload.getOpeningTime())
                 .closingTime(payload.getClosingTime())
                 .minChargeLongDistance(payload.getMinChargeLongDistance())
-                .user(user)
                 .build();
         if(payload.getVendorId()!=null){
             vendorParams.setVendorId(payload.getVendorId());
@@ -220,6 +236,9 @@ public class VendorServiceImpl implements VendorService {
             vendorParams.setLicenseImage(Base64.getEncoder().encodeToString(licensePath.getBytes()));
         }
         Vendor createdVendor = vendorRepository.save(vendorParams);
+//        userRepository.findByVendorAndRole(createdVendor, Role.VENDOR)
+        user.setVendor(createdVendor);
+        userRepository.save(user);
         if(payload.getVendorId()==null)
             sequencesService.createSequenceFor("vendors", 1000, createdVendor.getVendorId());
         return createdVendor;
@@ -240,12 +259,24 @@ public class VendorServiceImpl implements VendorService {
             throw  new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             Vendor vendor = vendorOptional.get();
-            userService.deleteUserById(vendor.getUser().getUserId());
-            List<String> list = List.of(vendor.getProfileImage(), vendor.getIdentityImage(), vendor.getLicenseImage());
+//            this.getVendorUsersList(vendor.getVendorId());
+            vendorRepository.deleteById(vendor.getVendorId());
+            List<String> list = List.of(vendor.getCoverImage() ,vendor.getProfileImage(), vendor.getIdentityImage(), vendor.getLicenseImage());
             fileStorageService.remove(list.stream()
                     .map(path -> new String(Base64.getDecoder().decode(path.getBytes()))).collect(Collectors.toList()));
             return true;
         }
+    }
+    @Override
+    public Boolean deleteUserById(Long userId) throws TabaldiGenericException {
+        UserEntity user = userService.getUserById(userId);
+        if(!user.getRole().equals(Role.VENDOR_USER)) {
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "User","المستخدم");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+//        if (lastLogin is before lastLogout) => logged out
+//        if (lastLogout is before lastLogin) => logged in
+        return userService.deleteUserById(userId);
     }
 
     @Override
@@ -262,21 +293,12 @@ public class VendorServiceImpl implements VendorService {
     public Vendor getVendorByUserId(Long userId) throws TabaldiGenericException {
         // if you want to check role check it using PathVariable annotation
         // or in any case you should not access auth user here
-        Optional<Vendor> vendor = vendorRepository.findByUser(
-                UserEntity.builder().userId(userId).build());
-        if(!vendor.isPresent()){
+        Optional<UserEntity> user = userRepository.findById(userId);
+        if(!user.isPresent() || user.get().getVendor()==null){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Vendor","البائع");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
-        return vendor.get();
-    }
-    @Override
-    public Vendor getProfile() throws TabaldiGenericException {
-        UserEntity myUserDetails = (UserEntity) SecurityContextHolder.getContext().getAuthentication()
-                .getPrincipal();
-        Session session = sessionService.getSessionByUsername(myUserDetails.getUsername());
-        UserEntity user = session.getUser();
-        return this.getVendorByUserId(user.getUserId());
+        return user.get().getVendor();
     }
 
     @Override
@@ -289,6 +311,17 @@ public class VendorServiceImpl implements VendorService {
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         return categoryList;
+    }
+    @Override
+    public List<UserEntity> getVendorUsersList(Long vendorId) throws TabaldiGenericException {
+        Vendor vendor = this.getVendorById(vendorId);
+        List<UserEntity> userList = userRepository.findByVendorAndRole(vendor, Role.VENDOR_USER);
+
+        if(userList.isEmpty()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"User", "المستخدمين");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        return userList;
     }
     @Override
     public List<Advertisement> getVendorAdvertisementsList(Long vendorId) throws TabaldiGenericException {

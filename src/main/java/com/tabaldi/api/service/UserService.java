@@ -27,4 +27,6 @@ public interface UserService {
     UserEntity getUserById(Long userId) throws TabaldiGenericException;
 
     UserEntity changeUserPhoneNumber(long userId, String newPhoneNumber, VerifyOtpPayload payload) throws TabaldiGenericException;
+
+    UserEntity getExistByEmailOrPhone(String email, String phone);
 }

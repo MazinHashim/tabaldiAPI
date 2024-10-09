@@ -24,8 +24,9 @@ public interface VendorService {
 
     Vendor getVendorById(Long vendorId) throws TabaldiGenericException;
     Vendor getVendorByUserId(Long userId) throws TabaldiGenericException;
-    public Vendor getProfile() throws TabaldiGenericException;
+    Boolean deleteUserById(Long userId) throws TabaldiGenericException;
     List<Category> getVendorCategoriesList(Long vendorId) throws TabaldiGenericException;
+    List<UserEntity> getVendorUsersList(Long vendorId) throws TabaldiGenericException;
     List<Advertisement> getVendorAdvertisementsList(Long vendorId) throws TabaldiGenericException;
     List<Order> getVendorOrdersList(Long vendorId) throws TabaldiGenericException, IOException;
     List<Product> getVendorProductsList(Long vendorId, String roleName) throws TabaldiGenericException, IOException;
