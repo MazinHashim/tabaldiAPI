@@ -16,9 +16,9 @@ import java.util.Optional;
 public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query(value = "select count(*) from orders where DATE(order_date) = CURRENT_DATE", nativeQuery = true)
     long countByOrderDate();
-//    @Query("select o from Order o where o.customer.customerId = ?1 and o.vendor.vendorId = ?2 and " +
-//            "o.status not in ('DELIVERED', 'CANCELED') ORDER BY o.orderDate DESC")
-//    List<Order> getLastActiveOrderPerVendor(long customerId, long vendorId);
+    @Query("select o from Order o where o.customer.customerId = ?1 and o.vendor.vendorId = ?2 and " +
+            "o.status not in ('DELIVERED', 'CANCELED') ORDER BY o.orderDate DESC")
+    List<Order> getLastActiveOrderPerVendor(long customerId, long vendorId);
 
     @Query("select o from Order o where o.status not in ?1")
     List<Order> findByPendingOrders(Collection<OrderStatus> statuses);

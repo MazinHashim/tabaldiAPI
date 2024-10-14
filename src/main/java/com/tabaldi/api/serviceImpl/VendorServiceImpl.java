@@ -365,6 +365,15 @@ public class VendorServiceImpl implements VendorService {
     @Override
     public List<VendorFrequency> fetchFrequentVendorByOrders(List<Order> orders, int size) {
         List<VendorFrequency> vendorFrequency = orders.stream()
+                .map((order) -> {
+                    Vendor v = order.getVendor();
+                    UserEntity user = userRepository.findByVendorAndRole(v, Role.VENDOR).stream().findFirst().get();
+                    v.setUserId(user.getUserId());
+                    v.setUserEmail(user.getEmail());
+                    v.setUserPhone(user.getPhone());
+                    order.setVendor(v);
+                    return order;
+                })
                 .collect(Collectors.groupingBy(e -> e.getVendor(), Collectors.counting()))  // Step 1: Count frequency
                 .entrySet()
                 .stream()

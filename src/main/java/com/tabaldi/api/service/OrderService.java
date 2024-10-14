@@ -8,6 +8,7 @@ import com.tabaldi.api.model.OrderStatus;
 import com.tabaldi.api.model.Vendor;
 import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
+import com.tabaldi.api.payload.ShippingCostPayload;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -33,4 +34,7 @@ public interface OrderService {
     void fillOrdersDetails(List<Order> orderList) throws IOException, TabaldiGenericException;
     void fillOrderDetails(Order order) throws TabaldiGenericException, IOException;
 
+    String saveVendorNote(Long orderId, String vendorNote) throws TabaldiGenericException;
+
+    Boolean checkIfOrderWillPass(Long customerId, List<ShippingCostPayload> payload) throws TabaldiGenericException, IOException;
 }

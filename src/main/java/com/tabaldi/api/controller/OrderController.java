@@ -5,9 +5,7 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.CartItem;
 import com.tabaldi.api.model.Order;
 import com.tabaldi.api.model.OrderStatus;
-import com.tabaldi.api.payload.NotificationPayload;
-import com.tabaldi.api.payload.OrderPayload;
-import com.tabaldi.api.payload.PendingOrders;
+import com.tabaldi.api.payload.*;
 import com.tabaldi.api.response.*;
 import com.tabaldi.api.service.NotificationService;
 import com.tabaldi.api.service.OrderService;
@@ -15,6 +13,7 @@ import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -113,6 +112,31 @@ OrderController {
         return ResponseEntity.ok(ChangedStatusResponse.builder()
                 .message(successChangeMessage)
                 .isChanged(isChanged).build());
+
+    }
+    @GetMapping("/will/pass/{customerId}")
+    public @ResponseBody ResponseEntity<OrderWillPassResponse> checkIfOrderWillPass (@PathVariable("customerId") Long customerId,
+                                                                                     @RequestBody List<ShippingCostPayload> shippingCostPayloads)
+            throws TabaldiGenericException, IOException {
+        Boolean isWillPass = orderService.checkIfOrderWillPass(customerId, shippingCostPayloads);
+        String successOrderWillPassMessage = messageSource.getMessage("success.order.will.pass",
+                null, LocaleContextHolder.getLocale());
+
+        return ResponseEntity.ok(OrderWillPassResponse.builder()
+                .message(successOrderWillPassMessage)
+                .isWillPass(isWillPass).build());
+
+    }
+    @PostMapping("/save/note/{orderId}")
+    public @ResponseBody ResponseEntity<OrderVendorNoteResponse> saveVendorNote (@PathVariable("orderId") Long orderId,
+                                                                                  @RequestBody NotePayload payload)
+            throws TabaldiGenericException {
+        String vendorNote = orderService.saveVendorNote(orderId, payload.getVendorNote());
+        String successChangeMessage = MessagesUtils.getSavedDataMessage(messageSource, "Order", "الطلب", "updated", "تعديل");
+
+        return ResponseEntity.ok(OrderVendorNoteResponse.builder()
+                .message(successChangeMessage)
+                .vendorNote(vendorNote).build());
 
     }
 
