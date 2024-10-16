@@ -65,12 +65,15 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .build());
             Random random = new Random();
             int invoiceNumber = random.ints(111111, 999999).findFirst().getAsInt();
+            InvoiceStatus status = payload.getPaymentMethod().equals(PaymentMethod.GOOGLE_PAY)||
+                    payload.getPaymentMethod().equals(PaymentMethod.APPLE_PAY)
+                    ? InvoiceStatus.PAID : InvoiceStatus.UNPAID;
 
             return invoiceRepository.save(Invoice.builder()
                     .invoiceNumber(String.valueOf(invoiceNumber))
                     .issueDate(OffsetDateTime.now())
                     .paymentMethod(payload.getPaymentMethod())
-                    .status(InvoiceStatus.UNPAID)
+                    .status(status)
                     .order(order)
                     .summary(summary)
                     .build());
