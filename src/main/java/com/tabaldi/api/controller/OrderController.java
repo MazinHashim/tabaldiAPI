@@ -114,7 +114,7 @@ OrderController {
                 .isChanged(isChanged).build());
 
     }
-    @GetMapping("/will/pass/{customerId}")
+    @PostMapping("/will/pass/{customerId}")
     public @ResponseBody ResponseEntity<OrderWillPassResponse> checkIfOrderWillPass (@PathVariable("customerId") Long customerId,
                                                                                      @RequestBody List<ShippingCostPayload> shippingCostPayloads)
             throws TabaldiGenericException, IOException {
