@@ -48,6 +48,7 @@ OrderController {
             (@RequestParam(required = false) Long customerId) throws TabaldiGenericException, IOException {
         List<Order> ordersList = orderService.getAllOrders(customerId).stream()
                 .sorted(Comparator.comparing(Order::getOrderDate).reversed())
+                .filter(order -> order.getStatus().equals(OrderStatus.DELIVERED)||order.getStatus().equals(OrderStatus.CANCELED))
                 .toList();
         orderService.fillOrdersDetails(ordersList);
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Customers Orders", "طلبات الزبائن");
