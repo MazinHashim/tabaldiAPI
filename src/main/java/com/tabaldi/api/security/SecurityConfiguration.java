@@ -52,6 +52,8 @@ public class SecurityConfiguration {
                                 .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/customers/**")
                                 .hasAnyRole(Role.CUSTOMER.name())
+                                .requestMatchers("/api/v1/orders/*")
+                                .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/pending/*")
                                 .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/pending")
