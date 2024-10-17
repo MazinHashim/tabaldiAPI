@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -82,6 +83,7 @@ public class CartItemServiceImpl implements CartItemService {
 
     @Override
     @Transactional
+    @Modifying
     public List<CartItem> saveCartItemInfo(CartItemPayload payload) throws TabaldiGenericException, IOException {
 
         Product selectedProduct = productService.getProductById(payload.getProductId());
