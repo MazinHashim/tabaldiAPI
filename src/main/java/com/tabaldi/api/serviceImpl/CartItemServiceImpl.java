@@ -148,7 +148,7 @@ public class CartItemServiceImpl implements CartItemService {
                 .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
         boolean isAllRestaurant = vendors.stream()
                 .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
-        if (!(isAllNotRestaurant || isAllRestaurant)) {
+        if (!(isAllNotRestaurant || (isAllRestaurant && vendors.size()==1))) {
             String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null,
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);

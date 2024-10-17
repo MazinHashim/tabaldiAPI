@@ -139,8 +139,6 @@ public class InvoiceServiceImpl implements InvoiceService {
                 Map<String, Object> directPaymentResponse = paymentService
                         .directPaymentTransaction(directPaymentPayload, data.get("PaymentURL").toString());
                 System.out.println("Direct Payment: " + directPaymentResponse.toString());
-            } else if (invoice.getPaymentMethod().equals(PaymentMethod.APPLE_PAY)) {
-                // add apple_pay integration
             }
             invoice.setStatus(InvoiceStatus.PAID);
             // invoice.setInvoiceNumber("4303866");
