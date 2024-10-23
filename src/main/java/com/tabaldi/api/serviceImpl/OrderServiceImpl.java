@@ -427,6 +427,7 @@ public class OrderServiceImpl implements OrderService {
             Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
             if (!status.equals(OrderStatus.WAITING) &&
                     !status.equals(OrderStatus.DELIVERED) &&
+                    !invoice.getPaymentMethod().equals(PaymentMethod.CASH) &&
                     invoice.getStatus().equals(InvoiceStatus.UNPAID)) {
                 String notPaidOrderMessage = messageSource.getMessage("error.invoice.not.paid", null,
                         LocaleContextHolder.getLocale());
