@@ -52,8 +52,6 @@ public class SecurityConfiguration {
                                 .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/customers/**")
                                 .hasAnyRole(Role.CUSTOMER.name())
-                                .requestMatchers("/api/v1/orders/*")
-                                .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/pending/*")
                                 .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/pending")
@@ -61,8 +59,7 @@ public class SecurityConfiguration {
                                 .requestMatchers("/api/v1/orders/create/**")
                                 .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/history")
-                                .hasAnyRole(Role.CUSTOMER.name(),
-                                                Role.SUPERADMIN.name())
+                                .hasAnyRole(Role.CUSTOMER.name(), Role.SUPERADMIN.name())
                                 .requestMatchers("/api/v1/orders/cancel/**")
                                 .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/orders/*/cartItems")
@@ -78,6 +75,8 @@ public class SecurityConfiguration {
                                 .hasAnyRole(Role.SUPERADMIN.name(),
                                         Role.VENDOR_USER.name(),
                                         Role.VENDOR.name())
+                                .requestMatchers("/api/v1/orders/*")
+                                .hasAnyRole(Role.CUSTOMER.name())
                                 .requestMatchers("/api/v1/invoices/order/*")
                                 .hasAnyRole(Role.SUPERADMIN.name(), Role.VENDOR_USER.name(),Role.VENDOR.name(),
                                                 Role.CUSTOMER.name())
