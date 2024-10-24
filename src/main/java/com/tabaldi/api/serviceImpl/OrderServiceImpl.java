@@ -168,7 +168,7 @@ public class OrderServiceImpl implements OrderService {
     }
     @Override
     public Boolean checkIfOrderWillPass(Long customerId, List<ShippingCostPayload> payload) throws TabaldiGenericException, IOException {
-        Customer customer = customerService.getCustomerById(customerId);
+        customerService.getCustomerById(customerId);
         List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId, true);
 
         // 1/ check if all cart items has published products and categories to create an order
@@ -200,27 +200,27 @@ public class OrderServiceImpl implements OrderService {
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
         }
-        // 4/ check if there is any pending order for any of these restaurant vendors
-        AtomicBoolean hasPendingVendorOrder = new AtomicBoolean(false);
-        StringBuilder pending = new StringBuilder();
-        vendors.stream().filter(vendor-> vendor.getVendorType().equals(VendorType.RESTAURANT))
-                .forEach(vendor -> {
-                    List<Order> lastOrderCreatedOptional =
-                            orderRepository.getLastActiveOrderPerVendor(customerId,
-                                    vendor.getVendorId());
-                    if (!lastOrderCreatedOptional.isEmpty()) {
-                        hasPendingVendorOrder.set(true);
-                        pending.append(vendor.getFullName().concat(", "));
-                    }
-                });
-        if (hasPendingVendorOrder.get()) {
-            String pendingVendors = pending.substring(0, pending.lastIndexOf(", ")).trim();
-            String pendingOrderMessage =
-                    MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
-                            pendingVendors, pendingVendors);
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                    pendingOrderMessage);
-        }
+//        // 4/ check if there is any pending order for any of these restaurant vendors
+//        AtomicBoolean hasPendingVendorOrder = new AtomicBoolean(false);
+//        StringBuilder pending = new StringBuilder();
+//        vendors.stream().filter(vendor-> vendor.getVendorType().equals(VendorType.RESTAURANT))
+//                .forEach(vendor -> {
+//                    List<Order> lastOrderCreatedOptional =
+//                            orderRepository.getLastActiveOrderPerVendor(customerId,
+//                                    vendor.getVendorId());
+//                    if (!lastOrderCreatedOptional.isEmpty()) {
+//                        hasPendingVendorOrder.set(true);
+//                        pending.append(vendor.getFullName().concat(", "));
+//                    }
+//                });
+//        if (hasPendingVendorOrder.get()) {
+//            String pendingVendors = pending.substring(0, pending.lastIndexOf(", ")).trim();
+//            String pendingOrderMessage =
+//                    MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
+//                            pendingVendors, pendingVendors);
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+//                    pendingOrderMessage);
+//        }
         for (Vendor vendor : vendors) {
             double orderTotal = 0;
             for (CartItem cartItem : cartItems) {
