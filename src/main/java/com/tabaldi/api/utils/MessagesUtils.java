@@ -79,6 +79,12 @@ public class MessagesUtils {
         String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
         return messageSource.getMessage("error.order.exceed.scope", args, locale);
     }
+    public static String getOrderLessThatMinChargeMessage(MessageSource messageSource, String en, String ar) {
+        Locale locale = LocaleContextHolder.getLocale();
+        boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
+        String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
+        return messageSource.getMessage("error.order.less.min.charge", args, locale);
+    }
 
     public static String getAlreadyExistMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();

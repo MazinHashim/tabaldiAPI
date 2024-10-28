@@ -509,14 +509,19 @@ public class OrderServiceImpl implements OrderService {
         if (vendor.getVendorType() == VendorType.STORE || vendor.getMaxKilometerDelivery()==null) {
             return; // Not applicable for store vendors or those without max delivery
                     // distance
-        } else if (vendor.getVendorType() == VendorType.RESTAURANT) {
+        } else if (vendor.getVendorType().equals(VendorType.RESTAURANT)) {
             minCharge = this.getMinChargeBasedOn(orderDistance);
         }
         // Order total is less than min charge of the distance in case of restaurants,
         // and if it's less than 25 for any distance in case of groceries
         if (orderTotal < minCharge) {
-            String errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
+            String errorMessage="";
+            if(vendor.getVendorType().equals(VendorType.RESTAURANT))
+                errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
                     String.valueOf(minCharge), String.valueOf(minCharge));
+            else
+                errorMessage = MessagesUtils.getOrderLessThatMinChargeMessage(messageSource,
+                        String.valueOf(minCharge), String.valueOf(minCharge));
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
         }
     }
