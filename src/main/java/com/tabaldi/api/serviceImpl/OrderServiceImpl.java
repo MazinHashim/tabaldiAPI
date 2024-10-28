@@ -21,7 +21,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.*;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -130,7 +129,7 @@ public class OrderServiceImpl implements OrderService {
                 String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "vendor", "البائع");
                 throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
             }
-            this.validateRestaurantDelivery(order.getVendor(), order.getTotal(), shippingCostObj.get().getDistance());
+            this.validateDeliveryDistance(order.getVendor(), order.getTotal(), shippingCostObj.get().getDistance());
             double shippingCost = shippingCostObj.get().getShippingCost();
             Invoice createdInvoice = invoiceService.saveInvoiceInfo(InvoicePayload.builder()
                     .orderId(order.getOrderId())
@@ -144,7 +143,8 @@ public class OrderServiceImpl implements OrderService {
             order.setTotal(createdInvoice.getSummary().getTotal());
             order.setPaymentMethod(createdInvoice.getPaymentMethod());
             order.setShippingCost(createdInvoice.getSummary().getShippingCost());
-            if (!createdInvoice.getPaymentMethod().equals(PaymentMethod.CASH)) {
+            if (createdInvoice.getPaymentMethod().equals(PaymentMethod.MASTER_CARD)
+                    || createdInvoice.getPaymentMethod().equals(PaymentMethod.VISA)) {
                 createdInvoice = invoiceService.payOrderInvoice(order.getOrderId(), payload.getCard());
             }
             // send email with attached invoice to customer using email service
@@ -250,7 +250,7 @@ public class OrderServiceImpl implements OrderService {
                         throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
                     }
                     // 5/ Check Restaurant Delivery Max Distances Allowed And Minimum Charges
-                    this.validateRestaurantDelivery(vendor, orderTotal, shippingCostObj.get().getDistance());
+                    this.validateDeliveryDistance(vendor, orderTotal, shippingCostObj.get().getDistance());
                 }
             }
         }
@@ -503,19 +503,35 @@ public class OrderServiceImpl implements OrderService {
         }
     }
 
-    private void validateRestaurantDelivery(Vendor vendor, double orderTotal, double orderDistance)
+    private void validateDeliveryDistance(Vendor vendor, double orderTotal, int orderDistance)
             throws TabaldiGenericException {
-        if (vendor.getVendorType() != VendorType.RESTAURANT || vendor.getMaxKilometerDelivery() == null) {
-            return; // Not applicable for non-restaurant vendors or those without max delivery
+        double minCharge = 25;
+        if (vendor.getVendorType() == VendorType.STORE || vendor.getMaxKilometerDelivery()==null) {
+            return; // Not applicable for store vendors or those without max delivery
                     // distance
+        } else if (vendor.getVendorType() == VendorType.RESTAURANT) {
+            minCharge = this.getMinChargeBasedOn(orderDistance);
         }
-
-        if (orderDistance > vendor.getMaxKilometerDelivery() &&
-                orderTotal > vendor.getMinChargeLongDistance()) {
-
+        // Order total is less than min charge of the distance in case of restaurants,
+        // and if it's less than 25 for any distance in case of groceries
+        if (orderTotal < minCharge) {
             String errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
-                    vendor.getMinChargeLongDistance().toString(), vendor.getMinChargeLongDistance().toString());
+                    String.valueOf(minCharge), String.valueOf(minCharge));
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
         }
+    }
+
+    private double getMinChargeBasedOn(int orderDistance) throws TabaldiGenericException {
+        return switch (orderDistance) {
+            case 0, 1, 2, 3, 4, 5 -> 20;
+            case 6, 7, 8, 9, 10 -> 25;
+            case 11, 12, 13, 14, 15 -> 30;
+            case 16, 17, 18, 19, 20 -> 40;
+            case 21, 22, 23, 24, 25 -> 60;
+            case 26, 27, 28, 29, 30 -> 80;
+            case 31, 32, 33, 34, 35, 36, 37, 38, 39, 40 -> 100;
+            // 40 KM is Maximum Distance for restaurants
+            default -> throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Distance out of range");
+        };
     }
 }

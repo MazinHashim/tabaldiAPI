@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ShippingCostPayload {
 
-    private double distance;
+    private int distance;
     private double shippingCost;
     private long vendorId;
 }
