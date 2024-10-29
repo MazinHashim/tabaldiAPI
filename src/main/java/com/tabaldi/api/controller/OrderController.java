@@ -33,8 +33,9 @@ OrderController {
     private final NotificationService notificationService;
     @GetMapping("/{orderId}")
     public @ResponseBody ResponseEntity<OrderResponse> getById (@PathVariable("orderId") Long orderId)
-            throws TabaldiGenericException {
+            throws TabaldiGenericException, IOException {
         Order order = orderService.getOrderById(orderId);
+        orderService.fillOrderDetails(order);
         String successFetchMessage = MessagesUtils.getFetchMessage(messageSource, "Order", "الطلب");
 
         return ResponseEntity.ok(OrderResponse.builder()
