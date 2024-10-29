@@ -517,8 +517,8 @@ public class OrderServiceImpl implements OrderService {
         }
         // Order total is less than min charge of the distance in case of restaurants,
         // and if it's less than 25 for any distance in case of groceries
-        logger.info("Order Total"+ orderTotal +" less than Min Charge"+ minCharge +" "+ (orderTotal<minCharge));
-        if (orderTotal > minCharge) {
+        logger.info("Order Total "+ orderTotal +" less than Min Charge "+ minCharge +" "+ (orderTotal<minCharge));
+        if (orderTotal < minCharge) {
             String errorMessage="";
             if(vendor.getVendorType().equals(VendorType.RESTAURANT))
                 errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
