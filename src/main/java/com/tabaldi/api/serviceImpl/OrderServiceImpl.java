@@ -13,6 +13,8 @@ import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -39,6 +41,7 @@ public class OrderServiceImpl implements OrderService {
     private final EmailService emailService;
     private final InvoiceService invoiceService;
     private final MessageSource messageSource;
+    private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Override
     @Transactional
@@ -514,6 +517,7 @@ public class OrderServiceImpl implements OrderService {
         }
         // Order total is less than min charge of the distance in case of restaurants,
         // and if it's less than 25 for any distance in case of groceries
+        logger.info("Order Total"+ orderTotal +" less than Min Charge"+ minCharge +" "+ (orderTotal<minCharge));
         if (orderTotal < minCharge) {
             String errorMessage="";
             if(vendor.getVendorType().equals(VendorType.RESTAURANT))
