@@ -246,16 +246,16 @@ public class OrderServiceImpl implements OrderService {
                                 orderTotal+= (option.getFee() * cartItem.getQuantity());
                         }
                     }
-                    Optional<ShippingCostPayload> shippingCostObj = payload.stream()
-                            .filter(cost -> cost.getVendorId() == vendor.getVendorId()).findFirst();
-                    if (!shippingCostObj.isPresent()) {
-                        String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "vendor", "البائع");
-                        throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
-                    }
-                    // 5/ Check Restaurant Delivery Max Distances Allowed And Minimum Charges
-                    this.validateDeliveryDistance(vendor, orderTotal, shippingCostObj.get().getDistance());
                 }
             }
+            // 5/ Check Restaurant Delivery Max Distances Allowed And Minimum Charges
+            Optional<ShippingCostPayload> shippingCostObj = payload.stream()
+                    .filter(cost -> cost.getVendorId() == vendor.getVendorId()).findFirst();
+            if (!shippingCostObj.isPresent()) {
+                String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "vendor", "البائع");
+                throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
+            }
+            this.validateDeliveryDistance(vendor, orderTotal, shippingCostObj.get().getDistance());
         }
         return true;
     }
@@ -518,7 +518,7 @@ public class OrderServiceImpl implements OrderService {
         // Order total is less than min charge of the distance in case of restaurants,
         // and if it's less than 25 for any distance in case of groceries
         logger.info("Order Total"+ orderTotal +" less than Min Charge"+ minCharge +" "+ (orderTotal<minCharge));
-        if (orderTotal < minCharge) {
+        if (orderTotal > minCharge) {
             String errorMessage="";
             if(vendor.getVendorType().equals(VendorType.RESTAURANT))
                 errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
