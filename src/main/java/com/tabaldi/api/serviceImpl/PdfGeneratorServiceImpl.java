@@ -106,7 +106,7 @@ public class PdfGeneratorServiceImpl implements PdfGeneratorService {
                 // Shape and correct the Arabic text using ICU4J
                 contentStream.setFont(regFont, 12);
                 String[] itemData = {
-                        this.shapeIfArabicText(item.getProduct().getName()),
+                        this.shapeIfArabicText(item.getProduct().getName().replace("\t", " ")),
                         String.valueOf(item.getQuantity()),
                         String.valueOf(item.getPrice()),
                         String.valueOf(item.getPrice() * item.getQuantity())
