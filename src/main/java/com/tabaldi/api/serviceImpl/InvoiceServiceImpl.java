@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -49,6 +50,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional
     public Invoice saveInvoiceInfo(InvoicePayload payload, Order order) throws TabaldiGenericException {
         if (!order.getStatus().equals(OrderStatus.WAITING)) {
             String notConfirmedMessage = messageSource.getMessage("error.not.waiting", null,

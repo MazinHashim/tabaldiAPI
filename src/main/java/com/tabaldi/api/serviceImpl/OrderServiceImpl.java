@@ -125,7 +125,7 @@ public class OrderServiceImpl implements OrderService {
                     .forEach(productRepository::save);
             // 9/ Create invoice for each created order
             double discount = payload.getDiscount() == null ? 0.0 : payload.getDiscount();
-            double taxPercentage = 0;// order.getTotal() * payload.getTaxPercentage() / 100;
+            double taxPercentage = 0.0;// order.getTotal() * payload.getTaxPercentage() / 100;
             Optional<ShippingCostPayload> shippingCostObj = payload.getShippingCosts().stream()
                     .filter(cost -> cost.getVendorId() == order.getVendor().getVendorId()).findFirst();
             if (!shippingCostObj.isPresent()) {

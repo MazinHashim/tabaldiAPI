@@ -127,7 +127,7 @@ public class CartItemServiceImpl implements CartItemService {
             }
         }
         CartItem cartItemParams = CartItem.builder()
-                .price(payload.getPrice())
+                .price(payload.getPrice() + (payload.getPrice() * selectedProduct.getCompanyProfit() / 100))
                 .quantity(payload.getQuantity())
                 .product(selectedProduct)
                 .optionsCollection(payload.getOptions())
