@@ -8,7 +8,8 @@ public class ThreadFilter extends Filter<ILoggingEvent> {
 
     @Override
     public FilterReply decide(ILoggingEvent event) {
-        if (event.getThreadName().contains("main")) {
+        String message = event.getFormattedMessage();
+        if (event.getThreadName().contains("main") || message != null && message.contains("[B@")) {
             return FilterReply.DENY;
         } else {
             return FilterReply.NEUTRAL;
