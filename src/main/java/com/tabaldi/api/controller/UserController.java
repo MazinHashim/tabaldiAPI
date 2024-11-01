@@ -6,11 +6,9 @@ import com.tabaldi.api.model.Session;
 import com.tabaldi.api.model.UserEntity;
 import com.tabaldi.api.model.UserVerification;
 import com.tabaldi.api.payload.SendOtpPayload;
+import com.tabaldi.api.payload.UserPayload;
 import com.tabaldi.api.payload.VerifyOtpPayload;
-import com.tabaldi.api.response.AuthenticationResponse;
-import com.tabaldi.api.response.SendOtpResponse;
-import com.tabaldi.api.response.UserResponse;
-import com.tabaldi.api.response.VerificationResponse;
+import com.tabaldi.api.response.*;
 import com.tabaldi.api.service.UserService;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.validation.Valid;
@@ -25,6 +23,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 
 @RestController
@@ -34,6 +33,34 @@ import java.util.Locale;
 public class UserController {
     private final UserService userService;
     private final MessageSource messageSource;
+
+    @GetMapping("/admin")
+    public @ResponseBody ResponseEntity<ListResponse<UserEntity>> getUsersList () throws TabaldiGenericException {
+        List<UserEntity> usersList = userService.getAdminUsersList();
+        String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Users", "المستخدمين");
+        return ResponseEntity.ok(
+                ListResponse.<UserEntity>genericBuilder()
+                        .list(usersList)
+                        .message(fetchMessage)
+                        .build()
+        );
+    }
+    @PostMapping("/add")
+    public @ResponseBody ResponseEntity<UserResponse> addUser (
+            @RequestBody @Valid UserPayload payload
+    ) throws TabaldiGenericException {
+        String event = payload.getUserId()==null?"created":"updated";
+        String successSaveMessage = MessagesUtils.getSavedDataMessage(messageSource,
+                "User", "المستخدم", event, event.equals("created")?"حفظ":"تعديل");
+        UserEntity user = userService.addUser(payload);
+        return ResponseEntity.ok(
+                UserResponse.builder()
+                        .user(user)
+                        .message(successSaveMessage)
+                        .build()
+        );
+
+    }
 
     @PostMapping("/send/otp")
     public @ResponseBody ResponseEntity<SendOtpResponse> sendOtp (

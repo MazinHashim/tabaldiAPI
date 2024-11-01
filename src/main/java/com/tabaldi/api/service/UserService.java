@@ -6,15 +6,18 @@ import com.tabaldi.api.model.Session;
 import com.tabaldi.api.model.UserEntity;
 import com.tabaldi.api.model.UserVerification;
 import com.tabaldi.api.payload.SendOtpPayload;
+import com.tabaldi.api.payload.UserPayload;
 import com.tabaldi.api.payload.VerifyOtpPayload;
 import com.tabaldi.api.response.VerificationResponse;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 @Service
 public interface UserService {
+    List<UserEntity> getAdminUsersList() throws TabaldiGenericException;
     boolean checkUserExistRegardlessOfRole(UserEntity user);
     UserVerification sendOtp(@Valid SendOtpPayload payload) throws TabaldiGenericException, JsonProcessingException, UnsupportedEncodingException;
     VerificationResponse verifyOtp(@Valid VerifyOtpPayload payload) throws TabaldiGenericException;
@@ -29,4 +32,6 @@ public interface UserService {
     UserEntity changeUserPhoneNumber(long userId, String newPhoneNumber, VerifyOtpPayload payload) throws TabaldiGenericException;
 
     UserEntity getExistByEmailOrPhone(String email, String phone);
+
+    UserEntity addUser(UserPayload payload) throws TabaldiGenericException;
 }

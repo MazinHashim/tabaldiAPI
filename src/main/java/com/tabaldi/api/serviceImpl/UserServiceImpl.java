@@ -5,9 +5,9 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.SendOtpPayload;
 import com.tabaldi.api.payload.SessionPayload;
+import com.tabaldi.api.payload.UserPayload;
 import com.tabaldi.api.payload.VerifyOtpPayload;
 import com.tabaldi.api.repository.*;
-import com.tabaldi.api.response.UserResponse;
 import com.tabaldi.api.response.VerificationResponse;
 import com.tabaldi.api.security.JwtService;
 import com.tabaldi.api.service.SessionService;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.UnsupportedEncodingException;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.regex.Matcher;
@@ -46,6 +47,47 @@ public class UserServiceImpl implements UserService {
     private final TabaldiConfiguration configuration;
     @Value("${spring.profiles.active}")
     private String profile;
+
+    @Override
+    public List<UserEntity> getAdminUsersList() throws TabaldiGenericException {
+        List<UserEntity> userList = userRepository.findByVendorIsNullAndRole(Role.SUPERADMIN);
+
+        if(userList.isEmpty()){
+            String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"Users", "المستخدمين");
+            throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
+        }
+        return userList;
+    }
+
+    @Override
+    public UserEntity addUser(UserPayload payload) throws TabaldiGenericException {
+        UserEntity user=null;
+        if(payload.getUserId()!=null) {
+            user = this.getUserById(payload.getUserId());
+        }
+        UserEntity existUser = this.getExistByEmailOrPhone(payload.getEmail(), payload.getPhone());
+
+        if(existUser==null){
+            user = UserEntity.builder()
+                    .phone(payload.getPhone())
+                    .email(payload.getEmail())
+                    .agreeTermsConditions(payload.isAgreeTermsConditions())
+                    .role(Role.SUPERADMIN)
+                    .build();
+            if(payload.getUserId()!=null){
+                user.setUserId(payload.getUserId());
+            }
+            user = userRepository.saveAndFlush(user);
+        } else if(user!=null && existUser.getUserId()==user.getUserId()){
+            user.setPhone(payload.getPhone());
+            user.setEmail(payload.getEmail());
+            user = userRepository.saveAndFlush(user);
+        } else {
+            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"User", "المستخدم");
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
+        }
+        return user;
+    }
 
     @Override
     public UserVerification sendOtp(SendOtpPayload payload)

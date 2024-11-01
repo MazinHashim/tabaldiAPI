@@ -98,7 +98,6 @@ public class VendorServiceImpl implements VendorService {
         } else if(user!=null && existUser.getUserId()==user.getUserId()){
             user.setPhone(payload.getPhone());
             user.setEmail(payload.getEmail());
-            System.out.println("Yes It Passed Through here...");
             user = userRepository.saveAndFlush(user);
         } else {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"User", "المستخدم");
