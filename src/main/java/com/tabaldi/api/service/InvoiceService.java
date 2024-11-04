@@ -14,7 +14,7 @@ import java.util.List;
 public interface InvoiceService {
 
     Invoice getInvoiceById(long invoiceId) throws TabaldiGenericException;
-    Invoice getInvoiceByOrderId(long orderId) throws TabaldiGenericException;
+    Invoice getInvoiceByOrderId(long orderId) throws TabaldiGenericException, IOException;
     Invoice saveInvoiceInfo(InvoicePayload payload, Order order) throws TabaldiGenericException;
     Boolean deleteInvoiceById(Long invoiceId) throws TabaldiGenericException;
     Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException;

@@ -38,6 +38,8 @@ public class SecurityConfiguration {
                                 .hasAnyRole(Role.SUPERADMIN.name())
                                 .requestMatchers("/api/v1/users/add")
                                 .hasAnyRole(Role.SUPERADMIN.name())
+                                .requestMatchers("/api/v1/users/delete/*")
+                                .hasAnyRole(Role.SUPERADMIN.name())
                                 .requestMatchers("/api/v1/users/**", "/api/v1/files/**").permitAll()
                                 .requestMatchers("/api/v1/details/admin/home")
                                 .hasAnyRole(Role.SUPERADMIN.name())

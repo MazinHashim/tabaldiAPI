@@ -31,7 +31,7 @@ public class InvoiceController {
 
     @GetMapping("/order/{orderId}")
     public @ResponseBody ResponseEntity<InvoiceResponse> getByOrderId (@PathVariable("orderId") Long orderId)
-            throws TabaldiGenericException {
+            throws TabaldiGenericException, IOException {
         Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
         String successFetchMessage = MessagesUtils.getFetchMessage(messageSource, "Invoice", "الفاتورة");
 

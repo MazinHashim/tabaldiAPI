@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class ThreadFilter extends Filter<ILoggingEvent> {
 
-//    private final static Logger logger = LoggerFactory.getLogger(ThreadFilter.class);
+    private final static Logger logger = LoggerFactory.getLogger(ThreadFilter.class);
 
     @Override
     public FilterReply decide(ILoggingEvent event) {

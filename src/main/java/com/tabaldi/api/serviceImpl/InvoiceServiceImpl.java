@@ -7,6 +7,7 @@ import com.tabaldi.api.repository.InvoiceRepository;
 import com.tabaldi.api.repository.InvoiceSummaryRepository;
 import com.tabaldi.api.service.InvoiceService;
 import com.tabaldi.api.service.PaymentService;
+import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -40,12 +41,13 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public Invoice getInvoiceByOrderId(long orderId) throws TabaldiGenericException {
+    public Invoice getInvoiceByOrderId(long orderId) throws TabaldiGenericException, IOException {
         Optional<Invoice> invoiceOptional = invoiceRepository.findByOrderId(orderId);
         if (!invoiceOptional.isPresent()) {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Invoice", "الفاتورة");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
+        this.fillOrderDetails(invoiceOptional.get().getOrder(), invoiceOptional.get());
         return invoiceOptional.get();
     }
 
@@ -158,5 +160,20 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
         return invoiceList.stream().sorted(Comparator.comparing(Invoice::getIssueDate).reversed())
                 .collect(Collectors.toList());
+    }
+
+    public void fillOrderDetails(Order order, Invoice invoice) throws TabaldiGenericException, IOException {
+        for (CartItem cartItem : order.getCartItems()) {
+            if (cartItem.getProduct().getImagesCollection() != null)
+                cartItem.getProduct()
+                        .setImages(GenericMapper
+                                .jsonToListObjectMapper(cartItem.getProduct().getImagesCollection(), String.class));
+            if (cartItem.getOptionsCollection() != null)
+                cartItem.setSelectedOptions(GenericMapper
+                        .jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+            order.setTotal(invoice.getSummary().getTotal());
+            order.setPaymentMethod(invoice.getPaymentMethod());
+            order.setShippingCost(invoice.getSummary().getShippingCost());
+        }
     }
 }

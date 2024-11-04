@@ -162,4 +162,16 @@ public class UserController {
                         .build()
         );
     }
+    @DeleteMapping("/delete/{userId}")
+    public @ResponseBody ResponseEntity<DeleteResponse> deleteUser (
+            @PathVariable Long userId) throws TabaldiGenericException {
+        boolean isDeleted = userService.deleteUserById(userId);
+        String deletedMessage = MessagesUtils.getDeletedMessage(messageSource, "User", "المستخدم");
+        return ResponseEntity.ok(
+                DeleteResponse.builder()
+                        .isDeleted(isDeleted)
+                        .message(deletedMessage)
+                        .build()
+        );
+    }
 }
