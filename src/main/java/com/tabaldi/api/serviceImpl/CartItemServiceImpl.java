@@ -128,7 +128,8 @@ public class CartItemServiceImpl implements CartItemService {
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOptionsMessage);
             }
         }
-        double roundedPrice = Math.round(payload.getPrice() + (payload.getPrice() * selectedProduct.getCompanyProfit() / 100) * 2) / 2;
+        // TODO: Review IT IF SHOULD PASS PRICE OR CALCULATE PRODUCT PRICE
+        double roundedPrice = Math.round(selectedProduct.getPrice() + (selectedProduct.getPrice() * selectedProduct.getCompanyProfit() / 100) * 2) / 2;
         CartItem cartItemParams = CartItem.builder()
                 .price(roundedPrice)
                 .quantity(payload.getQuantity())
