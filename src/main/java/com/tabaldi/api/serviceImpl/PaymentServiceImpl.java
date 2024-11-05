@@ -64,8 +64,13 @@ public class PaymentServiceImpl implements PaymentService {
         } else {
             // delete order if There was any error happen (maybe not required)
             Map apiResponse = GenericMapper.jsonToObjectMapper(strResponse, Map.class);
-            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
+//            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
+                Map<String, Object> directData = (HashMap) apiResponse.get("Data");
+                String errorMessage = directData.get("ErrorMessage").toString();
+                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+//            }
+//            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
 //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
         }
     }

@@ -142,11 +142,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 Map<String, Object> data = (HashMap) executePaymentResponse.get("Data");
                 Map<String, Object> directPaymentResponse = paymentService
                         .directPaymentTransaction(directPaymentPayload, data.get("PaymentURL").toString());
-                if(!Boolean.valueOf(directPaymentResponse.get("IsSuccess").toString())){
-                    Map<String, Object> directData = (HashMap) directPaymentResponse.get("Data");
-                    String errorMessage = directData.get("ErrorMessage").toString();
-                    throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
-                }
+
                 System.out.println("Direct Payment: " + directPaymentResponse.toString());
             }
             invoice.setStatus(InvoiceStatus.PAID);
