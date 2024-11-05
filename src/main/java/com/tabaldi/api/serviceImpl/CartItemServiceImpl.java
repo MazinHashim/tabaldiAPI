@@ -129,9 +129,9 @@ public class CartItemServiceImpl implements CartItemService {
             }
         }
         // TODO: Review IT IF SHOULD PASS PRICE OR CALCULATE PRODUCT PRICE
-        double roundedPrice = Math.round(selectedProduct.getPrice() + (selectedProduct.getPrice() * selectedProduct.getCompanyProfit() / 100) * 2) / 2;
+
         CartItem cartItemParams = CartItem.builder()
-                .price(roundedPrice)
+                .price(selectedProduct.getFinalPrice())
                 .quantity(payload.getQuantity())
                 .product(selectedProduct)
                 .optionsCollection(payload.getOptions())
