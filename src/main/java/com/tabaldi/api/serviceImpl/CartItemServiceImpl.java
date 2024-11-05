@@ -62,8 +62,10 @@ public class CartItemServiceImpl implements CartItemService {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Item", "عنصر سلة التسوق");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
-        cartItem.setSelectedOptions(
-                GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+        if (cartItem.getSelectedOptions() != null && !cartItem.getSelectedOptions().isEmpty()) {
+            cartItem.setSelectedOptions(
+                    GenericMapper.jsonToListObjectMapper(cartItem.getOptionsCollection(), Option.class));
+        }
         // Save the updated cart item to the repository
         cartItemRepository.save(cartItem);
 
