@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -56,22 +57,24 @@ public class PaymentServiceImpl implements PaymentService {
                 new HttpEntity<>(paymentPayload, payloadHeaders);
         String url = configuration.getMyfatoorahTestBaseUrl()+endpoint;
         logger.info(url);
-        String strResponse = RestUtils.postRequest(url, requestHttp, String.class,
-                HttpServletResponse.SC_BAD_REQUEST, "Failed");
-        logger.info(strResponse);
-        if(Boolean.valueOf(strResponse.contains("IsSuccess"))){
-            return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
-        } else {
-            // delete order if There was any error happen (maybe not required)
-            Map apiResponse = GenericMapper.jsonToObjectMapper(strResponse, Map.class);
-//            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
-                Map<String, Object> directData = (HashMap) apiResponse.get("Data");
-                String errorMessage = directData.get("ErrorMessage").toString();
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+        try {
+            String strResponse = RestUtils.postRequest(url, requestHttp, String.class,
+                    HttpServletResponse.SC_BAD_REQUEST, "Failed");
+            logger.info(strResponse);
+//            if (Boolean.valueOf(strResponse.contains("IsSuccess"))) {
+                return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
 //            }
-//            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
-//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
-//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
+        } catch (HttpClientErrorException ex) {
+            // delete order if There was any error happen (maybe not required)
+            Map<String, Object> apiResponse = ex.getResponseBodyAs(Map.class);
+            //            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
+            Map<String, Object> directData = (HashMap) apiResponse.get("Data");
+            String errorMessage = directData.get("ErrorMessage").toString();
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+            //            }
+            //            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
+            //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
+            //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
         }
     }
 }
