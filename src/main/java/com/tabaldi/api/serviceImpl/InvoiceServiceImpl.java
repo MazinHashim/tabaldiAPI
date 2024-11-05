@@ -15,6 +15,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.time.OffsetDateTime;
@@ -98,7 +99,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException {
+    public Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException, HttpClientErrorException {
         Invoice invoice = this.getInvoiceByOrderId(orderId);
         if (invoice.getStatus().equals(InvoiceStatus.PAID)) {
             String notDeliveredMessage = messageSource.getMessage("error.invoice.already.paid", null,

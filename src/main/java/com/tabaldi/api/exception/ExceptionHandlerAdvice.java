@@ -21,7 +21,11 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @ControllerAdvice
 @RequiredArgsConstructor
@@ -53,6 +57,7 @@ public class ExceptionHandlerAdvice {
         return getCustomErrorResponse(response, message, HttpServletResponse.SC_UNAUTHORIZED);
     }
 
+
     @ResponseStatus(HttpStatus.FORBIDDEN)
     @ExceptionHandler({ AccessDeniedException.class })
     public @ResponseBody CustomErrorResponse handleClassAccessDeniedExceptions(HttpServletResponse response,
@@ -62,6 +67,7 @@ public class ExceptionHandlerAdvice {
                 LocaleContextHolder.getLocale());
         return getCustomErrorResponse(response, message, HttpServletResponse.SC_FORBIDDEN);
     }
+
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler({ NoResourceFoundException.class })
@@ -83,6 +89,19 @@ public class ExceptionHandlerAdvice {
                         + (exception instanceof ObjectOptimisticLockingFailureException));
         String message = MessagesUtils.getAltreadyUpdatedByTransactionMessage(messageSource, "Information", "البيانات");
         return getCustomErrorResponse(response, message, HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+    }
+
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    @ExceptionHandler({ HttpClientErrorException.class })
+    public @ResponseBody CustomErrorResponse handleHttpClientErrorExceptions(HttpServletResponse response,
+                                                                       HttpClientErrorException exception) {
+        System.out.println(
+                "Http Client Error Exception " + (exception instanceof HttpClientErrorException));
+        Map<String, Object> apiResponse = exception.getResponseBodyAs(Map.class);
+//            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
+        Map<String, Object> directData = (HashMap) apiResponse.get("Data");
+        String errorMessage = directData.get("ErrorMessage").toString();
+        return getCustomErrorResponse(response, errorMessage, HttpServletResponse.SC_UNAUTHORIZED);
     }
 
     @ResponseStatus(HttpStatus.BAD_REQUEST)

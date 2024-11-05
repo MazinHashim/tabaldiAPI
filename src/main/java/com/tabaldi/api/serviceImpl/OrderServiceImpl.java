@@ -19,6 +19,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.time.*;
@@ -46,7 +47,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload)
-            throws TabaldiGenericException, IOException, ArabicShapingException {
+            throws TabaldiGenericException, IOException, ArabicShapingException, HttpClientErrorException {
 
         Customer customer = customerService.getCustomerById(customerId);
         Session session = sessionService.getSessionByUsername(customer.getUser().getPhone());

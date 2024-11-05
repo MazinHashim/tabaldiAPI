@@ -16,6 +16,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -90,7 +91,7 @@ OrderController {
     @PostMapping("/create/{customerId}")
     public @ResponseBody ResponseEntity<ListResponse<Order>> createOrder (
             @PathVariable("customerId") @Valid long customerId,
-            @RequestBody @Valid OrderPayload payload) throws TabaldiGenericException, IOException, ArabicShapingException {
+            @RequestBody @Valid OrderPayload payload) throws TabaldiGenericException, IOException, ArabicShapingException, HttpClientErrorException {
 
         List<Order> orders = orderService.createAndSaveOrderInfo(customerId, payload);
         String event = "created";

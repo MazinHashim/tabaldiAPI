@@ -6,6 +6,7 @@ import com.tabaldi.api.model.Order;
 import com.tabaldi.api.payload.CardPayload;
 import com.tabaldi.api.payload.InvoicePayload;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.util.List;
@@ -17,6 +18,6 @@ public interface InvoiceService {
     Invoice getInvoiceByOrderId(long orderId) throws TabaldiGenericException, IOException;
     Invoice saveInvoiceInfo(InvoicePayload payload, Order order) throws TabaldiGenericException;
     Boolean deleteInvoiceById(Long invoiceId) throws TabaldiGenericException;
-    Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException;
+    Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException, HttpClientErrorException;
     List<Invoice> getInvoicesList(long vendorId) throws TabaldiGenericException;
 }

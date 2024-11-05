@@ -10,6 +10,7 @@ import com.tabaldi.api.payload.OrderPayload;
 import com.tabaldi.api.payload.PendingOrders;
 import com.tabaldi.api.payload.ShippingCostPayload;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.Map;
 public interface OrderService {
     List<Order> getAllOrders(Long customerId) throws TabaldiGenericException;
     List<Order> getByVendor(Vendor vendor, boolean check) throws TabaldiGenericException;
-    List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws TabaldiGenericException, IOException, ArabicShapingException;
+    List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload) throws HttpClientErrorException, TabaldiGenericException, IOException, ArabicShapingException;
     Map<String, Long> countAllOrdersInSystem() throws TabaldiGenericException;
     PendingOrders fetchPendingOrdersByVendor(List<Order> orders);
     PendingOrders getPendingOrdersList(Long customerId) throws TabaldiGenericException, IOException;

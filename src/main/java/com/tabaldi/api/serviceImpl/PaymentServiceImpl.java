@@ -29,15 +29,15 @@ public class PaymentServiceImpl implements PaymentService {
     final Logger logger = LoggerFactory.getLogger(PaymentServiceImpl.class);
 
     @Override
-    public Map<String, Object> initializeMyFatoorahPayment(InitPaymentPayload initPaymentPayload) throws TabaldiGenericException, IOException {
+    public Map<String, Object> initializeMyFatoorahPayment(InitPaymentPayload initPaymentPayload) throws TabaldiGenericException, IOException, HttpClientErrorException {
         return callMyfatoorahPaymentAPI("/InitiatePayment", initPaymentPayload);
     }
     @Override
-    public Map<String, Object> executePaymentTransaction(ExecutePaymentPayload executePaymentPayload) throws TabaldiGenericException, IOException {
+    public Map<String, Object> executePaymentTransaction(ExecutePaymentPayload executePaymentPayload) throws TabaldiGenericException, IOException, HttpClientErrorException {
         return callMyfatoorahPaymentAPI("/ExecutePayment", executePaymentPayload);
     }
     @Override
-    public Map<String, Object> directPaymentTransaction(DirectPaymentPayload directPaymentPayload, String paymentURL) throws TabaldiGenericException, IOException {
+    public Map<String, Object> directPaymentTransaction(DirectPaymentPayload directPaymentPayload, String paymentURL) throws TabaldiGenericException, IOException, HttpClientErrorException {
         try {
             URI uri = new URI(paymentURL);
             String path = uri.getPath();
@@ -49,7 +49,7 @@ public class PaymentServiceImpl implements PaymentService {
         } catch (URISyntaxException e) {e.printStackTrace(); return null;}
     }
 
-    private <T> Map<String, Object> callMyfatoorahPaymentAPI(String endpoint,T paymentPayload) throws TabaldiGenericException, IOException {
+    private <T> Map<String, Object> callMyfatoorahPaymentAPI(String endpoint,T paymentPayload) throws TabaldiGenericException, IOException, HttpClientErrorException {
         HttpHeaders payloadHeaders = HttpHeadersUtils.getApplicationJsonHeader();
         payloadHeaders.setBearerAuth(configuration.getMyfatoorahApiTestKey());
 
@@ -57,24 +57,21 @@ public class PaymentServiceImpl implements PaymentService {
                 new HttpEntity<>(paymentPayload, payloadHeaders);
         String url = configuration.getMyfatoorahTestBaseUrl()+endpoint;
         logger.info(url);
-        try {
-            String strResponse = RestUtils.postRequest(url, requestHttp, String.class,
-                    HttpServletResponse.SC_BAD_REQUEST, "Failed");
-            logger.info(strResponse);
-//            if (Boolean.valueOf(strResponse.contains("IsSuccess"))) {
-                return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
-//            }
-        } catch (HttpClientErrorException ex) {
+//        try {
+        String strResponse = RestUtils.postRequest(url, requestHttp, String.class,
+                HttpServletResponse.SC_BAD_REQUEST, "Failed");
+        logger.info(strResponse);
+        return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
+//        } catch (HttpClientErrorException ex) {
             // delete order if There was any error happen (maybe not required)
-            Map<String, Object> apiResponse = ex.getResponseBodyAs(Map.class);
-            //            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
-            Map<String, Object> directData = (HashMap) apiResponse.get("Data");
-            String errorMessage = directData.get("ErrorMessage").toString();
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
-            //            }
-            //            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
-            //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
-            //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
-        }
+//            Map<String, Object> apiResponse = ex.getResponseBodyAs(Map.class);
+//            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
+//            Map<String, Object> directData = (HashMap) apiResponse.get("Data");
+//            String errorMessage = directData.get("ErrorMessage").toString();
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+//            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
+//        }
     }
 }
