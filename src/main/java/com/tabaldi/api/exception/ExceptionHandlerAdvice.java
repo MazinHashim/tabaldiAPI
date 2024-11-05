@@ -1,6 +1,6 @@
 package com.tabaldi.api.exception;
 
-import com.tabaldi.api.serviceImpl.PaymentServiceImpl;
+
 import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;

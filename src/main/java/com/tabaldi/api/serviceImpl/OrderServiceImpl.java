@@ -448,7 +448,7 @@ public class OrderServiceImpl implements OrderService {
             notificationService.sendPushNotificationByToken(NotificationPayload.builder()
                     .token(session.getDeviceToken())
                     .title("Order # "+order.getOrderNumber())
-                    .body("Your order from " + order.getVendor().getFullName() + " has been delivered")
+                    .body("Your order from " + order.getVendor().getFullName() + " has been "+status)
                     .build());
 
             if (status.equals(OrderStatus.DELIVERED)

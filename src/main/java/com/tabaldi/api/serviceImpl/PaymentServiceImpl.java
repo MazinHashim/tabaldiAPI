@@ -62,16 +62,9 @@ public class PaymentServiceImpl implements PaymentService {
                 HttpServletResponse.SC_BAD_REQUEST, "Failed");
         logger.info(strResponse);
         return GenericMapper.jsonToObjectMapper(strResponse, Map.class);
-//        } catch (HttpClientErrorException ex) {
-            // delete order if There was any error happen (maybe not required)
-//            Map<String, Object> apiResponse = ex.getResponseBodyAs(Map.class);
-//            if(!Boolean.valueOf(apiResponse.get("IsSuccess").toString())){
-//            Map<String, Object> directData = (HashMap) apiResponse.get("Data");
-//            String errorMessage = directData.get("ErrorMessage").toString();
-//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errorMessage);
+        // The Error handled on ExceptionHandlerAdvice HttpClientErrorException
 //            List<Map> errors = (ArrayList) apiResponse.get("ValidationErrors");
 //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, errors.get(0).get("Error").toString());
 //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Testing Error");
-//        }
     }
 }
