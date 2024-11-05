@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public interface VendorService {
@@ -34,4 +35,8 @@ public interface VendorService {
     List<VendorFrequency> fetchFrequentVendorByOrders(List<Order> orders, int size) throws TabaldiGenericException;
 
     Long countAllProductsPerVendor(Long vendorId);
+
+    Map<String, Object> searchLocation(String query) throws TabaldiGenericException;
+
+    Map<String, Object> getLocationDetails(String placeId) throws TabaldiGenericException;
 }

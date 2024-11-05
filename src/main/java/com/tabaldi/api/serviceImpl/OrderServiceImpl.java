@@ -442,9 +442,27 @@ public class OrderServiceImpl implements OrderService {
                 order.setDeliveredDate(OffsetDateTime.now());
             order.setStatus(status);
             orderRepository.save(order);
-            if (status.equals(OrderStatus.DELIVERED))
-                // || status.equals(OrderStatus.CONFIRMED))
+            // send push notification to customer using firebase service
+            Session session = sessionService.getSessionByUsername(order.getCustomer().getUser().getPhone());
+            notificationService.sendPushNotificationByToken(NotificationPayload.builder()
+                    .token(session.getDeviceToken())
+                    .title("Order # "+order.getOrderNumber())
+                    .body("Your order from " + order.getVendor().getFullName() + " has been delivered")
+                    .build());
+
+            if (status.equals(OrderStatus.DELIVERED)
+                    && !invoice.getStatus().equals(InvoiceStatus.PAID)){
                 invoiceService.payOrderInvoice(order.getOrderId(), null);
+            }
+            if (status.equals(OrderStatus.DELIVERED)) {
+                // send email to customer using email service
+                if (order.getCustomer().getEmail() != null && !order.getCustomer().getEmail().isEmpty()) {
+                    emailService.sendEmail(
+                            order.getCustomer().getEmail(),
+                            "Order # " + order.getOrderNumber(),
+                            "Your order from "+ order.getVendor().getFullName()+ " has been delivered");
+                }
+            }
             return true;
         }
         return false;

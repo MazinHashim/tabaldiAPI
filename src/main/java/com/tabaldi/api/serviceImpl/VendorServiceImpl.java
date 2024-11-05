@@ -8,13 +8,12 @@ import com.tabaldi.api.repository.*;
 import com.tabaldi.api.service.*;
 import com.tabaldi.api.utils.GenericMapper;
 import com.tabaldi.api.utils.MessagesUtils;
+import com.tabaldi.api.utils.RestUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -387,5 +386,23 @@ public class VendorServiceImpl implements VendorService {
     @Override
     public Long countAllProductsPerVendor(Long vendorId) {
         return productRepository.countByVendor(vendorId);
+    }
+
+    @Override
+    public Map<String, Object> searchLocation(String query) throws TabaldiGenericException {
+        Map<String, Object> result = RestUtils.getRequest("https://maps.googleapis.com/maps/api/place/autocomplete/json?input="
+                        +query+"&components=country:AE&key=+"
+                        +configuration.getGoogleCloudApiKey()+"&language=ar&radius=50000"
+        ,null, Map.class, HttpServletResponse.SC_BAD_REQUEST, ""
+        );
+
+        return result;
+    }
+    @Override
+    public Map<String, Object> getLocationDetails(String placeId) throws TabaldiGenericException {
+        Map<String, Object> result = RestUtils.getRequest("https://maps.googleapis.com/maps/api/place/details/json?place_id="+placeId
+                        +"&key="+configuration.getGoogleCloudApiKey()
+                ,null, Map.class, HttpServletResponse.SC_BAD_REQUEST, "");
+        return result;
     }
 }

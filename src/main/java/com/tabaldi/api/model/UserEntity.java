@@ -20,6 +20,7 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "users")
 public class UserEntity implements UserDetails {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id", unique = true, nullable = false)
@@ -29,6 +30,8 @@ public class UserEntity implements UserDetails {
     @Column(nullable = false, unique = true)
     private String phone;
     private boolean agreeTermsConditions;
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean isSuperAdmin;
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
@@ -36,6 +39,7 @@ public class UserEntity implements UserDetails {
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     private Vendor vendor;
+
     @JsonIgnore
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

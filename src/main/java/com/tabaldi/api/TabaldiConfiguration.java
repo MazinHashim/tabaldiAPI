@@ -20,6 +20,7 @@ public class TabaldiConfiguration {
     private String smsGatewayPassword;
     private String smsGatewaySenderId;
     private String smsGatewayEndpointUrl;
+    private String googleCloudApiKey;
 
     @Setter
     private String sessionTokenExpiration = "7776000";

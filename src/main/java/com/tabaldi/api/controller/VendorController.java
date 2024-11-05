@@ -19,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @RestController
@@ -223,6 +224,20 @@ public class VendorController {
         return ResponseEntity.ok(PublishResponse.builder()
                 .message(successWorkingMessage)
                 .isPublished(isWorking).build());
+
+    }
+    @GetMapping("/search/location/{query}")
+    public @ResponseBody ResponseEntity<Map> searchMapLocation (@PathVariable("query") String query) throws TabaldiGenericException {
+        Map<String, Object> result = vendorService.searchLocation(query);
+
+        return ResponseEntity.ok().body(result);
+
+    }
+    @GetMapping("/place/details/{placeId}")
+    public @ResponseBody ResponseEntity<Map> getPlaceDetails (@PathVariable("placeId") String placeId) throws TabaldiGenericException {
+        Map<String, Object> result = vendorService.getLocationDetails(placeId);
+
+        return ResponseEntity.ok().body(result);
 
     }
 }
