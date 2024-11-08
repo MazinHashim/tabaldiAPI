@@ -53,7 +53,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = TabaldiGenericException.class)
     public Invoice saveInvoiceInfo(InvoicePayload payload, Order order) throws TabaldiGenericException {
         if (!order.getStatus().equals(OrderStatus.WAITING)) {
             String notConfirmedMessage = messageSource.getMessage("error.not.waiting", null,
@@ -70,9 +70,10 @@ public class InvoiceServiceImpl implements InvoiceService {
                     .build());
             Random random = new Random();
             int invoiceNumber = random.ints(111111, 999999).findFirst().getAsInt();
-            InvoiceStatus status = payload.getPaymentMethod().equals(PaymentMethod.GOOGLE_PAY)||
+            InvoiceStatus status = payload.getPaymentMethod().equals(PaymentMethod.GOOGLE_PAY) ||
                     payload.getPaymentMethod().equals(PaymentMethod.APPLE_PAY)
-                    ? InvoiceStatus.PAID : InvoiceStatus.UNPAID;
+                            ? InvoiceStatus.PAID
+                            : InvoiceStatus.UNPAID;
 
             return invoiceRepository.save(Invoice.builder()
                     .invoiceNumber(String.valueOf(invoiceNumber))
@@ -99,7 +100,9 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
-    public Invoice payOrderInvoice(Long orderId, CardPayload cardPayload) throws TabaldiGenericException, IOException, HttpClientErrorException {
+    @Transactional(rollbackFor = {TabaldiGenericException.class, IOException.class, HttpClientErrorException.class})
+    public Invoice payOrderInvoice(Long orderId, CardPayload cardPayload)
+            throws TabaldiGenericException, IOException, HttpClientErrorException {
         Invoice invoice = this.getInvoiceByOrderId(orderId);
         if (invoice.getStatus().equals(InvoiceStatus.PAID)) {
             String notDeliveredMessage = messageSource.getMessage("error.invoice.already.paid", null,

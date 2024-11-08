@@ -45,7 +45,7 @@ public class OrderServiceImpl implements OrderService {
     private static final Logger logger = LoggerFactory.getLogger(OrderServiceImpl.class);
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = {TabaldiGenericException.class, IOException.class, HttpClientErrorException.class, ArabicShapingException.class})
     public List<Order> createAndSaveOrderInfo(long customerId, OrderPayload payload)
             throws TabaldiGenericException, IOException, ArabicShapingException, HttpClientErrorException {
 
@@ -108,7 +108,7 @@ public class OrderServiceImpl implements OrderService {
                     if (cartItem.getSelectedOptions() != null) {
                         cartItem.getSelectedOptions().forEach(option -> {
                             if (option.getFee() != null)
-                                order.setTotal(order.getTotal() + (option.getFee()*cartItem.getQuantity()));
+                                order.setTotal(order.getTotal() + (option.getFee() * cartItem.getQuantity()));
                         });
                     }
                 }
@@ -170,26 +170,30 @@ public class OrderServiceImpl implements OrderService {
         }
         return createdOrders;
     }
+
     @Override
-    public Boolean checkIfOrderWillPass(Long customerId, List<ShippingCostPayload> payload) throws TabaldiGenericException, IOException {
+    public Boolean checkIfOrderWillPass(Long customerId, List<ShippingCostPayload> payload)
+            throws TabaldiGenericException, IOException {
         customerService.getCustomerById(customerId);
         List<CartItem> cartItems = customerService.getCustomerActiveCartItemsList(customerId, true);
 
-        // 1/ check if all cart items has published products and categories to create an order
+        // 1/ check if all cart items has published products and categories to create an
+        // order
         if (cartItems.stream().anyMatch(cartItem -> !cartItem.getProduct().isPublished()
                 || !cartItem.getProduct().getCategory().isPublished())) {
             String itemsInOrderNotAvailableMessage = messageSource.getMessage("error.items.in.order.not.available",
                     null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsInOrderNotAvailableMessage);
         }
-        // 2/ check if all vendor are not out of service (working) and restaurant is opened,
+        // 2/ check if all vendor are not out of service (working) and restaurant is
+        // opened,
         // if one of them out of service needs to remove it items from the cart
         List<Vendor> vendors = cartItems.stream()
                 .map(cartItem -> cartItem.getProduct().getVendor())
                 .distinct().collect(Collectors.toList());
         LocalTime timeInUAE = LocalTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
         if (vendors.stream().anyMatch(vendor -> !vendor.isWorking() || vendor.getVendorType().equals("RESTAURANT")
-                && !(timeInUAE.isBefore(vendor.getClosingTime()) &&  timeInUAE.isAfter(vendor.getOpeningTime())))) {
+                && !(timeInUAE.isBefore(vendor.getClosingTime()) && timeInUAE.isAfter(vendor.getOpeningTime())))) {
             String itemsFromClosedVendorMessage = messageSource.getMessage("error.items.from.closed.vendor", null,
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsFromClosedVendorMessage);
@@ -204,27 +208,29 @@ public class OrderServiceImpl implements OrderService {
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
         }
-//        // 4/ check if there is any pending order for any of these restaurant vendors
-//        AtomicBoolean hasPendingVendorOrder = new AtomicBoolean(false);
-//        StringBuilder pending = new StringBuilder();
-//        vendors.stream().filter(vendor-> vendor.getVendorType().equals(VendorType.RESTAURANT))
-//                .forEach(vendor -> {
-//                    List<Order> lastOrderCreatedOptional =
-//                            orderRepository.getLastActiveOrderPerVendor(customerId,
-//                                    vendor.getVendorId());
-//                    if (!lastOrderCreatedOptional.isEmpty()) {
-//                        hasPendingVendorOrder.set(true);
-//                        pending.append(vendor.getFullName().concat(", "));
-//                    }
-//                });
-//        if (hasPendingVendorOrder.get()) {
-//            String pendingVendors = pending.substring(0, pending.lastIndexOf(", ")).trim();
-//            String pendingOrderMessage =
-//                    MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
-//                            pendingVendors, pendingVendors);
-//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-//                    pendingOrderMessage);
-//        }
+        // // 4/ check if there is any pending order for any of these restaurant vendors
+        // AtomicBoolean hasPendingVendorOrder = new AtomicBoolean(false);
+        // StringBuilder pending = new StringBuilder();
+        // vendors.stream().filter(vendor->
+        // vendor.getVendorType().equals(VendorType.RESTAURANT))
+        // .forEach(vendor -> {
+        // List<Order> lastOrderCreatedOptional =
+        // orderRepository.getLastActiveOrderPerVendor(customerId,
+        // vendor.getVendorId());
+        // if (!lastOrderCreatedOptional.isEmpty()) {
+        // hasPendingVendorOrder.set(true);
+        // pending.append(vendor.getFullName().concat(", "));
+        // }
+        // });
+        // if (hasPendingVendorOrder.get()) {
+        // String pendingVendors = pending.substring(0, pending.lastIndexOf(",
+        // ")).trim();
+        // String pendingOrderMessage =
+        // MessagesUtils.getAlreadyHasPendingOrderMessage(messageSource,
+        // pendingVendors, pendingVendors);
+        // throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+        // pendingOrderMessage);
+        // }
         for (Vendor vendor : vendors) {
             double orderTotal = 0;
             for (CartItem cartItem : cartItems) {
@@ -238,13 +244,13 @@ public class OrderServiceImpl implements OrderService {
                     // Calculate the total price for the cart item and set order total
                     double itemTotal = cartItem.getPrice() * cartItem.getQuantity();
                     double roundedTotal = Math.round(itemTotal * 2) / 2;
-                    orderTotal+=roundedTotal;
+                    orderTotal += roundedTotal;
 
                     // Add fees for selected options to the order total
                     if (cartItem.getSelectedOptions() != null) {
                         for (Option option : cartItem.getSelectedOptions()) {
                             if (option.getFee() != null)
-                                orderTotal+= (option.getFee() * cartItem.getQuantity());
+                                orderTotal += (option.getFee() * cartItem.getQuantity());
                         }
                     }
                 }
@@ -400,6 +406,7 @@ public class OrderServiceImpl implements OrderService {
                 });
         return vendorEarnings.get() - companyEarnings.get();
     }
+
     @Override
     public String saveVendorNote(Long orderId, String vendorNote) throws TabaldiGenericException {
         Order order = this.getOrderById(orderId);
@@ -447,12 +454,12 @@ public class OrderServiceImpl implements OrderService {
             Session session = sessionService.getSessionByUsername(order.getCustomer().getUser().getPhone());
             notificationService.sendPushNotificationByToken(NotificationPayload.builder()
                     .token(session.getDeviceToken())
-                    .title("Order # "+order.getOrderNumber())
-                    .body("Your order from " + order.getVendor().getFullName() + " has been "+status)
+                    .title("Order # " + order.getOrderNumber())
+                    .body("Your order from " + order.getVendor().getFullName() + " has been " + status)
                     .build());
 
             if (status.equals(OrderStatus.DELIVERED)
-                    && !invoice.getStatus().equals(InvoiceStatus.PAID)){
+                    && !invoice.getStatus().equals(InvoiceStatus.PAID)) {
                 invoiceService.payOrderInvoice(order.getOrderId(), null);
             }
             if (status.equals(OrderStatus.DELIVERED)) {
@@ -461,7 +468,7 @@ public class OrderServiceImpl implements OrderService {
                     emailService.sendEmail(
                             order.getCustomer().getEmail(),
                             "Order # " + order.getOrderNumber(),
-                            "Your order from "+ order.getVendor().getFullName()+ " has been delivered");
+                            "Your order from " + order.getVendor().getFullName() + " has been delivered");
                 }
             }
             return true;
@@ -498,15 +505,20 @@ public class OrderServiceImpl implements OrderService {
     private String getOrderNumber(Customer customer, Vendor vendor) {
         OffsetDateTime now = OffsetDateTime.now();
         long orderSequenceNumber = sequencesService.getNextSequenceFor("orders", null);
-//        long vendorSequenceNumber = sequencesService.getNextSequenceFor("vendors", vendor.getVendorId());
-//        long customerSequenceNumber = sequencesService.getNextSequenceFor("customers", customer.getCustomerId());
-//        String vendorPrefix = vendor.getFullName().length() < 2 ? ""
-//                : vendor.getFullName().substring(0, 2).toUpperCase();
-//        String customerPrefix = customer.getEmail() == null || customer.getEmail().length() < 2 ? ""
-//                : customer.getEmail().substring(0, 2).toUpperCase();
+        // long vendorSequenceNumber = sequencesService.getNextSequenceFor("vendors",
+        // vendor.getVendorId());
+        // long customerSequenceNumber =
+        // sequencesService.getNextSequenceFor("customers", customer.getCustomerId());
+        // String vendorPrefix = vendor.getFullName().length() < 2 ? ""
+        // : vendor.getFullName().substring(0, 2).toUpperCase();
+        // String customerPrefix = customer.getEmail() == null ||
+        // customer.getEmail().length() < 2 ? ""
+        // : customer.getEmail().substring(0, 2).toUpperCase();
         int dayNumberFromToday = now.getDayOfMonth();
-//        String orderNumber = String.format("%s%s%04d%04d%04d%02d", customerPrefix, vendorPrefix,
-//                vendorSequenceNumber, customerSequenceNumber, orderSequenceNumber, dayNumberFromToday);
+        // String orderNumber = String.format("%s%s%04d%04d%04d%02d", customerPrefix,
+        // vendorPrefix,
+        // vendorSequenceNumber, customerSequenceNumber, orderSequenceNumber,
+        // dayNumberFromToday);
         String orderNumber = String.format("%s%04d%02d", "RAT", orderSequenceNumber, dayNumberFromToday);
         return orderNumber;
     }
@@ -528,7 +540,7 @@ public class OrderServiceImpl implements OrderService {
     private void validateDeliveryDistance(Vendor vendor, double orderTotal, int orderDistance)
             throws TabaldiGenericException {
         double minCharge = 25;
-        if (vendor.getVendorType() == VendorType.STORE || vendor.getMaxKilometerDelivery()==null) {
+        if (vendor.getVendorType() == VendorType.STORE || vendor.getMaxKilometerDelivery() == null) {
             return; // Not applicable for store vendors or those without max delivery
                     // distance
         } else if (vendor.getVendorType().equals(VendorType.RESTAURANT)) {
@@ -536,12 +548,13 @@ public class OrderServiceImpl implements OrderService {
         }
         // Order total is less than min charge of the distance in case of restaurants,
         // and if it's less than 25 for any distance in case of groceries
-        logger.info("Order Total "+ orderTotal +" less than Min Charge "+ minCharge +" "+ (orderTotal<minCharge));
+        logger.info(
+                "Order Total " + orderTotal + " less than Min Charge " + minCharge + " " + (orderTotal < minCharge));
         if (orderTotal < minCharge) {
-            String errorMessage="";
-            if(vendor.getVendorType().equals(VendorType.RESTAURANT))
+            String errorMessage = "";
+            if (vendor.getVendorType().equals(VendorType.RESTAURANT))
                 errorMessage = MessagesUtils.getOrderExceededScopeMessage(messageSource,
-                    String.valueOf(minCharge), String.valueOf(minCharge));
+                        String.valueOf(minCharge), String.valueOf(minCharge));
             else
                 errorMessage = MessagesUtils.getOrderLessThatMinChargeMessage(messageSource,
                         String.valueOf(minCharge), String.valueOf(minCharge));
