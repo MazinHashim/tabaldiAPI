@@ -270,7 +270,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public List<Order> getAllOrders(Long customerId) throws TabaldiGenericException {
         if (customerId == null)
-            return orderRepository.findAll();
+            return orderRepository.findAllHasInvoice();
         else {
             Customer customer = customerService.getCustomerById(customerId);
             return orderRepository.findByCustomer(customer);
