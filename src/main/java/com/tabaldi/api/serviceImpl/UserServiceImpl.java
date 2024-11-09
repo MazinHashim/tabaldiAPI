@@ -65,9 +65,10 @@ public class UserServiceImpl implements UserService {
         if(payload.getUserId()!=null) {
             user = this.getUserById(payload.getUserId());
         }
-        UserEntity existUser = this.getExistByEmailOrPhone(payload.getEmail(), payload.getPhone());
+        UserEntity existEmail = this.getExistByEmail(payload.getEmail());
+        UserEntity existPhone = this.getExistByPhone(payload.getPhone());
 
-        if(existUser==null){
+        if(existEmail==null || existPhone==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
                     .email(payload.getEmail())
@@ -79,13 +80,14 @@ public class UserServiceImpl implements UserService {
                 user.setUserId(payload.getUserId());
             }
             user = userRepository.saveAndFlush(user);
-        } else if(user!=null && existUser.getUserId()==user.getUserId()){
+        } else if(user!=null && (existPhone.getUserId()==user.getUserId()
+                || existEmail.getUserId()==user.getUserId())){
             user.setPhone(payload.getPhone());
             user.setEmail(payload.getEmail());
             user = userRepository.saveAndFlush(user);
         } else {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
-            if(existUser.getEmail().equals(payload.getEmail())){
+            if(existEmail!=null){
                 alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
             }
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
@@ -244,12 +246,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public UserEntity getExistByEmailOrPhone(String email, String phone) {
-
-        Optional<UserEntity> userEntityP = userRepository.findByPhone(phone);
+    public UserEntity getExistByEmail(String email) {
         Optional<UserEntity> userEntityE = userRepository.findByEmail(email);
-        if(userEntityP.isPresent()) return userEntityP.get();
         if(userEntityE.isPresent()) return userEntityE.get();
+        return null;
+    }
+    @Override
+    public UserEntity getExistByPhone(String phone) {
+        Optional<UserEntity> userEntityP = userRepository.findByPhone(phone);
+        if(userEntityP.isPresent()) return userEntityP.get();
         return null;
     }
 
