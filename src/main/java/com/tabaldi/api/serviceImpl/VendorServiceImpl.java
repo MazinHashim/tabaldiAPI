@@ -82,7 +82,7 @@ public class VendorServiceImpl implements VendorService {
         if(payload.getVendorId()!=null) {
             selectedVendor = this.getVendorById(payload.getVendorId());
         }
-        if(existEmail==null || existPhone==null){
+        if(existEmail==null && existPhone==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
                     .email(payload.getEmail())

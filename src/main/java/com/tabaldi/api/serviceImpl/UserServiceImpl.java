@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
         UserEntity existEmail = this.getExistByEmail(payload.getEmail());
         UserEntity existPhone = this.getExistByPhone(payload.getPhone());
 
-        if(existEmail==null || existPhone==null){
+        if(existEmail==null && existPhone==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
                     .email(payload.getEmail())
