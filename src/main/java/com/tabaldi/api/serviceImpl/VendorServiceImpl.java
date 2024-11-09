@@ -75,12 +75,14 @@ public class VendorServiceImpl implements VendorService {
         if(payload.getUserId()!=null) {
             user = userService.getUserById(payload.getUserId());
         }
-        UserEntity existUser = userService.getExistByEmailOrPhone(payload.getEmail(), payload.getPhone());
+        UserEntity existEmail = userService.getExistByEmail(payload.getEmail());
+        UserEntity existPhone = userService.getExistByPhone(payload.getPhone());
+
         Vendor selectedVendor=null;
         if(payload.getVendorId()!=null) {
             selectedVendor = this.getVendorById(payload.getVendorId());
         }
-        if(existUser==null){
+        if(existEmail==null || existPhone==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
                     .email(payload.getEmail())
@@ -94,12 +96,16 @@ public class VendorServiceImpl implements VendorService {
                 user.setVendor(selectedVendor);
             }
             user = userRepository.saveAndFlush(user);
-        } else if(user!=null && existUser.getUserId()==user.getUserId()){
+        } else if(user!=null && (existPhone.getUserId()==user.getUserId()
+                || existEmail.getUserId()==user.getUserId())){
             user.setPhone(payload.getPhone());
             user.setEmail(payload.getEmail());
             user = userRepository.saveAndFlush(user);
         } else {
-            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"User", "المستخدم");
+            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
+            if(existEmail!=null){
+                alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
+            }
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
         return user;
