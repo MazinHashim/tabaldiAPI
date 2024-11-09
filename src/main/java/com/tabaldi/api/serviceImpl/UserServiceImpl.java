@@ -79,20 +79,18 @@ public class UserServiceImpl implements UserService {
             if(payload.getUserId()!=null){
                 user.setUserId(payload.getUserId());
             }
-            user = userRepository.saveAndFlush(user);
-        } else if(user!=null && (existPhone.getUserId()==user.getUserId()
-                && existEmail.getUserId()==user.getUserId())){
+        } else if(user!=null && (existPhone.getUserId()==user.getUserId())) {
             user.setPhone(payload.getPhone());
+        } else if(user!=null && (existEmail.getUserId()==user.getUserId())){
             user.setEmail(payload.getEmail());
-            user = userRepository.saveAndFlush(user);
         } else {
-
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
             if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
                 alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
             }
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
+        user = userRepository.saveAndFlush(user);
         return user;
     }
 
