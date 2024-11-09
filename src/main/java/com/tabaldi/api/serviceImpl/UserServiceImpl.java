@@ -81,21 +81,21 @@ public class UserServiceImpl implements UserService {
             }
         } else if(user!=null && existPhone == null || existPhone.getUserId()==user.getUserId()) {
             user.setPhone(payload.getPhone());
-            if(existEmail != null && existEmail.getUserId()==user.getUserId()){
-                String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
-            }
         } else if(user!=null && existEmail == null || existEmail.getUserId()==user.getUserId()){
             user.setEmail(payload.getEmail());
-            if(existPhone != null && existPhone.getUserId()==user.getUserId()){
-                String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
-                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
-            }
-        } else {
+//        } else {
+//            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
+//            if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
+//                alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
+//            }
+//            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
+        }
+
+        if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
+            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
+        } else if ((user == null && existPhone!=null) || (user != null && existPhone.getUserId()!=user.getUserId())) {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
-            if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
-                alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
-            }
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
         user = userRepository.saveAndFlush(user);
