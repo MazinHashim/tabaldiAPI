@@ -73,6 +73,7 @@ public class UserServiceImpl implements UserService {
                     .email(payload.getEmail())
                     .agreeTermsConditions(payload.isAgreeTermsConditions())
                     .role(Role.SUPERADMIN)
+                    .isSuperAdmin(false)
                     .build();
             if(payload.getUserId()!=null){
                 user.setUserId(payload.getUserId());
@@ -242,12 +243,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserEntity getExistByEmailOrPhone(String email, String phone) {
 
-        UserEntity user = null;
         Optional<UserEntity> userEntityP = userRepository.findByPhone(phone);
         Optional<UserEntity> userEntityE = userRepository.findByEmail(email);
-        if(userEntityP.isPresent()) user = userEntityP.get();
-        if(userEntityE.isPresent()) user = userEntityE.get();
-        return user;
+        if(userEntityP.isPresent()) return userEntityP.get();
+        if(userEntityE.isPresent()) return userEntityE.get();
+        return null;
     }
 
     @Override
