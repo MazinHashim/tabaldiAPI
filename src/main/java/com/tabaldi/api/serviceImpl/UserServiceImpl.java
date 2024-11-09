@@ -81,7 +81,7 @@ public class UserServiceImpl implements UserService {
             }
             user = userRepository.saveAndFlush(user);
         } else if(user!=null && (existPhone.getUserId()==user.getUserId()
-                || existEmail.getUserId()==user.getUserId())){
+                && existEmail.getUserId()==user.getUserId())){
             user.setPhone(payload.getPhone());
             user.setEmail(payload.getEmail());
             user = userRepository.saveAndFlush(user);
