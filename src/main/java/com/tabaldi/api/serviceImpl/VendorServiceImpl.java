@@ -82,6 +82,7 @@ public class VendorServiceImpl implements VendorService {
         if(payload.getVendorId()!=null) {
             selectedVendor = this.getVendorById(payload.getVendorId());
         }
+//        1/ check if entered phone and email are not exist
         if(existEmail==null && existPhone==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
@@ -89,6 +90,7 @@ public class VendorServiceImpl implements VendorService {
                     .agreeTermsConditions(payload.isAgreeTermsConditions())
                     .role(payload.getRole())
                     .build();
+//            2/ assign both email and phone to updated user
             if(payload.getUserId()!=null){
                 user.setUserId(payload.getUserId());
             }
@@ -96,18 +98,31 @@ public class VendorServiceImpl implements VendorService {
                 user.setVendor(selectedVendor);
             }
             user = userRepository.saveAndFlush(user);
-        } else if(user!=null && (existPhone.getUserId()==user.getUserId()
-                && existEmail.getUserId()==user.getUserId())){
+//         3/ in update operation, if phone not exist or the exiting phone is belonged to updated user
+        } else if(user!=null && (existPhone == null || existPhone.getUserId()==user.getUserId())) {
             user.setPhone(payload.getPhone());
+//         4/ in update operation, if email not exist or the exiting email is belonged to updated user
+        } else if(user!=null && (existEmail == null || existEmail.getUserId()==user.getUserId())){
             user.setEmail(payload.getEmail());
-            user = userRepository.saveAndFlush(user);
         } else {
-            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
-            if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
-                alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
+//        5/ in add operation, if entered phone or email are exist
+            if(user == null) {
+                String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource, "phone", "رقم الهاتف");
+                if (existEmail != null) {
+                    alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource, "email", "البريد الإلكتروني");
+                }
+                throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
             }
+        }
+//        6/ in update operation, if email or phone are exist and aren't belonged to updated user
+        if(user != null && existEmail!=null && existEmail.getUserId()!=user.getUserId()){
+            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
+        } else if (user != null && existPhone!=null && existPhone.getUserId()!=user.getUserId()) {
+            String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
+        user = userRepository.saveAndFlush(user);
         return user;
     }
     @Override

@@ -68,22 +68,26 @@ public class UserServiceImpl implements UserService {
         UserEntity existEmail = this.getExistByEmail(payload.getEmail());
         UserEntity existPhone = this.getExistByPhone(payload.getPhone());
 
+//        1/ check if entered phone and email are not exist
         if(existEmail==null && existPhone==null){
             user = UserEntity.builder()
                     .phone(payload.getPhone())
                     .email(payload.getEmail())
                     .agreeTermsConditions(payload.isAgreeTermsConditions())
                     .role(Role.SUPERADMIN)
-                    .isSuperAdmin(false)
                     .build();
+//            2/ assign both email and phone to updated user
             if(payload.getUserId()!=null){
                 user.setUserId(payload.getUserId());
             }
+//        3/ in update operation, if phone not exist or the exiting phone is belonged to updated user
         } else if(user!=null && (existPhone == null || existPhone.getUserId()==user.getUserId())) {
             user.setPhone(payload.getPhone());
+//        4/ in update operation, if email not exist or the exiting email is belonged to updated user
         } else if(user!=null && (existEmail == null || existEmail.getUserId()==user.getUserId())){
             user.setEmail(payload.getEmail());
         } else {
+//        5/ in add operation, if entered phone or email are exist
             if(user == null) {
                 String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource, "phone", "رقم الهاتف");
                 if (existEmail != null) {
@@ -92,7 +96,7 @@ public class UserServiceImpl implements UserService {
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
             }
         }
-
+//        6/ in update operation, if email or phone are exist and aren't belonged to updated user
         if(user != null && existEmail!=null && existEmail.getUserId()!=user.getUserId()){
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
