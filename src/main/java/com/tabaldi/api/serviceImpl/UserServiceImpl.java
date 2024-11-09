@@ -79,9 +79,9 @@ public class UserServiceImpl implements UserService {
             if(payload.getUserId()!=null){
                 user.setUserId(payload.getUserId());
             }
-        } else if(user!=null && (existPhone.getUserId()==user.getUserId())) {
+        } else if(user!=null && existPhone != null && existPhone.getUserId()==user.getUserId()) {
             user.setPhone(payload.getPhone());
-        } else if(user!=null && (existEmail.getUserId()==user.getUserId())){
+        } else if(user!=null && existEmail != null && existEmail.getUserId()==user.getUserId()){
             user.setEmail(payload.getEmail());
         } else {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
