@@ -91,10 +91,10 @@ public class UserServiceImpl implements UserService {
 //            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
 
-        if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
+        if((user == null && existEmail!=null) || (user != null && existEmail!=null && existEmail.getUserId()!=user.getUserId())){
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
-        } else if ((user == null && existPhone!=null) || (user != null && existPhone.getUserId()!=user.getUserId())) {
+        } else if ((user == null && existPhone!=null) || (user != null && existPhone!=null && existPhone.getUserId()!=user.getUserId())) {
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
         }
