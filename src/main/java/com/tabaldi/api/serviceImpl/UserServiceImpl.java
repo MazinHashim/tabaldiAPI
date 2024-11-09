@@ -86,8 +86,9 @@ public class UserServiceImpl implements UserService {
             user.setEmail(payload.getEmail());
             user = userRepository.saveAndFlush(user);
         } else {
+
             String alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"phone", "رقم الهاتف");
-            if(existEmail.getUserId()!=user.getUserId()){
+            if((user == null && existEmail!=null) || (user != null && existEmail.getUserId()!=user.getUserId())){
                 alreadyExistMessage = MessagesUtils.getAlreadyExistMessage(messageSource,"email", "البريد الإلكتروني");
             }
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, alreadyExistMessage);
