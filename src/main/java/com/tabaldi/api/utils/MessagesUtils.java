@@ -22,7 +22,19 @@ public class MessagesUtils {
         String[] args = List.of(langCheck ? ar : en, langCheck ? tyAr : tyEn).toArray(new String[0]);
         return messageSource.getMessage("success.data.saving", args, locale);
     }
-
+    public static String getOrderNotificationBody(MessageSource messageSource, String en, String ar, String tyEn,
+                                                  String tyAr) {
+        Locale locale = LocaleContextHolder.getLocale();
+        boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
+        String[] args = List.of(langCheck ? ar : en, langCheck ? tyAr : tyEn).toArray(new String[0]);
+        return messageSource.getMessage("success.notification.body", args, locale);
+    }
+    public static String getInvoiceEmailSupject(MessageSource messageSource, String en, String ar) {
+        Locale locale = LocaleContextHolder.getLocale();
+        boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");
+        String[] args = List.of(langCheck ? ar : en).toArray(new String[0]);
+        return messageSource.getMessage("success.invoice.email.subject", args, locale);
+    }
     public static String getDeletedMessage(MessageSource messageSource, String en, String ar) {
         Locale locale = LocaleContextHolder.getLocale();
         boolean langCheck = locale.getLanguage().equalsIgnoreCase("ar");

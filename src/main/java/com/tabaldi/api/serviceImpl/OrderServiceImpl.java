@@ -27,6 +27,8 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+import static com.tabaldi.api.model.OrderStatus.*;
+
 @Service
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
@@ -67,7 +69,7 @@ public class OrderServiceImpl implements OrderService {
                     .orderNumber(orderNumber)
                     .customer(customer)
                     .vendor(vendor)
-                    .status(OrderStatus.WAITING)
+                    .status(WAITING)
                     .address(selectedAddress)
                     .build();
             orders.add(orderParams);
@@ -154,18 +156,29 @@ public class OrderServiceImpl implements OrderService {
             // send email with attached invoice to customer using email service
             if (customer.getEmail() != null && !customer.getEmail().isEmpty()) {
                 pdfGeneratorService.generatePdf(createdInvoice, true);
+                String invoiceEmailSubject = MessagesUtils.getInvoiceEmailSupject(messageSource,
+                        order.getVendor().getFullName(), !order.getVendor().getArFullName().isEmpty()
+                                ? order.getVendor().getArFullName() : order.getVendor().getFullName());
+                String invoiceEmailBody = messageSource.getMessage("success.invoice.email.body",
+                        null, LocaleContextHolder.getLocale());
                 emailService.sendEmailWithAttachment(
                         customer.getEmail(),
-                        "Order Invoice of " + order.getVendor().getFullName(),
-                        "Thanks for your order",
+                        invoiceEmailSubject ,
+                        invoiceEmailBody,
                         configuration.getInvoicePdfFolder() + "invoice_" + createdInvoice.getInvoiceNumber()
                                 + ".pdf");
             }
             // send push notification to customer using firebase service
+            String notificationTitle = messageSource.getMessage("success.notification.title",
+                    null, LocaleContextHolder.getLocale());
+            String notificationBody = MessagesUtils.getOrderNotificationBody(messageSource,
+                    order.getVendor().getFullName(), !order.getVendor().getArFullName().isEmpty()
+                            ? order.getVendor().getArFullName() : order.getVendor().getFullName(),
+                    "created", "إنشائه");
             notificationService.sendPushNotificationByToken(NotificationPayload.builder()
                     .token(session.getDeviceToken())
-                    .title("Rateena Order")
-                    .body("Your order from " + order.getVendor().getFullName() + " has been created")
+                    .title(notificationTitle +" "+ order.getOrderNumber())
+                    .body(notificationBody)
                     .build());
         }
         return createdOrders;
@@ -289,9 +302,9 @@ public class OrderServiceImpl implements OrderService {
         if (customerId != null) {
             customerService.getCustomerById(customerId);
             ordersList = orderRepository
-                    .findPendingOrdersByCustomer(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED), customerId);
+                    .findPendingOrdersByCustomer(List.of(DELIVERED, CANCELED), customerId);
         } else
-            ordersList = orderRepository.findByPendingOrders(List.of(OrderStatus.DELIVERED, OrderStatus.CANCELED));
+            ordersList = orderRepository.findByPendingOrders(List.of(DELIVERED, CANCELED));
 
         if (ordersList.isEmpty()) {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Customer Orders",
@@ -318,8 +331,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public PendingOrders fetchPendingOrdersByVendor(List<Order> orders) {
         List<Order> activeOrders = orders.stream()
-                .filter(order -> !order.getStatus().equals(OrderStatus.DELIVERED)
-                        && !order.getStatus().equals(OrderStatus.CANCELED))
+                .filter(order -> !order.getStatus().equals(DELIVERED)
+                        && !order.getStatus().equals(CANCELED))
                 .sorted(Comparator.comparing(Order::getOrderDate).reversed())
                 .map(order -> {
                     order.getCartItems().forEach(cartItem -> {
@@ -377,7 +390,7 @@ public class OrderServiceImpl implements OrderService {
         AtomicReference<Double> companyEarnings = new AtomicReference<>((double) 0);
         orders.stream()
                 .filter(order -> order.getOrderDate().toLocalDate().isEqual(OffsetDateTime.now().toLocalDate()))
-                .filter(order -> order.getStatus().equals(OrderStatus.DELIVERED))
+                .filter(order -> order.getStatus().equals(DELIVERED))
                 .forEach(order -> {
                     order.getCartItems().forEach(cartItem -> {
                         double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()) / 100
@@ -395,7 +408,7 @@ public class OrderServiceImpl implements OrderService {
         orders
                 .stream()
                 .filter(order -> order.getOrderDate().toLocalDate().isEqual(OffsetDateTime.now().toLocalDate()))
-                .filter(order -> order.getStatus().equals(OrderStatus.DELIVERED))
+                .filter(order -> order.getStatus().equals(DELIVERED))
                 .forEach(order -> {
                     order.getCartItems().forEach(cartItem -> {
                         double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity() + 10) / 100
@@ -410,7 +423,7 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public String saveVendorNote(Long orderId, String vendorNote) throws TabaldiGenericException {
         Order order = this.getOrderById(orderId);
-        if (order.getStatus().equals(OrderStatus.DELIVERED) || order.getStatus().equals(OrderStatus.CANCELED)) {
+        if (order.getStatus().equals(DELIVERED) || order.getStatus().equals(CANCELED)) {
             String finalizedOrderMessage = messageSource.getMessage("error.finalized.order", null,
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, finalizedOrderMessage);
@@ -429,52 +442,59 @@ public class OrderServiceImpl implements OrderService {
                         LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notSupportedMessage);
             }
-            if (status.equals(OrderStatus.CANCELED)
+            if (status.equals(CANCELED)
                     && OffsetDateTime.now().minusMinutes(10).isAfter(order.getOrderDate())) {
                 String finalizedOrderMessage = messageSource.getMessage("error.finalized.order", null,
                         LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, finalizedOrderMessage);
             }
             Invoice invoice = invoiceService.getInvoiceByOrderId(orderId);
-            if (!status.equals(OrderStatus.WAITING) &&
-                    !status.equals(OrderStatus.DELIVERED) &&
+            if (!status.equals(WAITING) &&
+                    !status.equals(DELIVERED) &&
                     !invoice.getPaymentMethod().equals(PaymentMethod.CASH) &&
                     invoice.getStatus().equals(InvoiceStatus.UNPAID)) {
                 String notPaidOrderMessage = messageSource.getMessage("error.invoice.not.paid", null,
                         LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notPaidOrderMessage);
             }
-            if (status.equals(OrderStatus.PROCESSING))
+            if (status.equals(PROCESSING))
                 order.setProcessedDate(OffsetDateTime.now());
-            else if (status.equals(OrderStatus.DELIVERED))
+            else if (status.equals(DELIVERED))
                 order.setDeliveredDate(OffsetDateTime.now());
             order.setStatus(status);
             orderRepository.save(order);
             // send push notification to customer using firebase service
             Session session = sessionService.getSessionByUsername(order.getCustomer().getUser().getPhone());
+            String notificationTitle = messageSource.getMessage("success.notification.title",
+                    null, LocaleContextHolder.getLocale());
+            String notificationBody = MessagesUtils.getOrderNotificationBody(messageSource,
+                    order.getVendor().getFullName(), !order.getVendor().getArFullName().isEmpty()
+                            ? order.getVendor().getArFullName() : order.getVendor().getFullName(),
+                    status.equals(WAITING) ? "created" : status.name(), this.getArabicStatus(status));
             notificationService.sendPushNotificationByToken(NotificationPayload.builder()
                     .token(session.getDeviceToken())
-                    .title("Order # " + order.getOrderNumber())
-                    .body("Your order from " + order.getVendor().getFullName() + " has been " + status)
+                    .title(notificationTitle +" "+ order.getOrderNumber())
+                    .body(notificationBody)
                     .build());
 
-            if (status.equals(OrderStatus.DELIVERED)
+            if (status.equals(DELIVERED)
                     && !invoice.getStatus().equals(InvoiceStatus.PAID)) {
                 invoiceService.payOrderInvoice(order.getOrderId(), null);
             }
-            if (status.equals(OrderStatus.DELIVERED)) {
+            if (status.equals(DELIVERED)) {
                 // send email to customer using email service
                 if (order.getCustomer().getEmail() != null && !order.getCustomer().getEmail().isEmpty()) {
                     emailService.sendEmail(
                             order.getCustomer().getEmail(),
-                            "Order # " + order.getOrderNumber(),
-                            "Your order from " + order.getVendor().getFullName() + " has been delivered");
+                            notificationTitle + " " + order.getOrderNumber(),
+                            notificationBody);
                 }
             }
             return true;
         }
         return false;
     }
+
 
     @Override
     public Order getOrderById(Long orderId) throws TabaldiGenericException {
@@ -524,12 +544,12 @@ public class OrderServiceImpl implements OrderService {
     }
 
     private boolean isDeliveredOrCanceledAndThrown(Order order) throws TabaldiGenericException {
-        if (order.getStatus().equals(OrderStatus.CANCELED)) {
-            String orderStatus = OrderStatus.CANCELED.name().toLowerCase();
+        if (order.getStatus().equals(CANCELED)) {
+            String orderStatus = CANCELED.name().toLowerCase();
             String orderStatusMessage = MessagesUtils.getOrderStatusMessage(messageSource, orderStatus, orderStatus);
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, orderStatusMessage);
-        } else if (order.getStatus().equals(OrderStatus.DELIVERED)) {
-            String orderStatus = OrderStatus.DELIVERED.name().toLowerCase();
+        } else if (order.getStatus().equals(DELIVERED)) {
+            String orderStatus = DELIVERED.name().toLowerCase();
             String orderStatusMessage = MessagesUtils.getOrderStatusMessage(messageSource, orderStatus, orderStatus);
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, orderStatusMessage);
         } else {
@@ -573,6 +593,16 @@ public class OrderServiceImpl implements OrderService {
             case 31, 32, 33, 34, 35, 36, 37, 38, 39, 40 -> 100;
             // 40 KM is Maximum Distance for restaurants
             default -> throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, "Distance out of range");
+        };
+    }
+
+    private String getArabicStatus(OrderStatus status) {
+        return switch (status) {
+            case DELIVERED -> "توصيله";
+            case CANCELED -> "إلغاءه";
+            case WAITING -> "إنشاءه";
+            case PROCESSING -> "معالجته";
+            case CONFIRMED -> "تأكيده";
         };
     }
 }
