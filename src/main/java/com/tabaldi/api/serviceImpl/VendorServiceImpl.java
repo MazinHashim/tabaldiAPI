@@ -260,6 +260,8 @@ public class VendorServiceImpl implements VendorService {
         user.setVendor(createdVendor);
         userRepository.save(user);
         createdVendor.setUserId(user.getUserId());
+        createdVendor.setUserEmail(user.getEmail());
+        createdVendor.setUserPhone(user.getPhone());
         if(payload.getVendorId()==null)
             sequencesService.createSequenceFor("vendors", 1000, createdVendor.getVendorId());
         return createdVendor;
