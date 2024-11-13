@@ -225,6 +225,10 @@ public class VendorServiceImpl implements VendorService {
             String imageNotUploadedMessage = messageSource.getMessage("error.not.uploaded.file", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotUploadedMessage);
         }
+        if(payload.getOpeningTime().isAfter(payload.getClosingTime())) {
+            String imageNotUploadedMessage = messageSource.getMessage("error.invalid.time.range", null, LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotUploadedMessage);
+        }
 
         Vendor vendorParams = Vendor.builder()
                 .fullName(payload.getFullName())
