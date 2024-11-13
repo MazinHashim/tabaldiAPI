@@ -204,9 +204,9 @@ public class OrderServiceImpl implements OrderService {
         List<Vendor> vendors = cartItems.stream()
                 .map(cartItem -> cartItem.getProduct().getVendor())
                 .distinct().collect(Collectors.toList());
-        LocalTime timeInUAE = LocalTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
+
         if (vendors.stream().anyMatch(vendor -> !vendor.isWorking() || vendor.getVendorType().equals("RESTAURANT")
-                && !(timeInUAE.isBefore(vendor.getClosingTime()) && timeInUAE.isAfter(vendor.getOpeningTime())))) {
+                && !vendor.isStillOpening())) {
             String itemsFromClosedVendorMessage = messageSource.getMessage("error.items.from.closed.vendor", null,
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, itemsFromClosedVendorMessage);

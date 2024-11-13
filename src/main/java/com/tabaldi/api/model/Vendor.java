@@ -1,14 +1,13 @@
 package com.tabaldi.api.model;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @Entity
 @Builder
@@ -70,10 +69,23 @@ public class Vendor {
 //    private List<UserEntity> users;
 
     public String getFOpeningTime(){
-        return openingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
+        return openingTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
     }
     public String getFClosingTime(){
-        return closingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
+        return closingTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
+    }
+    public boolean isStillOpening(){
+        LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
+        LocalDateTime openingDateTime = LocalDateTime.now();
+        openingDateTime = openingDateTime.withHour(this.openingTime.getHour());
+        openingDateTime = openingDateTime.withMinute(this.openingTime.getMinute());
+        LocalDateTime closingDateTime = LocalDateTime.now();
+        closingDateTime = closingDateTime.withHour(this.closingTime.getHour());
+        closingDateTime = closingDateTime.withMinute(this.closingTime.getMinute());
+        if(this.openingTime.isAfter(this.closingTime) || this.openingTime.equals(this.closingTime)){
+            closingDateTime = closingDateTime.plusDays(1);
+        }
+        return timeInUAE.isAfter(openingDateTime) && timeInUAE.isBefore(closingDateTime);
     }
 
 }

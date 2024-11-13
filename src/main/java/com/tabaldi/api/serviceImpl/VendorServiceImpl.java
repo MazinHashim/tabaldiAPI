@@ -12,6 +12,8 @@ import com.tabaldi.api.utils.RestUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -40,7 +46,7 @@ public class VendorServiceImpl implements VendorService {
     private final ProductRepository productRepository;
     private final FileStorageService fileStorageService;
     private final TabaldiConfiguration configuration;
-
+    private static final Logger logger = LoggerFactory.getLogger(VendorServiceImpl.class);
 
     @Override
     public List<Vendor> getVendorsList(String roleName) throws TabaldiGenericException {
@@ -53,6 +59,16 @@ public class VendorServiceImpl implements VendorService {
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
 
+        LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(0));
+        LocalDateTime openingDateTime = LocalDateTime.now();
+        openingDateTime = openingDateTime.withHour(vendorList.get(0).getOpeningTime().getHour());
+        openingDateTime = openingDateTime.withMinute(vendorList.get(0).getOpeningTime().getMinute());
+        LocalDateTime closingDateTime = LocalDateTime.now();
+        closingDateTime = closingDateTime.withHour(vendorList.get(0).getClosingTime().getHour());
+        closingDateTime = closingDateTime.withMinute(vendorList.get(0).getClosingTime().getMinute());
+        if(vendorList.get(0).getOpeningTime().isAfter(vendorList.get(0).getClosingTime())){
+            closingDateTime = closingDateTime.plusDays(1);
+        }
         vendorList.forEach(v-> {
             Long productCount = productRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
             Long categoryCount = categoryRepository.countByIsPublishedAndVendor_vendorId(false, v.getVendorId());
@@ -223,10 +239,6 @@ public class VendorServiceImpl implements VendorService {
         Boolean saved = fileStorageService.save(addList);
         if(!saved){
             String imageNotUploadedMessage = messageSource.getMessage("error.not.uploaded.file", null, LocaleContextHolder.getLocale());
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotUploadedMessage);
-        }
-        if(payload.getOpeningTime().isAfter(payload.getClosingTime())) {
-            String imageNotUploadedMessage = messageSource.getMessage("error.invalid.time.range", null, LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotUploadedMessage);
         }
 
