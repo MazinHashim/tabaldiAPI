@@ -62,10 +62,10 @@ public class Advertisement {
     }
 
     public String getFStartTime() {
-        return startTime.format(DateTimeFormatter.ofPattern("HH:mm:ss a"));
+        return startTime.format(DateTimeFormatter.ofPattern("hh:mm:ss a"));
     }
 
     public String getFEndTime() {
-        return endTime.format(DateTimeFormatter.ofPattern("HH:mm:ss a"));
+        return endTime.format(DateTimeFormatter.ofPattern("hh:mm:ss a"));
     }
 }

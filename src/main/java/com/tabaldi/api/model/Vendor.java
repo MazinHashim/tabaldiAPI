@@ -70,10 +70,10 @@ public class Vendor {
 //    private List<UserEntity> users;
 
     public String getFOpeningTime(){
-        return openingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
+        return openingTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
     }
     public String getFClosingTime(){
-        return closingTime.format(DateTimeFormatter.ofPattern("HH:mm a"));
+        return closingTime.format(DateTimeFormatter.ofPattern("hh:mm a"));
     }
 
 }
