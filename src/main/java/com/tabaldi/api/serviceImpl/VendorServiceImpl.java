@@ -259,7 +259,7 @@ public class VendorServiceImpl implements VendorService {
 //        userRepository.findByVendorAndRole(createdVendor, Role.VENDOR)
         user.setVendor(createdVendor);
         userRepository.save(user);
-        createdVendor.setUserId(user.getUserId());
+//        createdVendor.setUserId(user.getUserId());
         if(payload.getVendorId()==null)
             sequencesService.createSequenceFor("vendors", 1000, createdVendor.getVendorId());
         return createdVendor;
