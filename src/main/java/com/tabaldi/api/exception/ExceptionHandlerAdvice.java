@@ -10,6 +10,7 @@ import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -35,7 +36,7 @@ public class ExceptionHandlerAdvice {
     final Logger logger = LoggerFactory.getLogger(ExceptionHandlerAdvice.class);
 
     @ExceptionHandler({ Exception.class })
-    public @ResponseBody CustomErrorResponse handleExceptions(HttpServletResponse response, Exception exception) {
+    public @ResponseBody ResponseEntity<CustomErrorResponse> handleExceptions(HttpServletResponse response, Exception exception) {
         CustomErrorResponse errorResponse = new CustomErrorResponse(response);
         logger.error(exception.getMessage());
         exception.printStackTrace();
@@ -44,7 +45,7 @@ public class ExceptionHandlerAdvice {
 
         errorResponse.setMessage(message);
 
-        return errorResponse;
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
     }
 
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
