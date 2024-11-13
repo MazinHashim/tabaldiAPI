@@ -138,13 +138,13 @@ public class VendorServiceImpl implements VendorService {
         // update vendor constraints
         if (payload.getVendorId() != null) {
             Vendor vendor = this.getVendorById(payload.getVendorId());
-            UserEntity userByEmail = userService.getExistByEmail(payload.getEmail());
+//            UserEntity userByEmail = userService.getExistByEmail(payload.getEmail());
             licensePath = vendor.getLicenseImage()!=null?vendor.getLicenseImage():"";
             identityPath = vendor.getIdentityImage()!=null?vendor.getIdentityImage():"";
             profilePath = vendor.getProfileImage()!=null?vendor.getProfileImage():"";
             coverPath = vendor.getCoverImage()!=null?vendor.getCoverImage():"";
             isWorking = vendor.isWorking();
-            user = userService.getUserById(userByEmail.getUserId());
+            user = userService.getUserById(payload.getUserId());
             if(!user.getPhone().equals(payload.getPhone()) || !user.getEmail().equals(payload.getEmail())) {
                 user.setPhone(payload.getPhone());
                 user.setEmail(payload.getEmail());
