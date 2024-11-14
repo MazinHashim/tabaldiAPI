@@ -6,9 +6,7 @@ import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
-import java.time.LocalDate;
-import java.time.LocalTime;
-import java.time.OffsetDateTime;
+import java.time.*;
 import java.time.format.DateTimeFormatter;
 
 @Entity
@@ -67,5 +65,19 @@ public class Advertisement {
 
     public String getFEndTime() {
         return endTime.format(DateTimeFormatter.ofPattern("hh:mm:ss a"));
+    }
+    public boolean isVisibleNow(){
+        LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
+        LocalDateTime startingDateTime = LocalDateTime.now();
+        startingDateTime = startingDateTime.withHour(this.startTime.getHour());
+        startingDateTime = startingDateTime.withMinute(this.startTime.getMinute());
+        LocalDateTime endingDateTime = LocalDateTime.now();
+        endingDateTime = endingDateTime.withHour(this.endTime.getHour());
+        endingDateTime = endingDateTime.withMinute(this.endTime.getMinute());
+        if(this.startTime.isAfter(this.endTime) || this.startTime.equals(this.endTime)){
+            endingDateTime = endingDateTime.plusDays(1);
+        }
+        return (LocalDate.now().isAfter(this.getCreatedDate()) && LocalDate.now().isBefore(this.getExpireDate())) &&
+        (timeInUAE.isAfter(startingDateTime) && timeInUAE.isBefore(endingDateTime));
     }
 }

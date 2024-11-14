@@ -393,8 +393,8 @@ public class OrderServiceImpl implements OrderService {
                 .filter(order -> order.getStatus().equals(DELIVERED))
                 .forEach(order -> {
                     order.getCartItems().forEach(cartItem -> {
-                        double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity()) / 100
-                                * cartItem.getProduct().getCompanyProfit();
+                        double companyEarningsPerItem = (cartItem.getProduct().getFinalPrice()
+                                - cartItem.getProduct().getPrice()) * cartItem.getQuantity();
                         companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
                     });
                 });
@@ -598,11 +598,11 @@ public class OrderServiceImpl implements OrderService {
 
     private String getArabicStatus(OrderStatus status) {
         return switch (status) {
-            case DELIVERED -> "توصيله";
-            case CANCELED -> "إلغاءه";
-            case WAITING -> "إنشاءه";
-            case PROCESSING -> "معالجته";
-            case CONFIRMED -> "تأكيده";
+            case DELIVERED -> "توصيل";
+            case CANCELED -> "إلغاء";
+            case WAITING -> "إنشاء";
+            case PROCESSING -> "معالجت";
+            case CONFIRMED -> "تأكيد";
         };
     }
 }

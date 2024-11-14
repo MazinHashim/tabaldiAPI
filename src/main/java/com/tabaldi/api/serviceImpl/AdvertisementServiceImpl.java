@@ -53,7 +53,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
     @Override
     public List<Advertisement> getActiveAdvertisementsList() throws TabaldiGenericException {
         List<Advertisement> advertisementList = advertisementRepository.findByIsShownAndExpireDateGreaterThan(true,
-                LocalDate.now());
+                LocalDate.now()).stream().filter(adv -> adv.isVisibleNow()).collect(Collectors.toList());
         if (advertisementList.isEmpty()) {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "advertisements", "الإعلانات");
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);

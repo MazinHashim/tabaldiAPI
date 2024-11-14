@@ -62,7 +62,7 @@ public class CategoryController {
     public @ResponseBody ResponseEntity<DeleteResponse> deleteCategory (@PathVariable("categoryId") Long categoryId)
             throws TabaldiGenericException {
         Boolean isDeleted = categoryService.deleteCategoryById(categoryId);
-        String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Category", "العنوان");
+        String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Category", "الصنف");
         return ResponseEntity.ok(DeleteResponse.builder()
                 .message(successDeleteMessage)
                 .isDeleted(isDeleted).build());
