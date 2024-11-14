@@ -67,7 +67,7 @@ public class Advertisement {
     }
 
 //========================= check if it's not expired until specified end time ONLY =========================/
-    public boolean isExpiredNow(){
+    public boolean isActivatedNow(){
         LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
         LocalDateTime startingDateTime = this.createdDate.atTime(this.startTime);
         LocalDateTime endingDateTime = this.expireDate.atTime(this.endTime);
