@@ -174,7 +174,7 @@ public class OrderServiceImpl implements OrderService {
             String notificationBody = MessagesUtils.getOrderNotificationBody(messageSource,
                     order.getVendor().getFullName(), !order.getVendor().getArFullName().isEmpty()
                             ? order.getVendor().getArFullName() : order.getVendor().getFullName(),
-                    "created", "إنشائه");
+                    "created", "إنشاء");
             notificationService.sendPushNotificationByToken(NotificationPayload.builder()
                     .token(session.getDeviceToken())
                     .title(notificationTitle +" "+ order.getOrderNumber())
