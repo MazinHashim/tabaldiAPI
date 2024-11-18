@@ -94,12 +94,9 @@ public class CartItemServiceImpl implements CartItemService {
         }
 
         Customer selectedCustomer = customerService.getCustomerById(payload.getCustomerId());
+        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId(),
+                false);
 
-        if (payload.getQuantity() > selectedProduct.getQuantity()) {
-            String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null,
-                    LocaleContextHolder.getLocale());
-            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notAvailableMessage);
-        }
         List<Option> selectedOptions = null;
         if (!selectedProduct.getOptions().isEmpty()) {
             List<Option> requiredOptions = selectedProduct.getOptions().stream()
@@ -128,11 +125,26 @@ public class CartItemServiceImpl implements CartItemService {
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, requiredOptionsMessage);
             }
         }
+        List<Option> finalSelectedOptions = selectedOptions;
+        CartItem productExistInCart = cartList.stream()
+                .filter(ci -> ci.getProduct().getProductId() == selectedProduct.getProductId() &&
+                        (ci.getSelectedOptions().equals(finalSelectedOptions)))
+                .findFirst().orElse(null);
+        int totalQuantity = payload.getQuantity();
+        if (productExistInCart != null) {
+            totalQuantity = productExistInCart.getQuantity() + payload.getQuantity();
+        }
+
+        if (totalQuantity > selectedProduct.getQuantity()) {
+            String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null,
+                    LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notAvailableMessage);
+        }
         // TODO: Review IT IF SHOULD PASS PRICE OR CALCULATE PRODUCT PRICE
 
         CartItem cartItemParams = CartItem.builder()
                 .price(selectedProduct.getFinalPrice())
-                .quantity(payload.getQuantity())
+                .quantity(totalQuantity)
                 .product(selectedProduct)
                 .optionsCollection(payload.getOptions())
                 .customer(selectedCustomer)
@@ -141,9 +153,10 @@ public class CartItemServiceImpl implements CartItemService {
             cartItemParams.setComment(payload.getComment());
         if (selectedOptions != null)
             cartItemParams.setSelectedOptions(selectedOptions);
-        List<CartItem> cartList = customerService.getCustomerActiveCartItemsList(selectedCustomer.getCustomerId(),
-                false);
-        cartList.add(cartItemParams);
+        if(productExistInCart!=null)
+            cartItemParams.setItemId(productExistInCart.getItemId());
+        else
+            cartList.add(cartItemParams);
 
         List<Vendor> vendors = cartList.stream()
                 .map(cartItem -> cartItem.getProduct().getVendor())
@@ -152,7 +165,7 @@ public class CartItemServiceImpl implements CartItemService {
                 .allMatch(vendor -> !vendor.getVendorType().equals(VendorType.RESTAURANT));
         boolean isAllRestaurant = vendors.stream()
                 .allMatch(vendor -> vendor.getVendorType().equals(VendorType.RESTAURANT));
-        if (!(isAllNotRestaurant || (isAllRestaurant && vendors.size()==1))) {
+        if (!(isAllNotRestaurant || (isAllRestaurant && vendors.size() == 1))) {
             String onlyOneAllowedMessage = messageSource.getMessage("error.separate.restaurant.order", null,
                     LocaleContextHolder.getLocale());
             throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
