@@ -90,6 +90,6 @@ public class Vendor {
         return timeInUAE.isAfter(openingDateTime) && timeInUAE.isBefore(closingDateTime);
     }
 
-    public boolean areEquals() {return this.openingTime.equals(this.closingTime);}
+    public boolean isEquals() {return this.openingTime.equals(this.closingTime);}
 
 }
