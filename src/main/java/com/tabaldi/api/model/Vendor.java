@@ -89,23 +89,23 @@ public class Vendor {
         }
         return timeInUAE.isAfter(openingDateTime) && timeInUAE.isBefore(closingDateTime);
     }
-    public String getOpeningDateLocal(){
-        LocalDateTime openingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
-        openingDateTime = openingDateTime
-                .withHour(this.openingTime.getHour())
-                .withMinute(this.openingTime.getMinute());
-        return openingDateTime.toString();
-    }
-    public String getClosingDateLocal(){
-        LocalDateTime closingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
-        closingDateTime = closingDateTime
-                .withHour(this.closingTime.getHour())
-                .withMinute(this.closingTime.getMinute());
-        return closingDateTime.toString();
-    }
-    public String getNowLocal(){
-        LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
-        return timeInUAE.toString();
-    }
+//    public String getOpeningDateLocal(){
+//        LocalDateTime openingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
+//        openingDateTime = openingDateTime
+//                .withHour(this.openingTime.getHour())
+//                .withMinute(this.openingTime.getMinute());
+//        return openingDateTime.toString();
+//    }
+//    public String getClosingDateLocal(){
+//        LocalDateTime closingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
+//        closingDateTime = closingDateTime
+//                .withHour(this.closingTime.getHour())
+//                .withMinute(this.closingTime.getMinute());
+//        return closingDateTime.toString();
+//    }
+//    public String getNowLocal(){
+//        LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
+//        return timeInUAE.toString();
+//    }
 
 }
