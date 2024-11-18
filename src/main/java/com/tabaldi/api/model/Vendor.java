@@ -79,9 +79,11 @@ public class Vendor {
         LocalDateTime openingDateTime = LocalDateTime.now();
         openingDateTime = openingDateTime.withHour(this.openingTime.getHour());
         openingDateTime = openingDateTime.withMinute(this.openingTime.getMinute());
+        openingDateTime = openingDateTime.withSecond(0).withNano(0);
         LocalDateTime closingDateTime = LocalDateTime.now();
         closingDateTime = closingDateTime.withHour(this.closingTime.getHour());
         closingDateTime = closingDateTime.withMinute(this.closingTime.getMinute());
+        closingDateTime = closingDateTime.withSecond(0).withNano(0);
         if(this.openingTime.isAfter(this.closingTime) || this.openingTime.equals(this.closingTime)){
             closingDateTime = closingDateTime.plusDays(1);
         }
