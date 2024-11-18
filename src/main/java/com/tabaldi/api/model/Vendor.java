@@ -76,11 +76,11 @@ public class Vendor {
     }
     public boolean isStillOpening(){
         LocalDateTime timeInUAE = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4));
-        LocalDateTime openingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
+        LocalDateTime openingDateTime = timeInUAE.withSecond(0).withNano(0);
         openingDateTime = openingDateTime
                 .withHour(this.openingTime.getHour())
                 .withMinute(this.openingTime.getMinute());
-        LocalDateTime closingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
+        LocalDateTime closingDateTime = timeInUAE.withSecond(0).withNano(0);
         closingDateTime = closingDateTime
                 .withHour(this.closingTime.getHour())
                 .withMinute(this.closingTime.getMinute());
