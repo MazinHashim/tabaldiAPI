@@ -85,7 +85,10 @@ public class Vendor {
                 .withHour(this.closingTime.getHour())
                 .withMinute(this.closingTime.getMinute());
         if(this.openingTime.isAfter(this.closingTime) || this.openingTime.equals(this.closingTime)){
+            System.out.println("Yes, Entered...");
             closingDateTime = closingDateTime.plusDays(1);
+        } else {
+            System.out.println("No, Not Entered...");
         }
         return timeInUAE.isAfter(openingDateTime) && timeInUAE.isBefore(closingDateTime);
     }
