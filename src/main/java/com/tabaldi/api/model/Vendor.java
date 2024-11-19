@@ -90,14 +90,16 @@ public class Vendor {
         return timeInUAE.isAfter(openingDateTime) && timeInUAE.isBefore(closingDateTime);
     }
 //    public String getOpeningDateLocal(){
-//        LocalDateTime openingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
+//        LocalDateTime openingDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4))
+//        .withSecond(0).withNano(0);
 //        openingDateTime = openingDateTime
 //                .withHour(this.openingTime.getHour())
 //                .withMinute(this.openingTime.getMinute());
 //        return openingDateTime.toString();
 //    }
 //    public String getClosingDateLocal(){
-//        LocalDateTime closingDateTime = LocalDateTime.now().withSecond(0).withNano(0);
+//        LocalDateTime closingDateTime = LocalDateTime.ofInstant(Instant.now(), ZoneOffset.ofHours(4))
+//        .withSecond(0).withNano(0);
 //        closingDateTime = closingDateTime
 //                .withHour(this.closingTime.getHour())
 //                .withMinute(this.closingTime.getMinute());

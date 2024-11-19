@@ -128,7 +128,7 @@ public class CartItemServiceImpl implements CartItemService {
         List<Option> finalSelectedOptions = selectedOptions;
         CartItem productExistInCart = cartList.stream()
                 .filter(ci -> ci.getProduct().getProductId() == selectedProduct.getProductId() &&
-                        (ci.getSelectedOptions().equals(finalSelectedOptions)))
+                        ((ci.getSelectedOptions()==null&&finalSelectedOptions==null)||ci.getSelectedOptions().equals(finalSelectedOptions)))
                 .findFirst().orElse(null);
         int totalQuantity = payload.getQuantity();
         if (productExistInCart != null) {
