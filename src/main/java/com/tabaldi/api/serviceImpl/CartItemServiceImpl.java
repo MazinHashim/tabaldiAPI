@@ -57,6 +57,11 @@ public class CartItemServiceImpl implements CartItemService {
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         }
         CartItem cartItem = selectedCartItem.get();
+        if(newQuantity > cartItem.getProduct().getQuantity()){
+            String notAvailableMessage = messageSource.getMessage("error.not.available.qnt", null,
+                    LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, notAvailableMessage);
+        }
         cartItem.setQuantity(newQuantity);
         if (cartItem.getOrder() != null) {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Cart Item", "عنصر سلة التسوق");

@@ -242,6 +242,11 @@ public class ProductServiceImpl implements ProductService {
         List<String> imagesPaths = GenericMapper.jsonToListObjectMapper(product.getImagesCollection(), String.class);
 
         String decodedImagePath = new String(Base64.getDecoder().decode(imagePathToRemove));
+        if(imagesPaths.size()==1){
+            String imageNotRemovedMessage = messageSource.getMessage("error.not.removed.file", null,
+                    LocaleContextHolder.getLocale());
+            throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, imageNotRemovedMessage);
+        }
         if (!imagesPaths.remove(imagePathToRemove)) {
             String imageNotFoundMessage = messageSource.getMessage("error.image.not.found", null,
                     LocaleContextHolder.getLocale());
