@@ -35,7 +35,7 @@ public class Address {
     @Column(nullable = false)
     private double longitude;
     @JoinColumn(name = "customer_id", nullable = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OnDelete(action = OnDeleteAction.NO_ACTION)
     @ManyToOne
     @JsonIgnore
     private Customer customer;
