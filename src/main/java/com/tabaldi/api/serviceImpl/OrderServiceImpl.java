@@ -62,7 +62,7 @@ public class OrderServiceImpl implements OrderService {
         // 5/ if all checks passed successfully, create an order for each vendor
         List<Order> orders = new ArrayList<>(vendors.size());
         Address selectedAddress = customerService.getSelectedCustomerAddress(customerId);
-        vendors.forEach(vendor -> {
+        for (Vendor vendor : vendors) {
             final String orderNumber = this.getOrderNumber(customer, vendor);
             Order orderParams = Order.builder()
                     .orderDate(OffsetDateTime.now())
@@ -70,10 +70,14 @@ public class OrderServiceImpl implements OrderService {
                     .customer(customer)
                     .vendor(vendor)
                     .status(WAITING)
+                    // TODO: Require Review
+//                    .addressObject(GenericMapper.objectToJSONMapper(selectedAddress))
                     .address(selectedAddress)
                     .build();
+            if(payload.getComment()!=null && !payload.getComment().isEmpty())
+                orderParams.setComment(payload.getComment());
             orders.add(orderParams);
-        });
+        }
 
         List<Order> createdOrders = orderRepository.saveAll(orders);
 
@@ -375,6 +379,8 @@ public class OrderServiceImpl implements OrderService {
             order.setTotal(invoice.getSummary().getTotal());
             order.setPaymentMethod(invoice.getPaymentMethod());
             order.setShippingCost(invoice.getSummary().getShippingCost());
+            // TODO: Require Review
+//            order.setAddress(GenericMapper.jsonToObjectMapper(order.getAddressObject(), Address.class));
         }
     }
 
@@ -406,17 +412,17 @@ public class OrderServiceImpl implements OrderService {
         AtomicReference<Double> vendorEarnings = new AtomicReference<>((double) 0);
         AtomicReference<Double> companyEarnings = new AtomicReference<>((double) 0);
         orders
-                .stream()
-                .filter(order -> order.getOrderDate().toLocalDate().isEqual(OffsetDateTime.now().toLocalDate()))
-                .filter(order -> order.getStatus().equals(DELIVERED))
-                .forEach(order -> {
-                    order.getCartItems().forEach(cartItem -> {
-                        double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity() + 10) / 100
-                                * cartItem.getProduct().getCompanyProfit();
-                        companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
-                    });
-                    vendorEarnings.updateAndGet(v -> order.getTotal() + v);
+            .stream()
+            .filter(order -> order.getOrderDate().toLocalDate().isEqual(OffsetDateTime.now().toLocalDate()))
+            .filter(order -> order.getStatus().equals(DELIVERED))
+            .forEach(order -> {
+                order.getCartItems().forEach(cartItem -> {
+                    double companyEarningsPerItem = (cartItem.getPrice() * cartItem.getQuantity() + 10) / 100
+                            * cartItem.getProduct().getCompanyProfit();
+                    companyEarnings.updateAndGet(v -> v + companyEarningsPerItem);
                 });
+                vendorEarnings.updateAndGet(v -> order.getTotal() + v);
+            });
         return vendorEarnings.get() - companyEarnings.get();
     }
 
@@ -481,15 +487,7 @@ public class OrderServiceImpl implements OrderService {
                     && !invoice.getStatus().equals(InvoiceStatus.PAID)) {
                 invoiceService.payOrderInvoice(order.getOrderId(), null);
             }
-            if (status.equals(DELIVERED)) {
-                // send email to customer using email service
-                if (order.getCustomer().getEmail() != null && !order.getCustomer().getEmail().isEmpty()) {
-                    emailService.sendEmail(
-                            order.getCustomer().getEmail(),
-                            notificationTitle + " " + order.getOrderNumber(),
-                            notificationBody);
-                }
-            }
+//            iFF
             return true;
         }
         return false;

@@ -23,4 +23,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
     Optional<Category> findByVendorAndName(long vendorId, String name);
 
     Long countByIsPublishedAndVendor_vendorId(boolean b, long vendorId);
+
+    List<Category> findByVendorAndIsPublished(Vendor vendor, boolean b);
 }

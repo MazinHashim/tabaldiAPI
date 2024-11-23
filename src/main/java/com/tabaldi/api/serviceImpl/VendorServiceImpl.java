@@ -341,9 +341,11 @@ public class VendorServiceImpl implements VendorService {
     }
 
     @Override
-    public List<Category> getVendorCategoriesList(Long vendorId) throws TabaldiGenericException {
+    public List<Category> getVendorCategoriesList(Long vendorId, String roleName) throws TabaldiGenericException {
         Vendor vendor = this.getVendorById(vendorId);
-        List<Category> categoryList = categoryRepository.findByVendor(vendor);
+        List<Category> categoryList = roleName.equals(Role.SUPERADMIN.name())||roleName.equals(Role.VENDOR.name())
+                ? categoryRepository.findByVendor(vendor)
+                : categoryRepository.findByVendorAndIsPublished(vendor, true);
 
         if(categoryList.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource,"categories", "أنواع المنتج");

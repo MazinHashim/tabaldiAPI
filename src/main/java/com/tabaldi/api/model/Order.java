@@ -52,6 +52,10 @@ public class Order {
     @OnDelete(action = OnDeleteAction.NO_ACTION)
     @ManyToOne
     private Address address;
+//    @JsonIgnore
+//    private String addressObject;
+//    @Transient
+//    private Address address;
 
     @JoinColumn(name = "vendor_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

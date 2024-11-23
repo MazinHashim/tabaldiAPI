@@ -75,8 +75,8 @@ public class VendorController {
 
     @GetMapping("/{vendorId}/categories")
     public @ResponseBody ResponseEntity<ListResponse<VendorCategoryResponse>> getCategoriesList (
-            @PathVariable("vendorId") long vendorId) throws TabaldiGenericException {
-        List<Category> categoriesList = vendorService.getVendorCategoriesList(vendorId); // may add filters
+            @PathVariable("vendorId") long vendorId, @RequestParam("roleName") String roleName) throws TabaldiGenericException {
+        List<Category> categoriesList = vendorService.getVendorCategoriesList(vendorId, roleName); // may add filters
         String fetchMessage = MessagesUtils.getFetchMessage(messageSource, "Vendor Categories", "أنواع منتجات البائع");
         List<VendorCategoryResponse> list = categoriesList.stream().map(category -> {
             Long count = productService.countByCategory(category.getCategoryId());
