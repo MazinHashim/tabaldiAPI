@@ -161,7 +161,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<Product> searchProductByQuery(String query) throws TabaldiGenericException, IOException {
-        List<Product> products = productRepository.findByNameContainingIgnoreCase(query);
+        List<Product> products = productRepository.findByNameOrArNameContainingIgnoreCase(query);
         if (products.isEmpty()) {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Products", "المنتجات");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);

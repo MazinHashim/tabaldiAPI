@@ -31,13 +31,13 @@ public class FilesController {
 
     @GetMapping(value = "/get/data/{filePath}")
     public @ResponseBody
-    FileDataResponse getFileData(@PathVariable("filePath") final String filePath) throws Exception, Throwable {
+    FileDataResponse getFileData(@PathVariable("filePath") final String filePath) throws TabaldiGenericException {
         if (StringUtils.hasText(filePath)) {
 
             String decodedPath = new String(Base64.getDecoder().decode(filePath.getBytes()));
 
             String data = Base64.getEncoder().encodeToString(fileStorageService.fetch(decodedPath));
-            if(data.isEmpty()) {
+            if(decodedPath!=null && decodedPath.isEmpty()) {
                 String noFileMessage = messageSource.getMessage("error.no.file", null, LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, noFileMessage);
             }
