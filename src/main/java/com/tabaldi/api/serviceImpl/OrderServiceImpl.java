@@ -121,7 +121,7 @@ public class OrderServiceImpl implements OrderService {
             }
             // 8/ check if order's payment method is CASH and total is less than 70, the
             // order will be aborted
-            if (payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal() > 70) {
+            if (payload.getPaymentMethod().equals(PaymentMethod.CASH) && order.getTotal() < 70) {
                 String onlyOneAllowedMessage = messageSource.getMessage("error.order.exceed.allowed.cash", null,
                         LocaleContextHolder.getLocale());
                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST, onlyOneAllowedMessage);
@@ -276,7 +276,7 @@ public class OrderServiceImpl implements OrderService {
             Optional<ShippingCostPayload> shippingCostObj = payload.stream()
                     .filter(cost -> cost.getVendorId() == vendor.getVendorId()).findFirst();
             if (!shippingCostObj.isPresent()) {
-                String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "vendor", "البائع");
+                String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Shipping Cost", "رسوم التوصيل");
                 throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
             }
             this.validateDeliveryDistance(vendor, orderTotal, shippingCostObj.get().getDistance());
