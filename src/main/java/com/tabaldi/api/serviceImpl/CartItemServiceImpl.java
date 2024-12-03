@@ -148,7 +148,7 @@ public class CartItemServiceImpl implements CartItemService {
         // TODO: Review IT IF SHOULD PASS PRICE OR CALCULATE PRODUCT PRICE
 
         CartItem cartItemParams = CartItem.builder()
-                .price(selectedProduct.getFinalPrice() * totalQuantity)
+                .price(Math.round(selectedProduct.getFinalPrice() * totalQuantity * 100) / 100)
                 .quantity(totalQuantity)
                 .product(selectedProduct)
                 .optionsCollection(payload.getOptions())

@@ -49,20 +49,19 @@ public class Product {
 
     @OneToMany(mappedBy = "product", fetch = FetchType.LAZY)
     private List<Option> options;
-//    @OneToMany(mappedBy = "product")
-//    private List<CartItem> cartItems;
+    // @OneToMany(mappedBy = "product")
+    // private List<CartItem> cartItems;
     @JoinColumn(name = "vendor_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
-//    @JsonIgnore
+    // @JsonIgnore
     private Vendor vendor;
     @JoinColumn(name = "category_id", nullable = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
     @ManyToOne
     private Category category;
 
-
     public double getFinalPrice() {
-        return this.price + (this.price * this.companyProfit / 100);
+        return Math.round((this.price + (this.price * this.companyProfit / 100)) * 100.0) / 100.0;
     }
 }
