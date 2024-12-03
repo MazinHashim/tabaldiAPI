@@ -16,7 +16,7 @@ public interface ProductService {
     Product saveProductInfo(ProductPayload payload, List<MultipartFile> productImages)
             throws TabaldiGenericException, IOException;
 
-    Boolean deleteProductById(Long productId) throws TabaldiGenericException;
+    Boolean deleteProductById(Long productId) throws TabaldiGenericException, IOException;
 
     List<Product> searchProductByQuery(String query) throws TabaldiGenericException, IOException;
 

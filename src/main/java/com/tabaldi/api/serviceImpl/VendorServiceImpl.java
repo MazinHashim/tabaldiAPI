@@ -391,7 +391,7 @@ public class VendorServiceImpl implements VendorService {
         Vendor vendor = this.getVendorById(vendorId);
         List<Product> products = roleName.equals(Role.SUPERADMIN.name())||roleName.equals(Role.VENDOR.name())
                 ? productRepository.findByVendor(vendor)
-                : productRepository.findByVendorAndIsPublished(vendor, true);
+                : productRepository.findByVendorAndIsPublishedAndCategory_isPublished(vendor, true, true);
         if(products.isEmpty()){
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Product","المنتج");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);

@@ -76,7 +76,7 @@ public class ProductController {
 
         @DeleteMapping("/delete/{productId}")
         public @ResponseBody ResponseEntity<DeleteResponse> deleteProduct(@PathVariable("productId") Long productId)
-                        throws TabaldiGenericException {
+                throws TabaldiGenericException, IOException {
                 Boolean isDeleted = productService.deleteProductById(productId);
                 String successDeleteMessage = MessagesUtils.getDeletedMessage(messageSource, "Product", "المنتج");
 

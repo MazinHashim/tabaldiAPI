@@ -5,9 +5,7 @@ import com.tabaldi.api.exception.TabaldiGenericException;
 import com.tabaldi.api.model.*;
 import com.tabaldi.api.payload.FileDataObject;
 import com.tabaldi.api.payload.ProductPayload;
-import com.tabaldi.api.repository.CartItemRepository;
-import com.tabaldi.api.repository.OptionRepository;
-import com.tabaldi.api.repository.ProductRepository;
+import com.tabaldi.api.repository.*;
 import com.tabaldi.api.service.CategoryService;
 import com.tabaldi.api.service.FileStorageService;
 import com.tabaldi.api.service.ProductService;
@@ -20,6 +18,7 @@ import net.bytebuddy.utility.RandomString;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -33,6 +32,9 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final OptionRepository optionRepository;
     private final CartItemRepository cartItemRepository;
+    private final InvoiceSummaryRepository invoiceSummaryRepository;
+    private final InvoiceRepository invoiceRepository;
+    private final OrderRepository orderRepository;
     private final CategoryService categoryService;
     private final VendorService vendorService;
     private final MessageSource messageSource;
@@ -135,13 +137,26 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Boolean deleteProductById(Long productId) throws TabaldiGenericException {
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean deleteProductById(Long productId) throws TabaldiGenericException, IOException {
         Optional<Product> productOptional = productRepository.findById(productId);
         if (!productOptional.isPresent()) {
             String notFoundMessage = MessagesUtils.getNotFoundMessage(messageSource, "Product", "المنتج");
             throw new TabaldiGenericException(HttpServletResponse.SC_NOT_FOUND, notFoundMessage);
         } else {
             Product product = productOptional.get();
+            List<String> imagesPaths = GenericMapper.jsonToListObjectMapper(product.getImagesCollection(), String.class);
+            List<String> decodedImagesPaths = imagesPaths.stream().map(imgPath -> new String(Base64.getDecoder().decode(imgPath))).collect(Collectors.toList());
+            Boolean removed = fileStorageService.remove(decodedImagesPaths);
+            if (!removed) {
+                String imageNotRemovedMessage = messageSource.getMessage("error.not.removed.file", null,
+                        LocaleContextHolder.getLocale());
+                throw new TabaldiGenericException(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, imageNotRemovedMessage);
+            }
+            cartItemRepository.deleteByProduct_productId(product.getProductId());
+            invoiceRepository.deleteByOrder_cartItems_product_productId(product.getProductId());
+            orderRepository.deleteByCartItems_product_productId(product.getProductId());
+            optionRepository.deleteByProduct_productId(product.getProductId());
             productRepository.deleteById(product.getProductId());
             return true;
         }

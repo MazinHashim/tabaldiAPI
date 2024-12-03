@@ -36,4 +36,6 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     @Query("select o from Order o where o.customer = ?1 " +
             "and o.orderId in (select inv.order.orderId from Invoice inv)")
     List<Order> findByCustomer(Customer customer);
+
+    void deleteByCartItems_product_productId(long productId);
 }

@@ -16,4 +16,6 @@ public interface InvoiceRepository extends JpaRepository<Invoice, Long> {
     List<Invoice> findByVendorId(@Param("vendorId") long vendorId);
     @Query("SELECT inv FROM Invoice inv WHERE inv.order.orderId=:orderId")
     Optional<Invoice> findByOrderId(@Param("orderId") long orderId);
+
+    void deleteByOrder_cartItems_product_productId(long productId);
 }

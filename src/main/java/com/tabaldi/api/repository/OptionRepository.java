@@ -16,4 +16,5 @@ public interface OptionRepository extends JpaRepository<Option, Long> {
     @Query("select o from Option o where o.product.productId = ?1 and upper(o.name) = upper(?2)")
     Optional<Option> findByProductAndName(long productId, String name);
 
+    void deleteByProduct_productId(long productId);
 }
