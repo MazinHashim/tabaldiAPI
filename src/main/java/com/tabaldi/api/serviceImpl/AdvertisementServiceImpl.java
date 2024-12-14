@@ -60,7 +60,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
         }
         return advertisementList.stream()
                 .sorted(Comparator.comparing(Advertisement::getPriority).reversed())
-                .sorted(Comparator.comparing(Advertisement::getExpireDate).reversed())
+//                .sorted(Comparator.comparing(Advertisement::getExpireDate).reversed())
                 .collect(Collectors.toList());
     }
 
