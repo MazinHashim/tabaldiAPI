@@ -59,7 +59,7 @@ public class AdvertisementServiceImpl implements AdvertisementService {
             throw new TabaldiGenericException(HttpServletResponse.SC_OK, notFoundMessage);
         }
         return advertisementList.stream()
-                .sorted(Comparator.comparing(Advertisement::getPriority).reversed())
+                .sorted(Comparator.comparing(Advertisement::getPriority))
 //                .sorted(Comparator.comparing(Advertisement::getExpireDate).reversed())
                 .collect(Collectors.toList());
     }
