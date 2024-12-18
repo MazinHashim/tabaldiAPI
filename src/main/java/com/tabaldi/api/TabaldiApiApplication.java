@@ -23,7 +23,7 @@ import java.io.IOException;
 @EnableConfigurationProperties(TabaldiConfiguration.class)
 public class TabaldiApiApplication implements CommandLineRunner {
 	// private final EmailService emailService;
-	 private final PaymentService paymentService;
+//	 private final PaymentService paymentService;
 
 	@Bean
 	FirebaseMessaging firebaseMessaging() throws IOException {
@@ -68,10 +68,10 @@ public class TabaldiApiApplication implements CommandLineRunner {
 		// sequencesService.getNextSequenceFor("customer", 3);
 		// sequencesService.getNextSequenceFor("customer", 3);
 		// sequencesService.getNextSequenceFor("customer", 3);
-		InitPaymentPayload initPaymentPayload = InitPaymentPayload.builder()
-				.InvoiceAmount(100)
-				.CurrencyIso("AED")
-				.build();
-		paymentService.initializeMyFatoorahPayment(initPaymentPayload);
+//		InitPaymentPayload initPaymentPayload = InitPaymentPayload.builder()
+//				.InvoiceAmount(100)
+//				.CurrencyIso("AED")
+//				.build();
+//		paymentService.initializeMyFatoorahPayment(initPaymentPayload);
 	}
 }
