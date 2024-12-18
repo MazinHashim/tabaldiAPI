@@ -17,6 +17,8 @@ import com.tabaldi.api.utils.MessagesUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.bytebuddy.utility.RandomString;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -45,8 +47,7 @@ public class UserServiceImpl implements UserService {
     private final SmsService smsService;
     private final SessionService sessionService;
     private final TabaldiConfiguration configuration;
-    @Value("${spring.profiles.active}")
-    private String profile;
+    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Override
     public List<UserEntity> getAdminUsersList() throws TabaldiGenericException {
@@ -153,7 +154,7 @@ public class UserServiceImpl implements UserService {
 
             String uuid = RandomString.make(64);
             UserVerification verification = UserVerification.builder()
-                    .code(1111)
+                    .code(configuration.getActiveProfile().equals("prod")?otpCode:1111)
                     .phone(payload.getPhone())
                     .resendCounter(resendTimes + 1)
                     .createdTime(OffsetDateTime.now())
@@ -165,15 +166,15 @@ public class UserServiceImpl implements UserService {
                     .build();
 
             // send otp sms using smart sms gateway
-            if (!profile.equals("local") || !profile.equals("dev")) {
-                // String response = smsService.sendSms(payload.getPhone(), "Welcome your
-                // Rateena sign in OTP code is " + otpCode);
-                // System.out.println(response);
-                // if (!response.contains("OK")) {
-                // throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
-                // messageSource.getMessage("error.exceed.resend.limit", null,
-                // LocaleContextHolder.getLocale()) + "Error " + response);
-                // }
+            if (configuration.getActiveProfile().equals("prod")) {
+                 String response = smsService.sendSms(payload.getPhone(), "Welcome your " +
+                         "Rateena sign in OTP code is " + otpCode);
+                logger.info(response);
+                 if (!response.contains("OK")) {
+                 throw new TabaldiGenericException(HttpServletResponse.SC_BAD_REQUEST,
+                 messageSource.getMessage("error.exceed.resend.limit", null,
+                 LocaleContextHolder.getLocale()) + "Error " + response);
+                 }
             }
 
             return userVerificationRepository.saveAndFlush(verification);

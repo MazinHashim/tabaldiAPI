@@ -4,7 +4,9 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.tabaldi.api.payload.InitPaymentPayload;
 import com.tabaldi.api.service.EmailService;
+import com.tabaldi.api.service.PaymentService;
 import lombok.RequiredArgsConstructor;
 
 import org.springframework.boot.CommandLineRunner;
@@ -21,7 +23,7 @@ import java.io.IOException;
 @EnableConfigurationProperties(TabaldiConfiguration.class)
 public class TabaldiApiApplication implements CommandLineRunner {
 	// private final EmailService emailService;
-	// private final TabaldiConfiguration configuration;
+//	 private final PaymentService paymentService;
 
 	@Bean
 	FirebaseMessaging firebaseMessaging() throws IOException {
@@ -66,5 +68,10 @@ public class TabaldiApiApplication implements CommandLineRunner {
 		// sequencesService.getNextSequenceFor("customer", 3);
 		// sequencesService.getNextSequenceFor("customer", 3);
 		// sequencesService.getNextSequenceFor("customer", 3);
+//		InitPaymentPayload initPaymentPayload = InitPaymentPayload.builder()
+//				.InvoiceAmount(100)
+//				.CurrencyIso("AED")
+//				.build();
+//		paymentService.initializeMyFatoorahPayment(initPaymentPayload);
 	}
 }

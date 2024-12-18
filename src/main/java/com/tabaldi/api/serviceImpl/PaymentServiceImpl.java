@@ -51,11 +51,15 @@ public class PaymentServiceImpl implements PaymentService {
 
     private <T> Map<String, Object> callMyfatoorahPaymentAPI(String endpoint,T paymentPayload) throws TabaldiGenericException, IOException, HttpClientErrorException {
         HttpHeaders payloadHeaders = HttpHeadersUtils.getApplicationJsonHeader();
-        payloadHeaders.setBearerAuth(configuration.getMyfatoorahApiTestKey());
+        payloadHeaders.setBearerAuth(configuration.getActiveProfile().equals("prod")
+                ? configuration.getMyfatoorahApiLiveKey()
+                : configuration.getMyfatoorahApiTestKey());
 
         HttpEntity<T> requestHttp =
                 new HttpEntity<>(paymentPayload, payloadHeaders);
-        String url = configuration.getMyfatoorahTestBaseUrl()+endpoint;
+        String url = (configuration.getActiveProfile().equals("prod")
+                ? configuration.getMyfatoorahLiveBaseUrl()
+                : configuration.getMyfatoorahTestBaseUrl())+endpoint;
         logger.info(url);
 //        try {
         String strResponse = RestUtils.postRequest(url, requestHttp, String.class,
